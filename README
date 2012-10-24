@@ -1,0 +1,10 @@
+History Gluon
+=====
+
+History Gluon is a database (mainly NoSQL) interface server for
+ZABBIX (http://www.zabbix.com/). The supported databases are the following.
+ - HBase
+ - Cassandra
+ - Riak
+ - Mem (mainly for test)
+
