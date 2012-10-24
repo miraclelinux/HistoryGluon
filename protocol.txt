@@ -1,0 +1,126 @@
+*** Basics ***
+Endian: Little
+
+===== COMMAND PKT: Add data ======
+* Packet length [4B] (not including this)
+* Command Type  [2B]
+    100: Add data
+* data type [2B]    
+    01:Write Double
+    01:Write UINT64
+    02: Write STRING
+* Item ID [8B]
+* clock [4B]
+* ns    [4B]
+* Data
+    Command Type: 00: 64bit IEEE 754
+    Command Type: 01: 64bit 
+    Command Type: 02: Length[4B], String body
+===== PKT END =====
+
+===== COMMAND PKT: Get data =====
+* Packet length [4B] (not including this)
+* Command Type  [2B]
+   1000: get data
+* Item ID [8B]
+* clock0 [4B]
+* clock1 [4B]
+* maximum entries [4B]: 0 means no limit
+* order [2B]: 0: ascending, 1: descending
+===== PKT END =====
+
+===== REPLY PKT: Get data =====
+* Packet length [4B] (not including this)
+* Reply Type  [2B]
+   1000: reply: get data
+* Result [4B]
+   0: Success
+   1: Error due to unknown reason
+   2: Too many records (overflow)
+* Number of Entries [4B]
+<< REPEAT: Number of Entries >>
+* Item ID [8B]
+* clock [4B]
+* ns [4B]
+* type [2B]
+* Data
+    type: 00: 64bit IEEE 754
+    type: 01: 64bit 
+    type: 02: Length[4B], String body
+<< REPEAT END >>
+===== PKT END =====
+
+===== COMMAND PKT: Get data with timestamp =====
+* Packet length [4B] (not including this)
+* Command Type  [2B]
+   1050: get data with limit
+* Item ID [8B]
+* clock [4B]
+* ns [4B]
+* serach near [1B]: 0: No, 1: Yes
+===== PKT END =====
+
+===== REPLY PKT: Get data with timestamp =====
+% the same as 'Get data' (Reply Type: 1050, Number of Entries: 1)
+===== PKT END =====
+
+===== COMMAND PKT: Get MinClock =====
+* Packet length [4B] (not including this)
+* Command Type  [2B]
+   1100: GetMinClock
+* Item ID [8B]
+===== PKT END =====
+
+===== REPLY PKT: Get MinClock =====
+* Packet length [4B] (not including this)
+* Reply Type  [2B]
+   1100: reply: get data
+* Result [4B]
+   0: Success
+   1: Error due to unknown reason
+* Minimum clock [4B]
+===== PKT END =====
+
+===== COMMAND PKT: Get statistics =====
+* Packet length [4B] (not including this)
+* Command Type  [2B]
+   1200: get statistical data
+* Item ID [8B]
+* clock0 [4B]: 0 means not limited
+* clock1 [4B]: 0 means not limited
+===== PKT END =====
+
+===== REPLY PKT: Get statistics =====
+* Packet length [4B] (not including this)
+* Reply Type  [2B]
+   1200: reply: get statistical data
+* Result [4B]
+   0: Success
+   1: Error due to unknown reason
+* Item ID [8B]
+* clock0 [4B]
+* clock1 [4B]
+* count [8B]: Uint64
+* min [8B]  IEEE754
+* max [8B]: IEEE754
+* sum [8B]: IEEE754
+===== PKT END =====
+
+===== COMMAND PKT: Delete data =====
+* Packet length [4B] (not including this)
+* Command Type  [2B]
+   2000: delete data
+* Item ID [8B]
+* min_clock [4B]
+===== PKT END =====
+
+===== REPLY PKT: Get data =====
+* Packet length [4B] (not including this)
+* Reply Type  [2B]
+   2000: reply: get data
+* Result [4B]
+   0: Success
+   1: Error due to unknown reason
+* NumberOfDeleted [4B]
+===== PKT END =====
+

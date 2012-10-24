@@ -1,0 +1,79 @@
+========================================================================
+* Setup for CentOS 6.3 *
+========================================================================
+*** Component versions ***
+HBase           : 0.94.1
+Cassandra       : 1.1.6
+Riak            : 1.2.1
+riak-java-client: 1.0.6
+riak-pb         : 1.2
+
+<<< HBase >>>
+(1) download package hbase-0.94.1.tar.gz from http://www.apache.org/dyn/closer.cgi/hbase/
+(2) unzip under /usr/local
+
+<<< Cassandra >>>
+(1) download package apache-cassandra-1.1.6-bin.tar.gz from http://cassandra.apache.org/download/
+(2) unzip under /usr/local
+
+<<< Riak >>>
+(1) download http://downloads.basho.com.s3-website-us-east-1.amazonaws.com/riak/CURRENT/rhel/6/riak-1.2.1-1.el6.x86_64.rpm
+(2) install the above rpm.
+(3a) donwload package riak-client-1.0.6.jar from http://search.maven.org/?#search%7Cgav%7C1%7Cg%3A%22com.basho.riak%22%20AND%20a%3A%22riak-client%22
+(4b) download package riak-pb-1.2.jar from  http://mvnrepository.com/artifact/com.basho.riak.protobuf/riak-pb
+(4) put the jar files at /usr/local/riak-client
+
+======================================
+* How to build *
+======================================
+$ ant compile
+
+======================================
+* How to run *
+======================================
+1) Start NoSQL services
+<<< HBase >>>
+# JAVA_HOME=/usr /usr/local/hbase-0.94.1/bin/start-hbase.sh
+
+Note: You can set JAVA_HOME by editing hbase-env.sh.
+And you no longer need to specify JAVA_HOME in a command line.
+
+<<< Cassandra >>>
+# /usr/local/apache-cassandra-1.1.6/bin/cassandra
+
+Note: Before you execute the above, the partitioner must be
+changed to 'ByteOrderedPartitioner' by editing conf/cassandra.yaml.
+
+partitioner: org.apache.cassandra.dht.ByteOrderedPartitioner
+
+<<< Riak >>>
+# riak start
+
+2) Run HistoryServer
+java -cp "classes:/usr/local/hbase-0.94.1/*:/usr/local/hbase-0.94.1/lib/*:/usr/local/apache-cassandra-1.1.6/lib/*:/usr/local/riak-client/*" com/miraclelinux/zbx/HistoryServer HBase|Cassandra|Riak
+
+======================================
+* Memo *
+======================================
+*** environment variables
+MEASURE_CMD_PROC_TIME=1 : show the time to execute the command.
+
+* To run Hadoop/HBase, the host name should be in /etc/hosts. 
+However, the host name seems not to be 127.0.1.1.
+
+* How to set save directory of HBase.
+ Add the following setting into conf/hbase-site.xml
+Ex.)
+<configuration>
+  <property>
+    <name>hbase.rootdir</name>
+    <value>file:///var/hbase</value>
+  </property>
+</configuration>
+
+* How to set save directory of Cassandra
+ Fix 'data_file_directories:' and 'commitlog_directory:' in conf/cassandra.yaml
+Ex.)
+data_file_directories:
+    - /var/lib/cassandra/data
+commitlog_directory: /var/lib/cassandra/commit/log

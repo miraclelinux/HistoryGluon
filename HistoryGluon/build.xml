@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<project name="HistoryGluon" default="all" basedir=".">
+
+    <property name="srcDir" value="src" />
+    <property name="classDir" value="classes" />
+    <property name="packageName" value="com.miraclelinux.historygluon" />
+    <property name="apiDocsDir" value="docs/api" />
+
+    <target name="init">
+        <tstamp/>
+    </target>
+
+    <target name="compile" depends="init">
+        <mkdir dir="${classDir}" />
+        <javac includeAntRuntime="false" srcdir="${srcDir}" destdir="${classDir}" debug="on">
+            <classpath>
+                <pathelement path="/usr/local/hbase-0.94.1/hbase-0.94.1.jar"/>
+                <pathelement path="/usr/local/hbase-0.94.1/lib/hadoop-core-1.0.3.jar"/>
+                <pathelement path="/usr/local/hbase-0.94.1/lib/commons-logging-1.1.1.jar"/>
+                <pathelement path="/usr/local/apache-cassandra-1.1.6/lib/libthrift-0.7.0.jar"/>
+                <pathelement path="/usr/local/apache-cassandra-1.1.6/lib/apache-cassandra-1.1.6.jar"/>
+                <pathelement path="/usr/local/riak-client/riak-client-1.0.6.jar"/>
+            </classpath>
+            <compilerarg value="-Xlint:deprecation"/>
+        </javac>
+    </target>
+</project>
