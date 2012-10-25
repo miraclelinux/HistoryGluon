@@ -7,7 +7,7 @@ public class HistoryGluon {
     /* -----------------------------------------------------------------------
      * Const Members
      * -------------------------------------------------------------------- */
-    private static final int DEFAULT_PORT = 10010;
+    private static final int DEFAULT_PORT = 30010;
 
     /* -----------------------------------------------------------------------
      * Private Members
