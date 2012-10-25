@@ -1,9 +1,0 @@
-prefix=/usr/local
-exec_prefix=${prefix}
-libdir=${exec_prefix}/lib
-includedir=${prefix}/include
-
-Name: history-gluon
-Description: Client library for History Gluon
-Version: 0.1.0
-Libs: -L${libdir} -lhistory-gluon
