@@ -528,7 +528,10 @@ history_gluon_context_t history_gluon_create_context(void)
 
 void history_gluon_free_context(history_gluon_context_t _ctx)
 {
-	free(_ctx);
+	private_context_t *ctx = (private_context_t *)_ctx;
+	if (ctx->connected)
+		close(ctx->socket);
+	free(ctx);
 }
 
 int history_gluon_add_float(history_gluon_context_t _ctx,
