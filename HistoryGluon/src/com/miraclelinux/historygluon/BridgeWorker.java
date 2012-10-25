@@ -197,7 +197,11 @@ public class BridgeWorker extends Thread {
         }
 
         m_log.debug(history.toString());
-        m_driver.addData(history);
+        if (!m_driver.addData(history)) {
+            m_log.error("Failed to add data.");
+            return false;
+        }
+
         return true;
     }
 

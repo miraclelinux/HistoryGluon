@@ -5,7 +5,8 @@ interface StorageDriver {
     public boolean init();
     public void close();
     public String getName();
-    public void addData(HistoryData history);
+
+    public boolean addData(HistoryData history);
 
     public HistoryDataSet getData(long itemId, int clock0, int clock1)
       throws HistoryDataSet.TooManyException;

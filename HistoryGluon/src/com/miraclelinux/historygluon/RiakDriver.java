@@ -71,7 +71,7 @@ public class RiakDriver extends BasicStorageDriver {
     }
 
     @Override
-    public void addData(HistoryData history) {
+    public boolean addData(HistoryData history) {
         try {
             Bucket bucket = m_pbClient.fetchBucket(BUCKET_NAME).execute();
             String key = makeKey(history.itemId, history.clock, history.ns);
@@ -82,7 +82,9 @@ public class RiakDriver extends BasicStorageDriver {
         } catch (RiakRetryFailedException e) {
             m_log.error(e);
             e.printStackTrace();
+            return false;
         }
+        return true;
     }
 
     @Override

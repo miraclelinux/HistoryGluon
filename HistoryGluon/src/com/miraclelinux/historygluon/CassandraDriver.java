@@ -115,12 +115,12 @@ public class CassandraDriver extends BasicStorageDriver {
     }
 
     @Override
-    public void addData(HistoryData history) {
+    public boolean addData(HistoryData history) {
 
         ByteBuffer dataBuffer = history.getDataAsByteBuffer();
         if (dataBuffer == null) {
             m_log.error("Unknown data type: " + history.type);
-            return;
+            return false;
         }
 
         ColumnParent columnParent = new ColumnParent();
@@ -134,6 +134,8 @@ public class CassandraDriver extends BasicStorageDriver {
         insertColumn(columnParent, column, key, BB_COLUMN_NS, history.ns);
         insertColumn(columnParent, column, key, BB_COLUMN_TYPE, history.type);
         insertColumn(columnParent, column, key, BB_COLUMN_DATA, dataBuffer);
+
+        return true;
     }
 
     @Override
