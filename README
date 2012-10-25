@@ -1,10 +1,32 @@
 History Gluon
 =====
 
-History Gluon is a database (mainly NoSQL) interface server for
-ZABBIX (http://www.zabbix.com/). The supported databases are the following.
+History Gluon is a database (mainly NoSQL) interface server. The current
+main target is used with ZABBIX (http://www.zabbix.com/). The supported
+databases are the following.
  - HBase
  - Cassandra
  - Riak
  - Mem (mainly for test)
 
+
+=========================================
+How to build souces from the repository
+=========================================
+The sources in the repository doesn't contain 'configure' script. So you have to crete
+'configure' with the following steps.
+
+0) install the following programs.
+(Note: More programs may be needed depending on the environment.)
+ - autoconf/automake
+ - libtools
+ - gcc
+ - make
+
+1) execute the autogen.sh
+$ autogen.sh
+
+2) build
+$ ./configure
+$ make
+$ sudo make install
