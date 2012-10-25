@@ -70,7 +70,8 @@ public class HistoryData implements Comparable {
     }
 
     public HistoryData(HistoryData history) {
-        key = new String(history.key);
+        if (history.key != null)
+            key = new String(history.key);
         type = history.type;
 
         itemId = history.itemId;
@@ -79,7 +80,8 @@ public class HistoryData implements Comparable {
 
         dataUint64 = history.dataUint64;
         dataFloat = history.dataFloat;
-        String dataString = new String(history.dataString);
+        if (history.dataString != null)
+           dataString = new String(history.dataString);
 
         // note: member 'data' is not copied
     }
