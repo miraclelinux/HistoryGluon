@@ -30,3 +30,4 @@ test/test-client-lib.la
 test/test-client-lib.lo
 touch
 missing
+history-gluon-1.0.pc
