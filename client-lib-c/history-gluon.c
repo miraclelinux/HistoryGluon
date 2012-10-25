@@ -80,12 +80,6 @@ enum {
 };
 
 enum {
-	DATA_TYPE_FLOAT  = 0,
-	DATA_TYPE_STRING = 1,
-	DATA_TYPE_UINT64 = 2,
-};
-
-enum {
 	SORT_ASCENDING = 0,
 	SORT_DESDENDING = 1,
 };
@@ -152,7 +146,7 @@ static int connect_to_history_service(private_context_t *ctx)
 	if (getaddrinfo(ctx->server_name, port_str, &hints, &result) != 0) {
 		fprintf(stderr,
 		        "%s: %s: Failed to call getaddrinfo(): "
-		        "errno: %d, host: %s, port: %s",
+		        "errno: %d, host: %s, port: %s\n",
 		        __FILE__, __func__,
 		        errno, ctx->server_name, port_str);
 		return -1;
@@ -171,7 +165,7 @@ static int connect_to_history_service(private_context_t *ctx)
 	freeaddrinfo(result);
 	if (rp == NULL) {
 		fprintf(stderr,
-		        "%s: %s: Failed to connect: host: %s, port: %s",
+		        "%s: %s: Failed to connect: host: %s, port: %s\n",
 		        __FILE__, __func__, ctx->server_name, port_str);
 		return -1;
 	}
@@ -179,7 +173,7 @@ static int connect_to_history_service(private_context_t *ctx)
 	ctx->connected = 1;
 	ctx->socket = sock;
 	fprintf(stdout,
-	        "%s: %s: Connected to history server: host: %s, port: %s",
+	        "%s: %s: Connected to history server: host: %s, port: %s\n",
 	        __FILE__, __func__, ctx->server_name, port_str);
 
 	return 0;
@@ -399,7 +393,7 @@ static int write_data(private_context_t *ctx, uint8_t *buf, size_t count)
 		ssize_t written_byte = write(ctx->socket, ptr, count);
 		if (written_byte == -1) {
 			fprintf(stderr,
-			        "%s: %s: Failed to write data: %d",
+			        "%s: %s: Failed to write data: %d\n",
 			        __FILE__, __func__, errno);
 			reset_context(ctx);
 			return -1;
@@ -417,13 +411,13 @@ static int read_data(private_context_t *ctx, uint8_t *buf, size_t count)
 		ssize_t read_byte = read(ctx->socket, ptr, count);
 		if (read_byte == 0) {
 			fprintf(stderr,
-			        "%s: %s: file stream has enexpectedly closed. count: %zd",
-			        __FILE__, __func__, count);
+			        "%s: %s: file stream has enexpectedly closed. "
+			        "count: %zd\n", __FILE__, __func__, count);
 			reset_context(ctx);
 			return -1;
 		} else if (read_byte == -1) {
 			fprintf(stderr,
-			        "%s: %s: Failed to read data: %d",
+			        "%s: %s: Failed to read data: %d\n",
 			        __FILE__, __func__, errno);
 			reset_context(ctx);
 			return -1;
@@ -447,7 +441,7 @@ static int parse_common_reply_header
 	if (length_check_func != NULL) {
 		if((*length_check_func)() == -1) {
 			fprintf(stderr,
-			        "%s: %s: reply length is not the expected: %d",
+			        "%s: %s: reply length is not the expected: %d\n",
 			        __FILE__, __func__, reply_length);
 			reset_context(ctx);
 			return -1;
@@ -467,7 +461,7 @@ static int parse_common_reply_header
 	idx += PKT_TYPE_LENGTH;
 	if (reply_type != expected_pkt_type) {
 		fprintf(stderr,
-		        "%s: %s: reply type is not PKT_TYPE_DELETE: %d: %d",
+		        "%s: %s: reply type is not PKT_TYPE_DELETE: %d: %d\n",
 		        __FILE__, __func__, reply_type, PKT_TYPE_DELETE);
 		return -1;
 	}
@@ -477,7 +471,7 @@ static int parse_common_reply_header
 	idx += REPLY_RESULT_LENGTH;
 	if (result != RESULT_SUCCESS) {
 		fprintf(stderr,
-		        "%s: %s: result is not Success: %d",
+		        "%s: %s: result is not Success: %d\n",
 		        __FILE__, __func__, result);
 		return -1;
 	}
@@ -549,7 +543,8 @@ int history_gluon_add_float(history_gluon_context_t _ctx,
 	uint8_t *ptr = buf;
 
 	/* header */
-	ptr += fill_add_data_header(ctx, id, time, ptr, DATA_TYPE_FLOAT, pkt_size);
+	ptr += fill_add_data_header(ctx, id, time, ptr,
+	                            HISTORY_GLUON_TYPE_FLOAT, pkt_size);
 
 	/* data */
 	write_ieee754_double(ctx, ptr, value);
@@ -572,7 +567,8 @@ int history_gluon_add_uint64(history_gluon_context_t _ctx,
 	uint8_t *ptr = buf;
 
 	/* header */
-	ptr += fill_add_data_header(ctx, id, time, ptr, DATA_TYPE_UINT64, pkt_size);
+	ptr += fill_add_data_header(ctx, id, time, ptr,
+	                            HISTORY_GLUON_TYPE_UINT64, pkt_size);
 
 	/* data */
 	*((uint64_t *)ptr) = conv_le64(ctx, value);
@@ -590,10 +586,20 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 	if (ctx == NULL)
 		return -1;
 
-	fprintf(stderr,
-	        "%s: %s: Not implemented string: %s",
-	        __FILE__, __func__, value);
-	return 0;
+	fprintf(stderr, "%s: %s: Not implemented yet\n", __FILE__, __func__);
+	return -1;
+}
+
+int history_gluon_add_blob(history_gluon_context_t _ctx,
+                           uint64_t id, struct timespec *time, uint8_t *value,
+                           uint64_t length)
+{
+	private_context_t *ctx = get_connected_private_context(_ctx);
+	if (ctx == NULL)
+		return -1;
+
+	fprintf(stderr, "%s: %s: Not implemented yet\n", __FILE__, __func__);
+	return -1;
 }
 
 int history_gluon_get_minmum_time(history_gluon_context_t _ctx,
@@ -616,6 +622,41 @@ int history_gluon_get_minmum_time(history_gluon_context_t _ctx,
 	if (parse_reply_get_min_clock(ctx, reply, minimum_time))
 		return -1;
 	return 0;
+}
+
+int history_gluon_range_query(history_gluon_context_t _ctx, uint64_t id,
+                              struct timespec *time0, struct timespec *time1,
+                              history_gluon_value_array_t *array)
+{
+	fprintf(stderr, "%s: %s: Not implemented yet\n", __FILE__, __func__);
+	return -1;
+}
+
+void history_gluon_free_value_array(history_gluon_context_t _ctx,
+                                    history_gluon_value_array_t *array)
+{
+	uint64_t i = 0;
+	for (i = 0; i < array->length; i++) {
+		history_gluon_value_t *value = &(array->array[i]);
+		history_gluon_free_value(_ctx, value);
+	}
+}
+
+int history_gluon_query(history_gluon_context_t _ctx,
+                        uint64_t id, struct timespec *time, int search_near,
+                        history_gluon_value_t *value)
+{
+	fprintf(stderr, "%s: %s: Not implemented yet\n", __FILE__, __func__);
+	return 0;
+}
+
+void history_gluon_free_value(history_gluon_context_t _ctx,
+                              history_gluon_value_t *value)
+{
+	if (value->type == HISTORY_GLUON_TYPE_STRING)
+		free(value->v_string);
+	else if (value->type == HISTORY_GLUON_TYPE_BLOB)
+		free(value->v_blob);
 }
 
 int history_gluon_delete_below_threshold(history_gluon_context_t _ctx,
@@ -644,9 +685,9 @@ int history_gluon_delete_below_threshold(history_gluon_context_t _ctx,
 	return 0;
 }
 
-int history_gluon_get_statistics(history_gluon_context_t _ctx,
-                                 uint64_t id, history_gluon_statistics_t *statistics,
-                                 struct timespec *time0, struct timespec *time1)
+int history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
+                                 struct timespec *time0, struct timespec *time1,
+                                 history_gluon_statistics_t *statistics)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
