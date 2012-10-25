@@ -17,7 +17,7 @@ if test -z "$CUTTER"; then
     CUTTER="`make -s -C $BASE_DIR echo-cutter`"
 fi
 
-CUTTER_ARGS=
+CUTTER_ARGS="--notify=no"
 CUTTER_WRAPPER=
 if test x"$CUTTER_DEBUG" = x"yes"; then
     CUTTER_WRAPPER="$top_dir/libtool --mode=execute gdb --args"
