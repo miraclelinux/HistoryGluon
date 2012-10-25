@@ -34,6 +34,8 @@ public class HistoryGluon {
             driver = new CassandraDriver();
         else if (storageName.equals("Riak"))
             driver = new RiakDriver();
+        else if (storageName.equals("Mem"))
+            driver = new MemDriver();
         else {
             m_log.error("Unknown Storage Type: " + storageName);
             printUsage();

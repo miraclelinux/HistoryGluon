@@ -66,6 +66,24 @@ public class HistoryData implements Comparable {
     // -----------------------------------------------------------------------
     // Public method
     // -----------------------------------------------------------------------
+    public HistoryData() {
+    }
+
+    public HistoryData(HistoryData history) {
+        key = new String(history.key);
+        type = history.type;
+
+        itemId = history.itemId;
+        clock = history.clock;
+        ns = history.ns;
+
+        dataUint64 = history.dataUint64;
+        dataFloat = history.dataFloat;
+        String dataString = new String(history.dataString);
+
+        // note: member 'data' is not copied
+    }
+
     public boolean clockIsValid() {
         return (clock != CLOCK_UNKNOWN);
     }
