@@ -411,7 +411,7 @@ static int read_data(private_context_t *ctx, uint8_t *buf, size_t count)
 		ssize_t read_byte = read(ctx->socket, ptr, count);
 		if (read_byte == 0) {
 			fprintf(stderr,
-			        "%s: %s: file stream has enexpectedly closed. "
+			        "%s: %s: file stream has unexpectedly closed. "
 			        "count: %zd\n", __FILE__, __func__, count);
 			reset_context(ctx);
 			return -1;
