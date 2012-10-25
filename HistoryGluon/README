@@ -50,7 +50,7 @@ partitioner: org.apache.cassandra.dht.ByteOrderedPartitioner
 # riak start
 
 2) Run HistoryServer
-java -cp "classes:/usr/local/hbase-0.94.1/*:/usr/local/hbase-0.94.1/lib/*:/usr/local/apache-cassandra-1.1.6/lib/*:/usr/local/riak-client/*" com/miraclelinux/zbx/HistoryServer HBase|Cassandra|Riak
+java -cp "classes:/usr/local/hbase-0.94.1/*:/usr/local/hbase-0.94.1/lib/*:/usr/local/apache-cassandra-1.1.6/lib/*:/usr/local/riak-client/*" com/miraclelinux/historygluon/HistoryGluon HBase|Cassandra|Riak|Mem
 
 ======================================
 * Memo *
