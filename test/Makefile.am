@@ -12,7 +12,8 @@ endif
 
 test_client_lib_la_SOURCES = test-client-lib.c
 AM_LDFLAGS = -module -rpath $(libdir) -avoid-version -no-undefined
-INCLUDES = $(CUTTER_CFLAGS) -g -Wall
+AM_CFLAGS = -g -Wall
+INCLUDES = $(CUTTER_CFLAGS)
 LIBS = $(CUTTER_LIBS) ../client-lib-c/libhistory-gluon.la
 
 echo-cutter:
