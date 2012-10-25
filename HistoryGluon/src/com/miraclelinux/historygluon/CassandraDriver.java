@@ -68,6 +68,7 @@ public class CassandraDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     private Log m_log = null;
     private Cassandra.Client m_client = null;
+    private TTransport m_transport = null;
 
     /* -----------------------------------------------------------------------
      * Public Methods
@@ -86,10 +87,10 @@ public class CassandraDriver extends BasicStorageDriver {
     @Override
     public boolean init() {
         TSocket socket = new TSocket("localhost", DEFALUT_PORT);
-        TTransport transport = new TFramedTransport(socket);
-        TProtocol protocol = new TBinaryProtocol(transport);
+        m_transport = new TFramedTransport(socket);
+        TProtocol protocol = new TBinaryProtocol(m_transport);
         try {
-            transport.open();
+            m_transport.open();
         } catch (TTransportException e) {
             m_log.error(e);
             e.printStackTrace();
@@ -98,6 +99,15 @@ public class CassandraDriver extends BasicStorageDriver {
         m_client = new Cassandra.Client(protocol);
         return makeTableIfNeeded();
     }
+
+    @Override
+    public void close() {
+        if (m_transport != null) {
+            m_transport.close();
+            m_transport = null;
+        }
+    }
+
 
     @Override
     public String getName() {
