@@ -15,6 +15,9 @@
 #define DEFAULT_PORT 30010
 #define DEFAULT_SERVER_NAME "localhost"
 
+#define ERR_MSG(FMT, ...) \
+(fprintf(stderr, "%s: %d: " FMT, __FILE__, __LINE__, ##__VA_ARGS__))
+
 /* Common header */
 #define PKT_SIZE_LENGTH           4
 #define PKT_TYPE_LENGTH           2
@@ -144,10 +147,7 @@ static int connect_to_history_service(private_context_t *ctx)
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_NUMERICSERV;  
 	if (getaddrinfo(ctx->server_name, port_str, &hints, &result) != 0) {
-		fprintf(stderr,
-		        "%s: %s: Failed to call getaddrinfo(): "
-		        "errno: %d, host: %s, port: %s\n",
-		        __FILE__, __func__,
+		ERR_MSG("Failed to call getaddrinfo(): errno: %d, host: %s, port: %s\n",
 		        errno, ctx->server_name, port_str);
 		return -1;
 	}
@@ -164,17 +164,15 @@ static int connect_to_history_service(private_context_t *ctx)
 
 	freeaddrinfo(result);
 	if (rp == NULL) {
-		fprintf(stderr,
-		        "%s: %s: Failed to connect: host: %s, port: %s\n",
-		        __FILE__, __func__, ctx->server_name, port_str);
+		ERR_MSG("Failed to connect: host: %s, port: %s\n",
+		        ctx->server_name, port_str);
 		return -1;
 	}
 
 	ctx->connected = 1;
 	ctx->socket = sock;
-	fprintf(stdout,
-	        "%s: %s: Connected to history server: host: %s, port: %s\n",
-	        __FILE__, __func__, ctx->server_name, port_str);
+	ERR_MSG("Connected to history server: host: %s, port: %s\n",
+	        ctx->server_name, port_str);
 
 	return 0;
 }
@@ -392,9 +390,7 @@ static int write_data(private_context_t *ctx, uint8_t *buf, size_t count)
 	while (count > 0) {
 		ssize_t written_byte = write(ctx->socket, ptr, count);
 		if (written_byte == -1) {
-			fprintf(stderr,
-			        "%s: %s: Failed to write data: %d\n",
-			        __FILE__, __func__, errno);
+			ERR_MSG("Failed to write data: %d\n", errno);
 			reset_context(ctx);
 			return -1;
 		}
@@ -410,15 +406,12 @@ static int read_data(private_context_t *ctx, uint8_t *buf, size_t count)
 	while (count > 0) {
 		ssize_t read_byte = read(ctx->socket, ptr, count);
 		if (read_byte == 0) {
-			fprintf(stderr,
-			        "%s: %s: file stream has unexpectedly closed. "
-			        "count: %zd\n", __FILE__, __func__, count);
+			ERR_MSG("file stream has unexpectedly closed. count: %zd\n",
+			        count);
 			reset_context(ctx);
 			return -1;
 		} else if (read_byte == -1) {
-			fprintf(stderr,
-			        "%s: %s: Failed to read data: %d\n",
-			        __FILE__, __func__, errno);
+			ERR_MSG("Failed to read data: %d\n", errno);
 			reset_context(ctx);
 			return -1;
 		}
@@ -440,18 +433,15 @@ static int parse_common_reply_header
 	idx += PKT_SIZE_LENGTH;
 	if (length_check_func != NULL) {
 		if((*length_check_func)() == -1) {
-			fprintf(stderr,
-			        "%s: %s: reply length is not the expected: %d\n",
-			        __FILE__, __func__, reply_length);
+			ERR_MSG("reply length is not the expected: %d\n", reply_length);
 			reset_context(ctx);
 			return -1;
 		}
 	}
 	else if (expected_length != LENGTH_CHECK_NONE &&
 	         reply_length != expected_length) {
-		fprintf(stderr,
-		        "%s: %s: reply length is not the expected: %d: %d",
-		        __FILE__, __func__, reply_length, expected_length);
+		ERR_MSG("reply length is not the expected: %d: %d",
+		        reply_length, expected_length);
 		reset_context(ctx);
 		return -1;
 	}
@@ -460,9 +450,8 @@ static int parse_common_reply_header
 	uint16_t reply_type = restore_le16(ctx, &buf[idx]);
 	idx += PKT_TYPE_LENGTH;
 	if (reply_type != expected_pkt_type) {
-		fprintf(stderr,
-		        "%s: %s: reply type is not PKT_TYPE_DELETE: %d: %d\n",
-		        __FILE__, __func__, reply_type, PKT_TYPE_DELETE);
+		ERR_MSG("reply type is not PKT_TYPE_DELETE: %d: %d\n",
+		        reply_type, PKT_TYPE_DELETE);
 		return -1;
 	}
 
@@ -470,9 +459,7 @@ static int parse_common_reply_header
 	uint32_t result = restore_le32(ctx, &buf[idx]);
 	idx += REPLY_RESULT_LENGTH;
 	if (result != RESULT_SUCCESS) {
-		fprintf(stderr,
-		        "%s: %s: result is not Success: %d\n",
-		        __FILE__, __func__, result);
+		ERR_MSG("result is not Success: %d\n", result);
 		return -1;
 	}
 
@@ -589,7 +576,7 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 	if (ctx == NULL)
 		return -1;
 
-	fprintf(stderr, "%s: %s: Not implemented yet\n", __FILE__, __func__);
+	ERR_MSG("Not implemented yet\n");
 	return -1;
 }
 
@@ -601,7 +588,7 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 	if (ctx == NULL)
 		return -1;
 
-	fprintf(stderr, "%s: %s: Not implemented yet\n", __FILE__, __func__);
+	ERR_MSG("Not implemented yet\n");
 	return -1;
 }
 
@@ -631,7 +618,7 @@ int history_gluon_range_query(history_gluon_context_t _ctx, uint64_t id,
                               struct timespec *time0, struct timespec *time1,
                               history_gluon_value_array_t *array)
 {
-	fprintf(stderr, "%s: %s: Not implemented yet\n", __FILE__, __func__);
+	ERR_MSG("Not implemented yet\n");
 	return -1;
 }
 
@@ -649,8 +636,8 @@ int history_gluon_query(history_gluon_context_t _ctx,
                         uint64_t id, struct timespec *time, int search_near,
                         history_gluon_value_t *value)
 {
-	fprintf(stderr, "%s: %s: Not implemented yet\n", __FILE__, __func__);
-	return 0;
+	ERR_MSG("Not implemented yet\n");
+	return -1;
 }
 
 void history_gluon_free_value(history_gluon_context_t _ctx,
