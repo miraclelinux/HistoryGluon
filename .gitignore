@@ -19,4 +19,14 @@ install-sh
 libtool
 ltmain.sh
 m4/
+.exrc
+client-lib-c/.deps/
+client-lib-c/.libs/
+client-lib-c/history-gluon.lo
+client-lib-c/libhistory-gluon.la
+test/.deps/
+test/.libs/
+test/test-client-lib.la
+test/test-client-lib.lo
+touch
 missing
