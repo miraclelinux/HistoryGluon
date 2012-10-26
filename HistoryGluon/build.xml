@@ -49,7 +49,7 @@
                 <pathelement location="${classDir}"/>
                 <pathelement location="${test.classDir}"/>
             </classpath>
-            <test name="com.miraclelinux.historygluon.UtilsTest"/>
+            <test name="com.miraclelinux.historygluon.AllTests"/>
         </junit>
     </target>
 </project>
