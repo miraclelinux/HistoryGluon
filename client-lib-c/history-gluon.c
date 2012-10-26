@@ -11,12 +11,10 @@
 #include <string.h>
 
 #include "history-gluon.h"
+#include "message.h"
 
 #define DEFAULT_PORT 30010
 #define DEFAULT_SERVER_NAME "localhost"
-
-#define ERR_MSG(FMT, ...) \
-(fprintf(stderr, "%s: %d: " FMT, __FILE__, __LINE__, ##__VA_ARGS__))
 
 /* Common header */
 #define PKT_SIZE_LENGTH           4
@@ -171,8 +169,8 @@ static int connect_to_history_service(private_context_t *ctx)
 
 	ctx->connected = 1;
 	ctx->socket = sock;
-	ERR_MSG("Connected to history server: host: %s, port: %s\n",
-	        ctx->server_name, port_str);
+	INFO("Connected to history server: host: %s, port: %s\n",
+	     ctx->server_name, port_str);
 
 	return 0;
 }
