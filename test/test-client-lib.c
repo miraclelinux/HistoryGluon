@@ -19,12 +19,8 @@ void free_global_context()
 void delete_all_data(uint64_t id, uint32_t *num_deleted_entries)
 {
 	struct timespec ts;
-	/*
 	ts.tv_sec = 0xffffffff;
 	ts.tv_nsec = 0xffffffff;
-	*/
-	ts.tv_sec = 0x0fffffff;
-	ts.tv_nsec = 0x0fffffff;
 	int ret = history_gluon_delete_below_threshold(g_ctx, id, &ts,
 	                                               num_deleted_entries);
 	cut_assert_equal_int(0, ret);
