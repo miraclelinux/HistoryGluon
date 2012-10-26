@@ -8,8 +8,8 @@
 
     <property name="test.srcDir" value="test"/>
     <property name="test.classDir" value="classes.test"/>
-
     <property name="junit4Path" value="/usr/share/java/junit4.jar"/>
+    <property name="defaultTestClass" value="com.miraclelinux.historygluon.AllTests"/>
 
     <target name="init">
         <tstamp/>
@@ -41,7 +41,11 @@
         </javac>
     </target>
 
-    <target name="test" depends="compile-test">
+    <target name="prepareTest" unless="testClass">
+        <property name="testClass" value="${defaultTestClass}"/>
+    </target>
+
+    <target name="test" depends="compile-test,prepareTest">
         <junit haltonfailure="false">
             <formatter type="plain"/>
             <classpath>
@@ -49,7 +53,7 @@
                 <pathelement location="${classDir}"/>
                 <pathelement location="${test.classDir}"/>
             </classpath>
-            <test name="com.miraclelinux.historygluon.AllTests"/>
+            <test name="${testClass}"/>
         </junit>
     </target>
 </project>
