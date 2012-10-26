@@ -111,7 +111,7 @@ void test_add_uint64(void)
 {
 	create_global_context();
 
-	uint64_t id = 1;
+	uint64_t id = 114;
 	struct timespec ts;
 	ts.tv_sec = 1;
 	ts.tv_nsec = 2;
@@ -123,7 +123,7 @@ void test_add_float(void)
 {
 	create_global_context();
 
-	uint64_t id = 10;
+	uint64_t id = 126;
 	struct timespec ts;
 	ts.tv_sec = 20;
 	ts.tv_nsec = 40;
@@ -135,7 +135,7 @@ void test_add_string(void)
 {
 	create_global_context();
 
-	uint64_t id = 100;
+	uint64_t id = 138;
 	struct timespec ts;
 	ts.tv_sec = 300;
 	ts.tv_nsec = 500;
@@ -148,7 +148,7 @@ void test_add_blob(void)
 {
 	create_global_context();
 
-	uint64_t id = 1000;
+	uint64_t id = 151;
 	struct timespec ts;
 	ts.tv_sec = 4300;
 	ts.tv_nsec = 8500;
