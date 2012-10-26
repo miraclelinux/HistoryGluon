@@ -3,7 +3,7 @@
 
 static history_gluon_context_t g_ctx = NULL;
 
-#define TEST_STD_ID  256
+#define TEST_STD_ID  0x65536
 
 /* Utility functions */
 static void create_global_context(void)
@@ -34,7 +34,7 @@ static void assert_add_uint64(uint64_t id, struct timespec *ts, uint64_t value)
 	cut_assert_equal_int(0, ret);
 }
 
-static void assert_send_float(uint64_t id, struct timespec *ts, double v)
+static void assert_add_float(uint64_t id, struct timespec *ts, double v)
 {
 	int ret = history_gluon_add_float(g_ctx, id, ts, v);
 	cut_assert_equal_int(0, ret);
@@ -75,11 +75,10 @@ static history_gluon_value_t g_float_samples[] = {
 
 static const int NUM_SAMPLES = sizeof(g_float_samples) / sizeof(history_gluon_value_t);
 
-static void add_samples()
-{
+static void add_samples() {
 	int i;
 	for (i = 0; i < NUM_SAMPLES; i++) {
-		assert_send_float(g_float_samples[i].id, &g_float_samples[i].time,
+		assert_add_float(g_float_samples[i].id, &g_float_samples[i].time,
 		                  g_float_samples[i].v_float);
 	}
 }
@@ -129,7 +128,7 @@ void test_add_float(void)
 	ts.tv_sec = 20;
 	ts.tv_nsec = 40;
 	double value = -10.5;
-	assert_send_float(id, &ts, value);
+	assert_add_float(id, &ts, value);
 }
 
 void test_add_string(void)
@@ -166,8 +165,14 @@ void test_delete_all(void)
 	assert_delete_all_for_id(id, NULL);
 
 	// add 2 items
-	test_add_uint64();
-	test_add_float();
+	struct timespec ts;
+	ts.tv_sec = 10000;
+	ts.tv_nsec = 0;
+	assert_add_float(id, &ts, -1.2e5);
+
+	ts.tv_sec = 10000;
+	ts.tv_nsec = 10;
+	assert_add_float(id, &ts, 3.14);
 
 	uint32_t num_deleted;
 	assert_delete_all_for_id(id, &num_deleted);
