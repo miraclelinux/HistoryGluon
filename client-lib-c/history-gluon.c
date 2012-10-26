@@ -38,6 +38,7 @@
 #define PKT_ADD_DATA_HEADER_LENGTH \
 (PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_DATA_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH + PKT_NS_LENGTH)
 
+#define REPLY_ADD_LENGTH (PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH)
 
 /* Get data */
 #define PKT_NUM_ENTRIES_LENGTH 4
@@ -470,6 +471,24 @@ static int parse_reply_delete(private_context_t *ctx, uint8_t *buf)
 	return num_deleted;
 }
 
+static int parse_reply_add(private_context_t *ctx, uint8_t *buf)
+{
+	uint32_t expected_length = REPLY_ADD_LENGTH - PKT_SIZE_LENGTH;
+	int idx = parse_common_reply_header(ctx, buf, NULL, expected_length,
+	                                    PKT_TYPE_ADD_DATA);
+	if (idx == -1)
+		return -1;
+	return 0;
+}
+
+static int wait_and_check_add_result(private_context_t *ctx)
+{
+	uint8_t reply[REPLY_ADD_LENGTH];
+	if (read_data(ctx, reply, REPLY_ADD_LENGTH) == -1)
+		return -1;
+	return parse_reply_add(ctx, reply);
+}
+
 /* ---------------------------------------------------------------------------
  * Public functions                                                           *
  * ------------------------------------------------------------------------- */
@@ -513,7 +532,9 @@ int history_gluon_add_float(history_gluon_context_t _ctx,
 	/* write data */
 	if (write_data(ctx, buf, pkt_size) == -1)
 		return -1;
-	return 0;
+
+	/* check result */
+	return wait_and_check_add_result(ctx);
 }
 
 int history_gluon_add_uint64(history_gluon_context_t _ctx,
@@ -537,7 +558,9 @@ int history_gluon_add_uint64(history_gluon_context_t _ctx,
 	/* write data */
 	if (write_data(ctx, buf, pkt_size) == -1)
 		return -1;
-	return 0;
+
+	/* check result */
+	return wait_and_check_add_result(ctx);
 }
 
 int history_gluon_add_string(history_gluon_context_t _ctx,
@@ -578,7 +601,9 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 	free(buf);
 	if (ret == -1)
 		return -1;
-	return 0;
+
+	/* check result */
+	return wait_and_check_add_result(ctx);
 }
 
 int history_gluon_add_blob(history_gluon_context_t _ctx,
@@ -619,7 +644,9 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 	free(buf);
 	if (ret == -1)
 		return -1;
-	return 0;
+
+	/* check result */
+	return wait_and_check_add_result(ctx);
 }
 
 int history_gluon_get_minmum_time(history_gluon_context_t _ctx,

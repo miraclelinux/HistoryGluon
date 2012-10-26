@@ -163,13 +163,15 @@ public class BridgeWorker extends Thread {
         return true;
     }
 
-    private boolean addHistoryData(byte[] pktBuf, int idx) {
+    private boolean addHistoryData(byte[] pktBuf, int idx) throws IOException {
         HistoryData history = new HistoryData();
 
         int putLength = PKT_DATA_TYPE_LENGTH + PKT_ITEM_ID_LENGTH
                         + PKT_CLOCK_LENGTH + PKT_NS_LENGTH;
-        if (!putBufferWithCheckLength(pktBuf, idx, putLength))
+        if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
+            // TODO: return error
             return false;
+        }
 
         // data type, Item ID, sec, and ns
         history.type = m_byteBuffer.getShort(idx);
@@ -192,6 +194,7 @@ public class BridgeWorker extends Thread {
         else if (history.type == HistoryData.TYPE_UINT64)
             procUint64Data(pktBuf, idx, history);
         else {
+            // TODO: return error
             m_log.error("Got unknown data type: " + history.type);
             return false;
         }
@@ -199,8 +202,18 @@ public class BridgeWorker extends Thread {
         m_log.debug(history.toString());
         if (!m_driver.addData(history)) {
             m_log.error("Failed to add data.");
+            // TODO: return error
             return false;
         }
+
+        // write reply to the socket
+        int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH;
+        m_byteBuffer.clear();
+        m_byteBuffer.putInt(length);
+        m_byteBuffer.putShort(PKT_TYPE_ADD_DATA);
+        m_byteBuffer.putInt(RESULT_SUCCESS);
+        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
+        m_ostream.flush();
 
         return true;
     }

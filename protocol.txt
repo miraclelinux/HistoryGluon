@@ -19,6 +19,16 @@ Endian: Little
     Command Type: 03: Length[4B], Blob (The max size of string is 0xffff0000)
 ===== PKT END =====
 
+===== REPLY PKT: Add data =====
+* Packet length [4B] (not including this)
+* Reply Type  [2B]
+   100: reply: Add data
+* Result [4B]
+   0: Success
+   1: Error due to unknown reason
+   2: Error: theere is the entry that has the same id and time.
+===== PKT END =====
+
 ===== COMMAND PKT: Get data =====
 * Packet length [4B] (not including this)
 * Command Type  [2B]
