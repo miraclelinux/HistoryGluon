@@ -16,13 +16,19 @@ void free_global_context()
 	g_ctx = NULL;
 }
 
-void delete_all_data(uint64_t id, uint32_t *num_deleted_entries)
+void assert_delete_all_for_id(uint64_t id, uint32_t *num_deleted_entries)
 {
 	struct timespec ts;
 	ts.tv_sec = 0xffffffff;
 	ts.tv_nsec = 0xffffffff;
 	int ret = history_gluon_delete_below_threshold(g_ctx, id, &ts,
 	                                               num_deleted_entries);
+	cut_assert_equal_int(0, ret);
+}
+
+void assert_add_uint64(uint64_t id, struct timespec *ts, uint64_t value)
+{
+	int ret = history_gluon_add_uint64(g_ctx, id, ts, value);
 	cut_assert_equal_int(0, ret);
 }
 
@@ -59,8 +65,7 @@ void test_add_uint64(void)
 	ts.tv_sec = 1;
 	ts.tv_nsec = 2;
 	uint64_t value = 3;
-	int ret = history_gluon_add_uint64(g_ctx, id, &ts, value);
-	cut_assert_equal_int(0, ret);
+	assert_add_uint64(id, &ts, value);
 }
 
 void test_add_float(void)
@@ -107,18 +112,46 @@ void test_delete_all(void)
 	create_global_context();
 
 	int id = 1;
-	delete_all_data(id, NULL);
+	assert_delete_all_for_id(id, NULL);
 
 	// add 2 items
 	test_add_uint64();
 	test_add_float();
 
 	uint32_t num_deleted;
-	delete_all_data(id, &num_deleted);
+	assert_delete_all_for_id(id, &num_deleted);
 	cut_assert_equal_int(2, num_deleted);
 
-	delete_all_data(id, &num_deleted);
+	assert_delete_all_for_id(id, &num_deleted);
 	cut_assert_equal_int(0, num_deleted);
+}
+
+void test_get_minimum_time(void)
+{
+	create_global_context();
+	int id = 256;
+	assert_delete_all_for_id(id, NULL);
+
+	// add data
+	struct timespec ts0;
+	ts0.tv_sec = 10;
+	ts0.tv_nsec = 20;
+	assert_add_uint64(id, &ts0, 3);
+
+	struct timespec ts1;
+	ts1.tv_sec = 100;
+	ts1.tv_nsec = 20;
+	assert_add_uint64(id, &ts1, 100);
+
+	struct timespec ts3;
+	ts3.tv_sec = 0x90000000L;
+	ts3.tv_nsec = 20;
+	assert_add_uint64(id, &ts3, 5);
+
+	// get the minimum
+	struct timespec ts;
+	int ret = history_gluon_get_minmum_time(g_ctx, id, &ts);
+	cut_assert_equal_int(0, ret);
 }
 
 
