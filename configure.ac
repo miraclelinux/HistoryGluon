@@ -37,5 +37,5 @@ dnl **************************************************************
 echo
 echo "Configure Result:"
 echo
-echo "  unit test : ${have_cutter}"
+echo "  C Unit test (cutter) : ${have_cutter}"
 echo
