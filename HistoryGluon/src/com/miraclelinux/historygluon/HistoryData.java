@@ -45,19 +45,22 @@ public class HistoryData implements Comparable {
     @Override
     public int compareTo(Object obj) {
         HistoryData history = (HistoryData)obj;
-        if (clock < history.clock)
+        int clockComparedResult = Utils.compareAsUnsigned(clock, history.clock);
+        if (clockComparedResult < 0)
             return -1;
-        else if (clock > history.clock)
+        else if (clockComparedResult > 0)
             return 1;
 
-        if (ns < history.ns)
+        int nsComparedResult = Utils.compareAsUnsigned(ns, history.ns);
+        if (nsComparedResult < 0)
             return -1;
-        else if (ns > history.ns)
+        else if (nsComparedResult > 0)
             return 1;
 
-        if (itemId < history.itemId)
+        int idComparedResult = Utils.compareAsUnsigned(itemId, history.itemId);
+        if (idComparedResult < 0)
             return -1;
-        else if (itemId > history.itemId)
+        else if (idComparedResult > 0)
             return 1;
 
         return 0;
