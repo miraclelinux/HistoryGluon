@@ -4,7 +4,22 @@ import java.nio.ByteBuffer;
 import java.io.UnsupportedEncodingException;
 
 public class Utils {
+    /* -----------------------------------------------------------------------
+     * Private constants
+     * -------------------------------------------------------------------- */
+    private static final long[] offsetArray64 = {
+      -9223372036854775808L, -8070450532247928832L,
+      -6917529027641081856L, -5764607523034234880L,
+      -4611686018427387904L, -3458764513820540928L,
+      -2305843009213693952L, -1152921504606846976L};
 
+    private static final int[] offsetArray32 = {
+      -2147483648, -1879048192, -1610612736, -342177280,
+      -1073741824, -805306368, -536870912, -268435456};
+
+    /* -----------------------------------------------------------------------
+     * Public Methods
+     * -------------------------------------------------------------------- */
     public static double toDoubleAsUnsigned(long v) {
         if (v >= 0)
             return (double)v;
@@ -93,5 +108,41 @@ public class Utils {
             throw new Error();
         }
         return string;
+    }
+
+    public static int hexCharToInt(char ch) {
+        if (ch <= '9')
+            return ch - '0';
+        if (ch <= 'F')
+            return ch - 'A' + 10;
+        return ch - 'a' + 10;
+    }
+
+    public static long parseHexLong(String str) {
+        int length = str.length();
+        if (length > 16)
+            throw new InternalCheckException("length > 16: " + length);
+        if (length != 16)
+            return Long.parseLong(str, 16);
+        int top_num = hexCharToInt(str.charAt(0));
+        if (top_num < 8)
+            return Long.parseLong(str, 16);
+
+        long digit15val = Long.parseLong(str.substring(1), 16);
+        return offsetArray64[top_num - 8] + digit15val;
+    }
+
+    public static int parseHexInt(String str) {
+        int length = str.length();
+        if (length > 8)
+            throw new InternalCheckException("length > 8: " + length);
+        if (length != 8)
+            return Integer.parseInt(str, 16);
+        int top_num = hexCharToInt(str.charAt(0));
+        if (top_num < 8)
+            return Integer.parseInt(str, 16);
+
+        int digit7val = Integer.parseInt(str.substring(1), 16);
+        return offsetArray32[top_num - 8] + digit7val;
     }
 }

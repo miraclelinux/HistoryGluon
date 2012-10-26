@@ -155,8 +155,8 @@ public abstract class BasicStorageDriver implements StorageDriver {
         String clockStr = key.substring(16,24);
         String nsStr = key.substring(24,32);
 
-        history.itemId = Long.parseLong(itemIdStr, 16);
-        history.clock = Integer.parseInt(clockStr, 16);
-        history.ns = Integer.parseInt(nsStr, 16);
+        history.itemId = Utils.parseHexLong(itemIdStr);
+        history.clock = Utils.parseHexInt(clockStr);
+        history.ns = Utils.parseHexInt(nsStr);
     }
 }
