@@ -112,6 +112,8 @@ void test_add_uint64(void)
 	create_global_context();
 
 	uint64_t id = 114;
+	assert_delete_all_for_id(id, NULL);
+
 	struct timespec ts;
 	ts.tv_sec = 1;
 	ts.tv_nsec = 2;
@@ -124,6 +126,8 @@ void test_add_float(void)
 	create_global_context();
 
 	uint64_t id = 126;
+	assert_delete_all_for_id(id, NULL);
+
 	struct timespec ts;
 	ts.tv_sec = 20;
 	ts.tv_nsec = 40;
@@ -136,6 +140,8 @@ void test_add_string(void)
 	create_global_context();
 
 	uint64_t id = 138;
+	assert_delete_all_for_id(id, NULL);
+
 	struct timespec ts;
 	ts.tv_sec = 300;
 	ts.tv_nsec = 500;
@@ -149,6 +155,7 @@ void test_add_blob(void)
 	create_global_context();
 
 	uint64_t id = 151;
+	assert_delete_all_for_id(id, NULL);
 	struct timespec ts;
 	ts.tv_sec = 4300;
 	ts.tv_nsec = 8500;
