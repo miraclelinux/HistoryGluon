@@ -16,6 +16,7 @@ Endian: Little
     Command Type: 00: 64bit IEEE 754
     Command Type: 01: 64bit 
     Command Type: 02: Length[4B], String body (The max size of string is 0x7fffffff)
+    Command Type: 03: Length[4B], Blob (The max size of string is 0xffff0000)
 ===== PKT END =====
 
 ===== COMMAND PKT: Get data =====

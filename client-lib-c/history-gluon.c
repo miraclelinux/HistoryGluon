@@ -17,6 +17,7 @@
 #define DEFAULT_SERVER_NAME "localhost"
 
 #define MAX_STRING_LENGTH 0x7fffffff
+#define MAX_BLOB_LENGTH 0xffff0000
 
 /* Common header */
 #define PKT_SIZE_LENGTH           4
@@ -614,8 +615,37 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 	if (ctx == NULL)
 		return -1;
 
-	ERR_MSG("Not implemented yet\n");
-	return -1;
+	if (length > MAX_BLOB_LENGTH) {
+		ERR_MSG("blob length is too long: %d", length);
+		return -1;
+	}
+	uint32_t pkt_size =
+	  PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_STRING_SIZE_LENGTH + length;
+	uint8_t *buf = malloc(pkt_size);
+	if (!buf) {
+		ERR_MSG("Failed to malloc: %d", pkt_size);
+		return -1;
+	}
+	uint8_t *ptr = buf;
+
+	/* header */
+	ptr += fill_add_data_header(ctx, id, time, ptr,
+	                            HISTORY_GLUON_TYPE_BLOB, pkt_size);
+
+	/* length */
+	*((uint32_t *)ptr) = conv_le32(ctx, length);
+	ptr += PKT_DATA_STRING_SIZE_LENGTH;
+
+	/* string body */
+	memcpy(ptr, value, length);
+
+	/* write data */
+	int ret = write_data(ctx, buf, pkt_size);
+
+	free(buf);
+	if (ret == -1)
+		return -1;
+	return 0;
 }
 
 int history_gluon_get_minmum_time(history_gluon_context_t _ctx,
