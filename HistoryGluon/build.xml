@@ -1,10 +1,15 @@
 <?xml version="1.0"?>
 <project name="HistoryGluon" default="all" basedir=".">
 
-    <property name="srcDir" value="src" />
-    <property name="classDir" value="classes" />
-    <property name="packageName" value="com.miraclelinux.historygluon" />
-    <property name="apiDocsDir" value="docs/api" />
+    <property name="srcDir" value="src"/>
+    <property name="classDir" value="classes"/>
+    <property name="packageName" value="com.miraclelinux.historygluon"/>
+    <property name="apiDocsDir" value="docs/api"/>
+
+    <property name="test.srcDir" value="test"/>
+    <property name="test.classDir" value="classes.test"/>
+
+    <property name="junit4Path" value="/usr/share/java/junit4.jar"/>
 
     <target name="init">
         <tstamp/>
@@ -23,5 +28,28 @@
             </classpath>
             <compilerarg value="-Xlint:deprecation"/>
         </javac>
+    </target>
+
+    <target name="compile-test" depends="compile">
+        <mkdir dir="${test.classDir}" />
+        <javac includeAntRuntime="false" srcdir="${test.srcDir}" destdir="${test.classDir}" debug="on">
+            <classpath>
+                <pathelement path="${junit4Path}"/>
+                <pathelement path="${classDir}"/>
+            </classpath>
+            <compilerarg value="-Xlint:deprecation"/>
+        </javac>
+    </target>
+
+    <target name="test" depends="compile-test">
+        <junit haltonfailure="false">
+            <formatter type="plain"/>
+            <classpath>
+                <pathelement path="${junit4Path}"/>
+                <pathelement location="${classDir}"/>
+                <pathelement location="${test.classDir}"/>
+            </classpath>
+            <test name="com.miraclelinux.historygluon.UtilsTest"/>
+        </junit>
     </target>
 </project>
