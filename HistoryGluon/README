@@ -60,10 +60,10 @@ When you run all tests,
 $ ant test
 
 When you run only a certain test case,
-$ ant test -DtestCase=<test class name> 
+$ ant test -DtestClass=<test class name> 
 
 Ex.)
-$ ant test -DtestCase=com.miraclelinux.historygluon.UtilsTest
+$ ant test -DtestClass=com.miraclelinux.historygluon.UtilsTest
 
 ======================================
 * Memo *
