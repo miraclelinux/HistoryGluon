@@ -9,10 +9,22 @@ GLIB_REQUIRED=2.4
 PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_REQUIRED)
 
 dnl cutter
-CUTTER_REQUIRED=1.1.3
+CUTTER_REQUIRED=1.1.7
 have_cutter=no
 
-AC_CHECK_CUTTER
+m4_ifdef([AC_CHECK_GCUTTER], [
+AC_CHECK_GCUTTER(>= $CUTTER_REQUIRED)
+],
+[ac_cv_use_cutter="no"])
+
+if test "$ac_cv_use_cutter" != "no"; then
+  m4_ifdef([AC_CHECK_CPPCUTTER], [
+  AC_CHECK_CPPCUTTER(>= $CUTTER_REQUIRED)
+  ],
+  [ac_cv_use_cutter="no"])
+fi
+
+
 AM_CONDITIONAL([WITH_CUTTER], [test "$ac_cv_use_cutter" != "no"])
 if test "$ac_cv_use_cutter" != "no"; then
   AC_DEFINE(WITH_CUTTER, 1, [Define to 1 if you use Cutter])
