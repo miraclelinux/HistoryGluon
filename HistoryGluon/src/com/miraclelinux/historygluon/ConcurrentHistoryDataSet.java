@@ -1,5 +1,6 @@
 package com.miraclelinux.historygluon;
 
+import java.util.Comparator;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -12,6 +13,14 @@ public class ConcurrentHistoryDataSet extends HistoryDataSet {
     /* -----------------------------------------------------------------------
      * Public Methods
      * -------------------------------------------------------------------- */
+    public ConcurrentHistoryDataSet() {
+    }
+
+    public ConcurrentHistoryDataSet(Comparator comparator) {
+        super(comparator);
+    }
+
+
     @Override
     public boolean add(HistoryData history) {
         boolean ret = false;

@@ -3,7 +3,7 @@ package com.miraclelinux.historygluon;
 import java.lang.Comparable;
 import java.nio.ByteBuffer;
 
-public class HistoryData implements Comparable {
+public class HistoryData implements Comparable<HistoryData> {
     // -----------------------------------------------------------------------
     // Public inner class
     // -----------------------------------------------------------------------
@@ -43,25 +43,18 @@ public class HistoryData implements Comparable {
     // Override method
     // -----------------------------------------------------------------------
     @Override
-    public int compareTo(Object obj) {
-        HistoryData history = (HistoryData)obj;
+    public int compareTo(HistoryData history) {
         int secComparedResult = Utils.compareAsUnsigned(sec, history.sec);
-        if (secComparedResult < 0)
-            return -1;
-        else if (secComparedResult > 0)
-            return 1;
+        if (secComparedResult != 0)
+            return secComparedResult;
 
         int nsComparedResult = Utils.compareAsUnsigned(ns, history.ns);
-        if (nsComparedResult < 0)
-            return -1;
-        else if (nsComparedResult > 0)
-            return 1;
+        if (nsComparedResult != 0)
+            return nsComparedResult;
 
         int idComparedResult = Utils.compareAsUnsigned(id, history.id);
-        if (idComparedResult < 0)
-            return -1;
-        else if (idComparedResult > 0)
-            return 1;
+        if (idComparedResult != 0)
+            return idComparedResult;
 
         return 0;
     }
@@ -139,6 +132,22 @@ public class HistoryData implements Comparable {
         else
             return false;
         return true;
+    }
+
+    public static int comparePreferId(HistoryData h0, HistoryData h1) {
+        int idComparedResult = Utils.compareAsUnsigned(h0.id, h1.id);
+        if (idComparedResult != 0)
+            return idComparedResult;
+
+        int secComparedResult = Utils.compareAsUnsigned(h0.sec, h1.sec);
+        if (secComparedResult != 0)
+            return secComparedResult;
+
+        int nsComparedResult = Utils.compareAsUnsigned(h0.ns, h1.ns);
+        if (nsComparedResult != 0)
+            return nsComparedResult;
+
+        return 0;
     }
 }
 

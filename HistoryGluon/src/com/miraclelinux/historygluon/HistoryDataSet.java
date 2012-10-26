@@ -1,6 +1,7 @@
 package com.miraclelinux.historygluon;
 
 import java.util.TreeSet;
+import java.util.Comparator;
 
 public class HistoryDataSet extends TreeSet<HistoryData> {
 
@@ -17,5 +18,9 @@ public class HistoryDataSet extends TreeSet<HistoryData> {
      * Public Methods
      * -------------------------------------------------------------------- */
     public HistoryDataSet() {
+    }
+
+    public HistoryDataSet(Comparator comparator) {
+        super(comparator);
     }
 }

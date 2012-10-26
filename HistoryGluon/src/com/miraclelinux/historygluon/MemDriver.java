@@ -1,5 +1,8 @@
 package com.miraclelinux.historygluon;
 
+import java.util.HashMap;
+import java.util.Comparator;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -9,7 +12,8 @@ public class MemDriver extends BasicStorageDriver {
      * Private members
      * -------------------------------------------------------------------- */
     private Log m_log = null;
-    private ConcurrentHistoryDataSet m_dataSet = null;
+    private ConcurrentHistoryDataSet m_dataSetPreferTime = null;
+    private ConcurrentHistoryDataSet m_dataSetPreferId = null;
 
     /* -----------------------------------------------------------------------
      * Public Methods
@@ -20,7 +24,9 @@ public class MemDriver extends BasicStorageDriver {
 
     @Override
     public boolean init() {
-        m_dataSet = new ConcurrentHistoryDataSet();
+        m_dataSetPreferTime = new ConcurrentHistoryDataSet();
+        m_dataSetPreferId =
+          new ConcurrentHistoryDataSet(new HistoryDataComparatorPreferId());
         return true;
     }
 
@@ -36,7 +42,15 @@ public class MemDriver extends BasicStorageDriver {
 
     @Override
     public boolean addData(HistoryData history) {
-        return m_dataSet.add(history);
+        boolean ret = m_dataSetPreferTime.add(history);
+        if (!ret)
+            return false;
+        ret = m_dataSetPreferId.add(history);
+        if (!ret) {
+            m_dataSetPreferTime.remove(history);
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -55,11 +69,14 @@ public class MemDriver extends BasicStorageDriver {
         HistoryData historyForComp1 = new HistoryData();
         fillItemIdClockNsWithKey(startKey, historyForComp0);
         fillItemIdClockNsWithKey(stopKey, historyForComp1);
-        return m_dataSet.createSubSet(historyForComp0, historyForComp1);
+        return m_dataSetPreferId.createSubSet(historyForComp0, historyForComp1);
     }
 
     @Override
     protected boolean deleteRow(HistoryData history, Object arg) {
-        return m_dataSet.remove(history);
+        boolean ret0 = m_dataSetPreferTime.remove(history);
+        boolean ret1 = m_dataSetPreferId.remove(history);
+        return ret0 && ret1;
     }
+
 }

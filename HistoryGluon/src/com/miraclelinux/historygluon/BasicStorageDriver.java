@@ -134,6 +134,13 @@ public abstract class BasicStorageDriver implements StorageDriver {
     /* -----------------------------------------------------------------------
      * Protected Methods
      * -------------------------------------------------------------------- */
+
+    /**
+     *
+     * @return The HistoryData instances that match the specified condition.
+     *         Even when there is no matched items, empty HistoryDataSet is returned.
+     *         When an error occured, null is returned.
+     */
     protected abstract HistoryDataSet
       getDataSet(long id, String startKey, String stopKey, int maxCount) 
       throws HistoryDataSet.TooManyException;
