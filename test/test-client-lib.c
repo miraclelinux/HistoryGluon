@@ -27,7 +27,6 @@ void delete_all_data(uint64_t id, uint32_t *num_deleted_entries)
 }
 
 /* Teset cases */
-
 void setup(void)
 {
 }
@@ -110,6 +109,7 @@ void test_delete_all(void)
 	int id = 1;
 	delete_all_data(id, NULL);
 
+	// add 2 items
 	test_add_uint64();
 	test_add_float();
 
