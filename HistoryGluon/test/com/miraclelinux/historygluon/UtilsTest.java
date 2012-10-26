@@ -6,6 +6,21 @@ import static org.junit.Assert.*;
 public class UtilsTest
 {
     @Test
+    public void testToDoubleAsUnsigned() {
+        double delta = 0.0f;
+        assertEquals(0f, Utils.toDoubleAsUnsigned(0), delta);
+        assertEquals(255f, Utils.toDoubleAsUnsigned(0xff), delta);
+        assertEquals(1000000000d, Utils.toDoubleAsUnsigned(0x3b9aca00), delta);
+        assertEquals(2147483647d, Utils.toDoubleAsUnsigned(0x7fffffff), delta);
+        assertEquals(2147483648d, Utils.toDoubleAsUnsigned(0x80000000), delta);
+        /*assertEquals(2147483647d, Utils.toDoubleAsUnsigned(0x123456789abcdef0L), delta);
+        assertEquals(2147483647d, Utils.toDoubleAsUnsigned(0x7fffffffffffffffL), delta);
+        assertEquals(2147483647d, Utils.toDoubleAsUnsigned(0x8000000000000000L), delta);
+        assertEquals(2147483647d, Utils.toDoubleAsUnsigned(0xffffffffffffffffL), delta);
+        */
+    }
+
+    @Test
     public void testCompareAsUnsignedInt() {
         assertEquals(0, Utils.compareAsUnsigned(0x00000000, 0x00000000));
         assertEquals(0, Utils.compareAsUnsigned(0x00000001, 0x00000001));
