@@ -111,11 +111,13 @@ public class Utils {
     }
 
     public static int hexCharToInt(char ch) {
-        if (ch <= '9')
+        if (ch >= '0' && ch <= '9')
             return ch - '0';
-        if (ch <= 'F')
+        if (ch >= 'A' && ch <= 'F')
             return ch - 'A' + 10;
-        return ch - 'a' + 10;
+        if (ch >= 'a' && ch <= 'f')
+            return ch - 'a' + 10;
+        throw new IllegalArgumentException("Invalid char: " + ch);
     }
 
     public static long parseHexLong(String str) {
