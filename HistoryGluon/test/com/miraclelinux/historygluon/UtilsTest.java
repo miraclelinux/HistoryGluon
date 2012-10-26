@@ -8,16 +8,15 @@ public class UtilsTest
     @Test
     public void testToDoubleAsUnsigned() {
         double delta = 0.0f;
-        assertEquals(0f, Utils.toDoubleAsUnsigned(0), delta);
-        assertEquals(255f, Utils.toDoubleAsUnsigned(0xff), delta);
-        assertEquals(1000000000d, Utils.toDoubleAsUnsigned(0x3b9aca00), delta);
-        assertEquals(2147483647d, Utils.toDoubleAsUnsigned(0x7fffffff), delta);
-        assertEquals(2147483648d, Utils.toDoubleAsUnsigned(0x80000000), delta);
-        /*assertEquals(2147483647d, Utils.toDoubleAsUnsigned(0x123456789abcdef0L), delta);
-        assertEquals(2147483647d, Utils.toDoubleAsUnsigned(0x7fffffffffffffffL), delta);
-        assertEquals(2147483647d, Utils.toDoubleAsUnsigned(0x8000000000000000L), delta);
-        assertEquals(2147483647d, Utils.toDoubleAsUnsigned(0xffffffffffffffffL), delta);
-        */
+        assertEquals(0f, Utils.toDoubleAsUnsigned(0L), delta);
+        assertEquals(255f, Utils.toDoubleAsUnsigned(0xffL), delta);
+        assertEquals(1000000000d, Utils.toDoubleAsUnsigned(0x3b9aca00L), delta);
+        assertEquals(2147483647d, Utils.toDoubleAsUnsigned(0x7fffffffL), delta);
+        assertEquals(2147483648d, Utils.toDoubleAsUnsigned(0x80000000L), delta);
+        assertEquals(1311768467463790320d, Utils.toDoubleAsUnsigned(0x123456789abcdef0L), delta);
+        assertEquals(9223372036854775807d, Utils.toDoubleAsUnsigned(0x7fffffffffffffffL), delta);
+        assertEquals(9223372036854775808d, Utils.toDoubleAsUnsigned(0x8000000000000000L), delta);
+        assertEquals(18446744073709551615d, Utils.toDoubleAsUnsigned(0xffffffffffffffffL), delta);
     }
 
     @Test
