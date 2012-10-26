@@ -2,19 +2,19 @@ Client library for C language.
 =====
 
 =========================================
-Message level conterol
+How to set the output message level
 =========================================
 This library outputs messages including error, warning, information, and debug to
 standard output or standard error.
 
-The message output can be controlled by the environment variable 'HISTORY_GLUON_MSG_LV'.
+Its output level can be controlled by the environment variable 'HISTORY_GLUON_MSG_LV'.
 The available levels are the following.
 - DBG
-- INFO
+- INFO    (default)
 - WARN
 - ERR
 - CRIT
-- NONE
+- NONE    (Completely no output)
 
 Ex.)
 $ export HISTORY_GLUON_MSG_LV=ERR
