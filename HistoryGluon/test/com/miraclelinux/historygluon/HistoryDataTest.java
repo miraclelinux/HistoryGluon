@@ -172,8 +172,8 @@ public class HistoryDataTest
      * -------------------------------------------------------------------- */
     private HistoryData createHistoryData(long id, int sec, int ns) {
         HistoryData history = new HistoryData();
-        history.itemId = id;
-        history.clock = sec;
+        history.id = id;
+        history.sec = sec;
         history.ns = ns;
         return history;
     }
