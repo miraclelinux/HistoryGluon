@@ -7,6 +7,7 @@ Cassandra       : 1.1.6
 Riak            : 1.2.1
 riak-java-client: 1.0.6
 riak-pb         : 1.2
+JUnit           : 4.10 (When you run tests)
 
 <<< HBase >>>
 (1) download package hbase-0.94.1.tar.gz from http://www.apache.org/dyn/closer.cgi/hbase/
@@ -51,6 +52,18 @@ partitioner: org.apache.cassandra.dht.ByteOrderedPartitioner
 
 2) Run HistoryServer
 java -cp "classes:/usr/local/hbase-0.94.1/*:/usr/local/hbase-0.94.1/lib/*:/usr/local/apache-cassandra-1.1.6/lib/*:/usr/local/riak-client/*" com/miraclelinux/historygluon/HistoryGluon HBase|Cassandra|Riak|Mem
+
+======================================
+* How to test *
+======================================
+When you run all tests,
+$ ant test
+
+When you run only a certain test case,
+$ ant test -DtestCase=<test class name> 
+
+Ex.)
+$ ant test -DtestCase=com.miraclelinux.historygluon.UtilsTest
 
 ======================================
 * Memo *
