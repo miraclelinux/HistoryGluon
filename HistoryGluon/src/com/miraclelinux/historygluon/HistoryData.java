@@ -19,7 +19,7 @@ public class HistoryData implements Comparable {
     public static final int TYPE_STRING = 1;
     public static final int TYPE_UINT64 = 2;
 
-    public static final int CLOCK_UNKNOWN = -1;
+    public static final int SEC_UNKNOWN = -1;
 
     // -----------------------------------------------------------------------
     // Public members
@@ -27,8 +27,8 @@ public class HistoryData implements Comparable {
     public String key = null;
     public short type = TYPE_UNKNOWN;
 
-    public long itemId = -1;
-    public int clock = CLOCK_UNKNOWN;;
+    public long id = -1;
+    public int sec = SEC_UNKNOWN;;
     public int ns = -1;
 
     // normally one of the following is used.
@@ -45,10 +45,10 @@ public class HistoryData implements Comparable {
     @Override
     public int compareTo(Object obj) {
         HistoryData history = (HistoryData)obj;
-        int clockComparedResult = Utils.compareAsUnsigned(clock, history.clock);
-        if (clockComparedResult < 0)
+        int secComparedResult = Utils.compareAsUnsigned(sec, history.sec);
+        if (secComparedResult < 0)
             return -1;
-        else if (clockComparedResult > 0)
+        else if (secComparedResult > 0)
             return 1;
 
         int nsComparedResult = Utils.compareAsUnsigned(ns, history.ns);
@@ -57,7 +57,7 @@ public class HistoryData implements Comparable {
         else if (nsComparedResult > 0)
             return 1;
 
-        int idComparedResult = Utils.compareAsUnsigned(itemId, history.itemId);
+        int idComparedResult = Utils.compareAsUnsigned(id, history.id);
         if (idComparedResult < 0)
             return -1;
         else if (idComparedResult > 0)
@@ -77,8 +77,8 @@ public class HistoryData implements Comparable {
             key = new String(history.key);
         type = history.type;
 
-        itemId = history.itemId;
-        clock = history.clock;
+        id = history.id;
+        sec = history.sec;
         ns = history.ns;
 
         dataUint64 = history.dataUint64;
@@ -89,8 +89,8 @@ public class HistoryData implements Comparable {
         // note: member 'data' is not copied
     }
 
-    public boolean clockIsValid() {
-        return (clock != CLOCK_UNKNOWN);
+    public boolean secIsValid() {
+        return (sec != SEC_UNKNOWN);
     }
 
     public double getDataAsDouble() throws DataNotNumericException {
@@ -111,7 +111,7 @@ public class HistoryData implements Comparable {
             dataStr = "data (Uint64): " + dataUint64;
         else
             dataStr = "data: Unknown";
-        String str = String.format("<<HistoryData>> type: %d, itemId: %016x, clock: %08x, ns: %08x, %s", type, itemId, clock, ns, dataStr);
+        String str = String.format("<<HistoryData>> type: %d, id: %016x, sec: %08x, ns: %08x, %s", type, id, sec, ns, dataStr);
         return str;
     }
 

@@ -74,7 +74,7 @@ public class RiakDriver extends BasicStorageDriver {
     public boolean addData(HistoryData history) {
         try {
             Bucket bucket = m_pbClient.fetchBucket(BUCKET_NAME).execute();
-            String key = makeKey(history.itemId, history.clock, history.ns);
+            String key = makeKey(history.id, history.sec, history.ns);
             ValueType value = new ValueType();
             value.type = history.type;
             value.data = history.getDataAsByteArray();
@@ -111,7 +111,7 @@ public class RiakDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     @Override
     protected HistoryDataSet
-      getDataSet(long itemId, String startKey, String stopKey, int maxCount) {
+      getDataSet(long id, String startKey, String stopKey, int maxCount) {
         HistoryDataSet dataSet = new HistoryDataSet();
         try {
             Bucket bucket = m_pbClient.fetchBucket(BUCKET_NAME).execute();

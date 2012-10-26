@@ -2,8 +2,8 @@ package com.miraclelinux.historygluon;
 
 public class Statistics {
     public long itemId = -1;
-    public int clock0 = -1;
-    public int clock1 = -1;
+    public int sec0 = -1;
+    public int sec1 = -1;
     public long  count = 0;
     public double min = 0;
     public double max = 0;
@@ -14,11 +14,11 @@ public class Statistics {
         String maxStr = "" + max;
 
         String diffClockStr = "N/A";
-        if (clock0 > 0 && clock1 > 0)
-            diffClockStr = "" + (clock1 - clock0);
+        if (sec0 > 0 && sec1 > 0)
+            diffClockStr = "" + (sec1 - sec0);
 
         String str = "ItemID: " + itemId +
-                     ", clock: " + clock0 + " - " + clock1 +
+                     ", sec: " + sec0 + " - " + sec1 +
                      " (" + diffClockStr + "), count: " + count +
                      ", min: " + minStr +
                      ", max: " + maxStr +
@@ -28,8 +28,8 @@ public class Statistics {
 
     public Statistics(long iId, int clk0, int clk1) {
         itemId = iId;
-        clock0 = clk0;
-        clock1 = clk1;
+        sec0 = clk0;
+        sec1 = clk1;
     }
 
     public void setData(HistoryData history)

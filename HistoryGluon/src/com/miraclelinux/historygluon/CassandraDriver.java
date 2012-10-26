@@ -43,8 +43,8 @@ public class CassandraDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     private static final String KEYSPACE = "zabbix";
     private static final String COLUMN_FAMILY = "history";
-    private static final String COLUMN_ITEM_ID = "itemId";
-    private static final String COLUMN_CLOCK = "clock";
+    private static final String COLUMN_ITEM_ID = "id";
+    private static final String COLUMN_CLOCK = "sec";
     private static final String COLUMN_NS = "ns";
     private static final String COLUMN_TYPE = "type";
     private static final String COLUMN_DATA = "data";
@@ -127,10 +127,10 @@ public class CassandraDriver extends BasicStorageDriver {
         columnParent.column_family = COLUMN_FAMILY;
         Column column = new Column();
         column.setTimestamp(System.currentTimeMillis());
-        String key = makeKey(history.itemId, history.clock, history.ns);
+        String key = makeKey(history.id, history.sec, history.ns);
 
-        insertColumn(columnParent, column, key, BB_COLUMN_ITEM_ID, history.itemId);
-        insertColumn(columnParent, column, key, BB_COLUMN_CLOCK, history.clock);
+        insertColumn(columnParent, column, key, BB_COLUMN_ITEM_ID, history.id);
+        insertColumn(columnParent, column, key, BB_COLUMN_CLOCK, history.sec);
         insertColumn(columnParent, column, key, BB_COLUMN_NS, history.ns);
         insertColumn(columnParent, column, key, BB_COLUMN_TYPE, history.type);
         insertColumn(columnParent, column, key, BB_COLUMN_DATA, dataBuffer);
@@ -155,7 +155,7 @@ public class CassandraDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     @Override
     protected HistoryDataSet
-      getDataSet(long itemId, String startKey, String stopKey, int maxCount) 
+      getDataSet(long id, String startKey, String stopKey, int maxCount) 
       throws HistoryDataSet.TooManyException {
         HistoryDataSet dataSet = new HistoryDataSet();
 
@@ -187,7 +187,7 @@ public class CassandraDriver extends BasicStorageDriver {
 
         for (KeySlice slice : list) {
             HistoryData history = new HistoryData();
-            history.itemId = itemId;
+            history.id = id;
             history.key = Utils.byteArrayToString(slice.getKey());
             List<ColumnOrSuperColumn> cols = slice.getColumns();
             for (ColumnOrSuperColumn cs : cols)
@@ -326,9 +326,9 @@ public class CassandraDriver extends BasicStorageDriver {
         String name = Utils.byteArrayToString(column.getName());
         byte[] value = column.getValue();
         if (name.equals(COLUMN_ITEM_ID))
-            history.itemId = Utils.byteArrayToLong(value);
+            history.id = Utils.byteArrayToLong(value);
         else if (name.equals(COLUMN_CLOCK))
-            history.clock = Utils.byteArrayToInt(value);
+            history.sec = Utils.byteArrayToInt(value);
         else if (name.equals(COLUMN_NS))
             history.ns = Utils.byteArrayToInt(value);
         else if (name.equals(COLUMN_TYPE))

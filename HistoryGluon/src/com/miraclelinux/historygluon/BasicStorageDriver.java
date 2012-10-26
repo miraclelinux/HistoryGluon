@@ -34,32 +34,32 @@ public abstract class BasicStorageDriver implements StorageDriver {
     }
 
     @Override
-    public HistoryDataSet getData(long itemId, int clock0, int clock1)
+    public HistoryDataSet getData(long id, int sec0, int sec1)
       throws HistoryDataSet.TooManyException {
-        String startKey = makeKey(itemId, clock0, 0);
-        String stopKey = makeKey(itemId, clock1, 0);
-        return getDataSet(itemId, startKey, stopKey, COUNT_UNLIMITED);
+        String startKey = makeKey(id, sec0, 0);
+        String stopKey = makeKey(id, sec1, 0);
+        return getDataSet(id, startKey, stopKey, COUNT_UNLIMITED);
     }
 
     @Override
-    public HistoryData getDataWithMinimumClock(long itemId)
+    public HistoryData getDataWithMinimumClock(long id)
       throws HistoryDataSet.TooManyException {
         final int max_count = 1;
-        String startKey = makeKey(itemId, 0, 0);
-        String stopKey = makeKey(itemId+1, 0, 0);
-        HistoryDataSet dataSet = getDataSet(itemId, startKey, stopKey, max_count);
+        String startKey = makeKey(id, 0, 0);
+        String stopKey = makeKey(id+1, 0, 0);
+        HistoryDataSet dataSet = getDataSet(id, startKey, stopKey, max_count);
         if (dataSet.isEmpty())
             return null;
         return dataSet.first();
     }
 
     @Override
-    public HistoryData getDataWithTimestamp(long itemId, int clock,
+    public HistoryData getDataWithTimestamp(long id, int sec,
                                             int ns, boolean searchNear)
       throws HistoryDataSet.TooManyException {
         HistoryDataSet dataSet = null;
-        String key = makeKey(itemId, clock, ns);
-        dataSet = getDataSet(itemId, key, key, 1);
+        String key = makeKey(id, sec, ns);
+        dataSet = getDataSet(id, key, key, 1);
         if (!dataSet.isEmpty())
             return dataSet.first();
         if (searchNear == false)
@@ -68,27 +68,27 @@ public abstract class BasicStorageDriver implements StorageDriver {
         // search the near data
         // TODO: We should make this method more fast.
         // HBase doen't have inverse order scan, does it ?
-        String key0 = makeKey(itemId, 0, 0);
-        dataSet = getDataSet(itemId, key0, key, COUNT_UNLIMITED);
+        String key0 = makeKey(id, 0, 0);
+        dataSet = getDataSet(id, key0, key, COUNT_UNLIMITED);
         if (dataSet.isEmpty())
             return null;
         return dataSet.descendingIterator().next();
     }
 
     @Override
-    public Statistics getStatistics(long itemId, int clock0, int clock1)
+    public Statistics getStatistics(long id, int sec0, int sec1)
       throws HistoryDataSet.TooManyException {
         // extract data set
-        String startKey = makeKey(itemId, clock0, 0);
+        String startKey = makeKey(id, sec0, 0);
         String stopKey;
-        if (clock1 != 0)
-            stopKey = makeKey(itemId, clock1, 0);
+        if (sec1 != 0)
+            stopKey = makeKey(id, sec1, 0);
         else
-            stopKey = makeKey(itemId+1, 0, 0);
-        HistoryDataSet dataSet = getDataSet(itemId, startKey, stopKey, COUNT_UNLIMITED);
+            stopKey = makeKey(id+1, 0, 0);
+        HistoryDataSet dataSet = getDataSet(id, startKey, stopKey, COUNT_UNLIMITED);
 
         // calcurate values
-        Statistics statistics = new Statistics(itemId, clock0, clock1);
+        Statistics statistics = new Statistics(id, sec0, sec1);
         Iterator<HistoryData> it = dataSet.iterator();
         while (it.hasNext()) {
             HistoryData history = it.next();
@@ -105,13 +105,13 @@ public abstract class BasicStorageDriver implements StorageDriver {
         return statistics;
     }
 
-    public int delete(long itemId, int thresClock) {
+    public int delete(long id, int thresClock) {
         int numDeleted = 0;
-        String startKey = makeKey(itemId, 0, 0);
-        String stopKey = makeKey(itemId, thresClock, 0);
+        String startKey = makeKey(id, 0, 0);
+        String stopKey = makeKey(id, thresClock, 0);
         HistoryDataSet dataSet = null;
         try {
-            dataSet = getDataSet(itemId, startKey, stopKey, COUNT_UNLIMITED);
+            dataSet = getDataSet(id, startKey, stopKey, COUNT_UNLIMITED);
         } catch (HistoryDataSet.TooManyException e) {
             // FIXME: try to delete with a certin number of items
             m_log.error("Entries are too many: Cannot delete items.");
@@ -135,7 +135,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
      * Protected Methods
      * -------------------------------------------------------------------- */
     protected abstract HistoryDataSet
-      getDataSet(long itemId, String startKey, String stopKey, int maxCount) 
+      getDataSet(long id, String startKey, String stopKey, int maxCount) 
       throws HistoryDataSet.TooManyException;
 
     protected abstract boolean deleteRow(HistoryData history, Object arg);
@@ -144,19 +144,19 @@ public abstract class BasicStorageDriver implements StorageDriver {
         return true;
     }
 
-    protected String makeKey(long itemId, int clock, int ns) {
-        return String.format("%016x%08x%08x", itemId, clock, ns);
+    protected String makeKey(long id, int sec, int ns) {
+        return String.format("%016x%08x%08x", id, sec, ns);
     }
 
     protected void fillItemIdClockNsWithKey(String key, HistoryData history) {
         if (key.length() != 32)
             throw new InternalCheckException("Invalid key length: " + key.length());
-        String itemIdStr = key.substring(0,16);
-        String clockStr = key.substring(16,24);
+        String idStr = key.substring(0,16);
+        String secStr = key.substring(16,24);
         String nsStr = key.substring(24,32);
 
-        history.itemId = Utils.parseHexLong(itemIdStr);
-        history.clock = Utils.parseHexInt(clockStr);
+        history.id = Utils.parseHexLong(idStr);
+        history.sec = Utils.parseHexInt(secStr);
         history.ns = Utils.parseHexInt(nsStr);
     }
 }

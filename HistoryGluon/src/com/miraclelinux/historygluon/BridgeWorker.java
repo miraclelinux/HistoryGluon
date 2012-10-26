@@ -171,14 +171,14 @@ public class BridgeWorker extends Thread {
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
-        // data type, Item ID, clock, and ns
+        // data type, Item ID, sec, and ns
         history.type = m_byteBuffer.getShort(idx);
         idx += PKT_DATA_TYPE_LENGTH;
 
-        history.itemId = m_byteBuffer.getLong(idx);
+        history.id = m_byteBuffer.getLong(idx);
         idx += PKT_ITEM_ID_LENGTH;
 
-        history.clock = m_byteBuffer.getInt(idx);
+        history.sec = m_byteBuffer.getInt(idx);
         idx += PKT_CLOCK_LENGTH;
 
         history. ns = m_byteBuffer.getInt(idx);
@@ -211,14 +211,14 @@ public class BridgeWorker extends Thread {
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
-        // Item ID, clock0, and clock1
-        long itemId = m_byteBuffer.getLong(idx);
+        // Item ID, sec0, and sec1
+        long id = m_byteBuffer.getLong(idx);
         idx += PKT_ITEM_ID_LENGTH;
 
-        int clock0 = m_byteBuffer.getInt(idx);
+        int sec0 = m_byteBuffer.getInt(idx);
         idx += PKT_CLOCK_LENGTH;
 
-        int clock1 = m_byteBuffer.getInt(idx);
+        int sec1 = m_byteBuffer.getInt(idx);
         idx += PKT_CLOCK_LENGTH;
 
         int maxEntries = m_byteBuffer.getInt(idx);
@@ -229,7 +229,7 @@ public class BridgeWorker extends Thread {
 
         HistoryDataSet dataSet = null;
         try {
-            dataSet = m_driver.getData(itemId, clock0, clock1);
+            dataSet = m_driver.getData(id, sec0, sec1);
         } catch (HistoryDataSet.TooManyException e) {
             // FIXME: return the error
             return false;
@@ -287,11 +287,11 @@ public class BridgeWorker extends Thread {
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
-        // Item ID, clock0, and clock1
-        long itemId = m_byteBuffer.getLong(idx);
+        // Item ID, sec0, and sec1
+        long id = m_byteBuffer.getLong(idx);
         idx += PKT_ITEM_ID_LENGTH;
 
-        int clock = m_byteBuffer.getInt(idx);
+        int sec = m_byteBuffer.getInt(idx);
         idx += PKT_CLOCK_LENGTH;
 
         int ns = m_byteBuffer.getInt(idx);
@@ -302,7 +302,7 @@ public class BridgeWorker extends Thread {
 
         HistoryData history = null;
         try {
-            history = m_driver.getDataWithTimestamp(itemId, clock,
+            history = m_driver.getDataWithTimestamp(id, sec,
                                                     ns, searchNear);
         } catch (HistoryDataSet.TooManyException e) {
             // FIXME: return the error
@@ -336,13 +336,13 @@ public class BridgeWorker extends Thread {
             return false;
 
         // extract Item ID
-        long itemId = m_byteBuffer.getLong(idx);
+        long id = m_byteBuffer.getLong(idx);
         idx += PKT_ITEM_ID_LENGTH;
 
-        // get boundary of clock
+        // get boundary of sec
         HistoryData history = null;
         try {
-            history = m_driver.getDataWithMinimumClock(itemId);
+            history = m_driver.getDataWithMinimumClock(id);
         } catch (HistoryDataSet.TooManyException e) {
             // FIXME: return the error
             return false;
@@ -350,7 +350,7 @@ public class BridgeWorker extends Thread {
 
         int minClock = 0;
         if (history != null)
-            minClock = history.clock;
+            minClock = history.sec;
 
         // write reply to the socket
         int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_CLOCK_LENGTH;
@@ -371,18 +371,18 @@ public class BridgeWorker extends Thread {
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
-        // extract Item ID and clocks
-        long itemId = m_byteBuffer.getLong(idx);
+        // extract Item ID and secs
+        long id = m_byteBuffer.getLong(idx);
         idx += PKT_ITEM_ID_LENGTH;
 
-        int clock0 = m_byteBuffer.getInt(idx);
+        int sec0 = m_byteBuffer.getInt(idx);
         idx += PKT_CLOCK_LENGTH;
-        int clock1 = m_byteBuffer.getInt(idx);
+        int sec1 = m_byteBuffer.getInt(idx);
         idx += PKT_CLOCK_LENGTH;
 
         Statistics statistics = null;
         try {
-            statistics = m_driver.getStatistics(itemId, clock0, clock1);
+            statistics = m_driver.getStatistics(id, sec0, sec1);
         } catch (HistoryDataSet.TooManyException e) {
             // TODO: return error
             return false;
@@ -400,9 +400,9 @@ public class BridgeWorker extends Thread {
         m_byteBuffer.putInt(length);
         m_byteBuffer.putShort(PKT_TYPE_GET_STATISTICS);
         m_byteBuffer.putInt(RESULT_SUCCESS);
-        m_byteBuffer.putLong(itemId);
-        m_byteBuffer.putInt(statistics.clock0);
-        m_byteBuffer.putInt(statistics.clock1);
+        m_byteBuffer.putLong(id);
+        m_byteBuffer.putInt(statistics.sec0);
+        m_byteBuffer.putInt(statistics.sec1);
         m_byteBuffer.putLong(statistics.count);
         m_byteBuffer.putDouble(statistics.min);
         m_byteBuffer.putDouble(statistics.max);
@@ -421,14 +421,14 @@ public class BridgeWorker extends Thread {
             return false;
 
         // extract Item ID and thresClock
-        long itemId = m_byteBuffer.getLong(idx);
+        long id = m_byteBuffer.getLong(idx);
         idx += PKT_ITEM_ID_LENGTH;
 
         int thresClock = m_byteBuffer.getInt(idx);
         idx += PKT_CLOCK_LENGTH;
 
-        // get min clock
-        int numDeleted = m_driver.delete(itemId, thresClock);
+        // get min sec
+        int numDeleted = m_driver.delete(id, thresClock);
 
         // write reply to the socket
         int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_NUM_ENTRIES_LENGTH;
@@ -485,8 +485,8 @@ public class BridgeWorker extends Thread {
 
     private void sendOneHistoryData(HistoryData history) throws IOException {
         m_byteBuffer.clear();
-        m_byteBuffer.putLong(history.itemId);
-        m_byteBuffer.putInt(history.clock);
+        m_byteBuffer.putLong(history.id);
+        m_byteBuffer.putInt(history.sec);
         m_byteBuffer.putInt(history.ns);
         m_byteBuffer.putShort(history.type);
 

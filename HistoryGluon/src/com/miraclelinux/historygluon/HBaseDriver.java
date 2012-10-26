@@ -72,17 +72,17 @@ public class HBaseDriver extends BasicStorageDriver {
         try {
             HTable table = new HTable(m_config, Bytes.toBytes(TABLE_NAME));
             String key = String.format("%016x%08x%08x",
-                                       history.itemId, history.clock,
+                                       history.id, history.sec,
                                        history.ns);
             Put putData = new Put(Bytes.toBytes(key));
             byte[] familyBytes = Bytes.toBytes(HISTORY_FAMILY_NAME);
 
             putData.add(familyBytes,
-                        Bytes.toBytes("itemId"),
-                        Bytes.toBytes(history.itemId));
+                        Bytes.toBytes("id"),
+                        Bytes.toBytes(history.id));
             putData.add(familyBytes,
-                        Bytes.toBytes("clock"),
-                        Bytes.toBytes(history.clock));
+                        Bytes.toBytes("sec"),
+                        Bytes.toBytes(history.sec));
             putData.add(familyBytes,
                         Bytes.toBytes("ns"),
                         Bytes.toBytes(history.ns));
@@ -118,7 +118,7 @@ public class HBaseDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     @Override
     protected HistoryDataSet
-      getDataSet(long itemId, String startKey, String stopKey, int maxCount) {
+      getDataSet(long id, String startKey, String stopKey, int maxCount) {
         HistoryDataSet dataSet = new HistoryDataSet();
         ResultScanner resultScanner = null;
         try {
@@ -129,7 +129,7 @@ public class HBaseDriver extends BasicStorageDriver {
             resultScanner = table.getScanner(scan);
             long count = 0;
             for (Result result : resultScanner) {
-                buildHistoryData(table, result, dataSet, itemId);
+                buildHistoryData(table, result, dataSet, id);
                 count++;
                 if (count == maxCount)
                     break;
@@ -206,12 +206,12 @@ public class HBaseDriver extends BasicStorageDriver {
     }
 
     private void buildHistoryData(HTable table, Result result,
-                                  HistoryDataSet dataSet, long itemId)
+                                  HistoryDataSet dataSet, long id)
       throws IOException {
 
-        // key and itemId
+        // key and id
         HistoryData history = new HistoryData();
-        history.itemId = itemId;
+        history.id = id;
 
         // fill one value
         for (KeyValue keyVal : result.list()) {
@@ -257,10 +257,10 @@ public class HBaseDriver extends BasicStorageDriver {
         Bytes.putBytes(buf, 0, keyVal.getBuffer(),
                        keyVal.getValueOffset(), length);
 
-        if (qualifier.equals("itemId"))
-            history.itemId = Bytes.toLong(buf); 
-        else if (qualifier.equals("clock"))
-            history.clock = Bytes.toInt(buf); 
+        if (qualifier.equals("id"))
+            history.id = Bytes.toLong(buf); 
+        else if (qualifier.equals("sec"))
+            history.sec = Bytes.toInt(buf); 
         else if (qualifier.equals("ns"))
             history.ns = Bytes.toInt(buf); 
         else if (qualifier.equals("type"))
