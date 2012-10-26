@@ -584,6 +584,10 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 	uint32_t pkt_size =
 	  PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_STRING_SIZE_LENGTH + len_string;
 	uint8_t *buf = malloc(pkt_size);
+	if (!buf) {
+		ERR_MSG("Failed to malloc: %d", pkt_size);
+		return -1;
+	}
 	uint8_t *ptr = buf;
 
 	/* header */
