@@ -129,7 +129,7 @@ int history_gluon_get_minmum_time(history_gluon_context_t context,
  *
  * @param context A History Gluon's context.
  * @param id An item ID.
- * @param threshold The threshold.
+ * @param threshold The threshold. The item with this time is NOT deleted.
  * @param num_deleted_entries A pointer in which the number of deleted items is stored,
  *                            or NULL when it is not needed. 
  * @return 0 if success. -1 if error occured. When the error, \num_deleted_entries is
