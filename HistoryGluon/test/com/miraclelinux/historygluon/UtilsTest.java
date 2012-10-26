@@ -6,6 +6,64 @@ import static org.junit.Assert.*;
 public class UtilsTest
 {
     @Test
+    public void testCompareAsUnsignedInt() {
+        assertEquals(0, Utils.compareAsUnsigned(0x00000000, 0x00000000));
+        assertEquals(0, Utils.compareAsUnsigned(0x00000001, 0x00000001));
+        assertEquals(0, Utils.compareAsUnsigned(0x12345678, 0x12345678));
+        assertEquals(0, Utils.compareAsUnsigned(0x7fffffff, 0x7fffffff));
+        assertEquals(0, Utils.compareAsUnsigned(0x80000000, 0x80000000));
+        assertEquals(0, Utils.compareAsUnsigned(0xffffffff, 0xffffffff));
+
+        assertTrue(Utils.compareAsUnsigned(0x00000000, 0x12345678) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x12345678, 0x87654321) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x00000000, 0x7fffffff) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x00000000, 0x80000000) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x00000000, 0xffffffff) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x7fffffff, 0x80000000) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x7fffffff, 0xffffffff) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x80000000, 0xffffffff) < 0);
+        assertTrue(Utils.compareAsUnsigned(0xfffffffe, 0xffffffff) < 0);
+
+        assertTrue(Utils.compareAsUnsigned(0x12345678, 0x00000000) > 0);
+        assertTrue(Utils.compareAsUnsigned(0x87654321, 0x12345678) > 0);
+        assertTrue(Utils.compareAsUnsigned(0x7fffffff, 0x00000000) > 0);
+        assertTrue(Utils.compareAsUnsigned(0x80000000, 0x00000000) > 0);
+        assertTrue(Utils.compareAsUnsigned(0x80000000, 0x7fffffff) > 0);
+        assertTrue(Utils.compareAsUnsigned(0xffffffff, 0x7fffffff) > 0);
+        assertTrue(Utils.compareAsUnsigned(0xffffffff, 0x80000000) > 0);
+        assertTrue(Utils.compareAsUnsigned(0xffffffff, 0xfffffffe) > 0);
+    }
+
+    @Test
+    public void testCompareAsUnsignedLong() {
+        assertEquals(0, Utils.compareAsUnsigned(0x0000000000000000L, 0x0000000000000000L));
+        assertEquals(0, Utils.compareAsUnsigned(0x0000000000000001L, 0x0000000000000001L));
+        assertEquals(0, Utils.compareAsUnsigned(0x123456789abcdef0L, 0x123456789abcdef0L));
+        assertEquals(0, Utils.compareAsUnsigned(0x7fffffffffffffffL, 0x7fffffffffffffffL));
+        assertEquals(0, Utils.compareAsUnsigned(0x8000000000000000L, 0x8000000000000000L));
+        assertEquals(0, Utils.compareAsUnsigned(0xffffffffffffffffL, 0xffffffffffffffffL));
+
+        assertTrue(Utils.compareAsUnsigned(0x0000000000000000L, 0x123456789abcdef0L) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x123456789abcdef0L, 0x789abcdef0123456L) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x0000000000000000L, 0x7fffffffffffffffL) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x0000000000000000L, 0x8000000000000000L) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x0000000000000000L, 0xffffffffffffffffL) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x7fffffffffffffffL, 0x8000000000000000L) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x7fffffffffffffffL, 0xffffffffffffffffL) < 0);
+        assertTrue(Utils.compareAsUnsigned(0x8000000000000000L, 0xffffffffffffffffL) < 0);
+        assertTrue(Utils.compareAsUnsigned(0xfffffffffffffffeL, 0xffffffffffffffffL) < 0);
+
+        assertTrue(Utils.compareAsUnsigned(0x123456789abcdef0L, 0x0000000000000000L) > 0);
+        assertTrue(Utils.compareAsUnsigned(0x789abcdef0123456L, 0x0000000000000001L) > 0);
+        assertTrue(Utils.compareAsUnsigned(0x7fffffffffffffffL, 0x0000000000000000L) > 0);
+        assertTrue(Utils.compareAsUnsigned(0x8000000000000000L, 0x0000000000000000L) > 0);
+        assertTrue(Utils.compareAsUnsigned(0x8000000000000000L, 0x7fffffffffffffffL) > 0);
+        assertTrue(Utils.compareAsUnsigned(0xffffffffffffffffL, 0x7fffffffffffffffL) > 0);
+        assertTrue(Utils.compareAsUnsigned(0xffffffffffffffffL, 0x8000000000000000L) > 0);
+        assertTrue(Utils.compareAsUnsigned(0xffffffffffffffffL, 0xfffffffffffffffeL) > 0);
+    }
+
+    @Test
     public void testHexCharToIntNumeric() {
         assertEquals(0, Utils.hexCharToInt('0'));
         assertEquals(1, Utils.hexCharToInt('1'));
