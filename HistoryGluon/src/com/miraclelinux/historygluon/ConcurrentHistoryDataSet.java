@@ -33,11 +33,16 @@ public class ConcurrentHistoryDataSet extends HistoryDataSet {
         return ret;
     }
 
-    public boolean remove(HistoryData history) {
+    public boolean delete(HistoryData history) {
         boolean ret = false;
+
+        HistoryData entry = get(history);
+        if (entry == null)
+            return false;
+
         try {
             m_rwlock.writeLock().lock();
-            ret = super.remove(history);
+            ret = super.remove(entry);
         } finally {
             m_rwlock.writeLock().unlock();
         }
@@ -48,7 +53,7 @@ public class ConcurrentHistoryDataSet extends HistoryDataSet {
         HistoryData history = null;
         try {
             m_rwlock.readLock().lock();
-            history = ceiling(history);
+            history = ceiling(keyHistory);
             if (history != null) {
                 if (history.compareTo(keyHistory) != 0)
                     history = null;

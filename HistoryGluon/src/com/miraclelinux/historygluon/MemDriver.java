@@ -47,7 +47,7 @@ public class MemDriver extends BasicStorageDriver {
             return false;
         ret = m_dataSetPreferId.add(history);
         if (!ret) {
-            m_dataSetPreferTime.remove(history);
+            m_dataSetPreferTime.delete(history);
             return false;
         }
         return true;
@@ -74,8 +74,8 @@ public class MemDriver extends BasicStorageDriver {
 
     @Override
     protected boolean deleteRow(HistoryData history, Object arg) {
-        boolean ret0 = m_dataSetPreferTime.remove(history);
-        boolean ret1 = m_dataSetPreferId.remove(history);
+        boolean ret0 = m_dataSetPreferTime.delete(history);
+        boolean ret1 = m_dataSetPreferId.delete(history);
         return ret0 && ret1;
     }
 
