@@ -251,36 +251,6 @@ static double read_ieee754_double(private_context_t *ctx, uint8_t *buf)
 	return d;
 }
 
-#if 0
-static int fill_common_header(private_context_t *ctx, uint64_t id,
-                              struct timespec *time, uint8_t *buf, uint16_t cmd, int pkt_size)
-{
-	int idx = 0;
-
-	/* pkt size */
-	*((uint32_t *)&buf[idx]) = conv_le32(ctx, pkt_size - PKT_SIZE_LENGTH);
-	idx += PKT_SIZE_LENGTH;
-
-	/* command */
-	*((uint16_t *)&buf[idx]) = conv_le16(ctx, cmd);
-	idx += PKT_TYPE_LENGTH;
-
-	/* Item ID */
-	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
-	idx += PKT_ITEM_ID_LENGTH;
-
-	/* sec */
-	*((uint32_t *)&buf[idx]) = conv_le32(ctx, time->tv_sec);
-	idx += PKT_SEC_LENGTH;
-
-	/* ns */
-	*((uint32_t *)&buf[idx]) = conv_le32(ctx, time->tv_nsec);
-	idx += PKT_NS_LENGTH;
-
-	return idx;
-}
-#endif
-
 static int fill_add_data_header(private_context_t *ctx, uint64_t id,
                                 struct timespec *time, uint8_t *buf, uint16_t data_type,
                                 int pkt_size)
