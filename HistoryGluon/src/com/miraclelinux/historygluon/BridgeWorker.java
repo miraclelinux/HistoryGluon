@@ -26,6 +26,7 @@ public class BridgeWorker extends Thread {
     private static final int PKT_DATA_FLOAT_LENGTH = 8;
     private static final int PKT_DATA_UINT64_LENGTH = 8;
     private static final int PKT_DATA_STRING_SIZE_LENGTH = 4;
+    private static final int PKT_DATA_BLOB_SIZE_LENGTH = 4;
     private static final int PKT_NUM_ENTRIES_LENGTH = 4;
     private static final int PKT_SORT_ORDER_LENGTH = 2;
     private static final int PKT_SEARCH_NEAR_LENGTH = 1;
@@ -193,6 +194,8 @@ public class BridgeWorker extends Thread {
             procStringData(pktBuf, idx, history);
         else if (history.type == HistoryData.TYPE_UINT64)
             procUint64Data(pktBuf, idx, history);
+        else if (history.type == HistoryData.TYPE_BLOB)
+            procBlobData(pktBuf, idx, history);
         else {
             // TODO: return error
             m_log.error("Got unknown data type: " + history.type);
@@ -456,7 +459,7 @@ public class BridgeWorker extends Thread {
         return true;
     }
 
-    private int procFloatData(byte[] pktBuf, int idx, HistoryData history) {
+    private long procFloatData(byte[] pktBuf, int idx, HistoryData history) {
         m_byteBuffer.clear();
         m_byteBuffer.put(pktBuf, idx, PKT_DATA_FLOAT_LENGTH);
         idx += PKT_DATA_FLOAT_LENGTH;
@@ -464,7 +467,7 @@ public class BridgeWorker extends Thread {
         return idx;
     }
 
-    private int procStringData(byte[] pktBuf, int idx, HistoryData history) {
+    private long procStringData(byte[] pktBuf, int idx, HistoryData history) {
         m_byteBuffer.clear();
         m_byteBuffer.put(pktBuf, idx, PKT_DATA_STRING_SIZE_LENGTH);
         idx += PKT_DATA_STRING_SIZE_LENGTH;
@@ -482,6 +485,17 @@ public class BridgeWorker extends Thread {
         return idx;
     }
 
+    private long procBlobData(byte[] pktBuf, int idx, HistoryData history) {
+        m_byteBuffer.clear();
+        m_byteBuffer.put(pktBuf, idx, PKT_DATA_BLOB_SIZE_LENGTH);
+        idx += PKT_DATA_BLOB_SIZE_LENGTH;
+        // TODO: Suport large size
+        int length = (m_byteBuffer.getInt(0));
+        history.dataBlob = new byte[length];
+        idx += length;
+        return idx;
+    }
+
     private int calcReplyPktSize(HistoryData history) {
         int size = 0;
         if (history.type == HistoryData.TYPE_FLOAT)
@@ -491,7 +505,10 @@ public class BridgeWorker extends Thread {
             size += history.dataString.length();
         } else if (history.type == HistoryData.TYPE_UINT64)
             size += PKT_DATA_UINT64_LENGTH;
-        else
+        else if (history.type == HistoryData.TYPE_BLOB) {
+            size += PKT_DATA_STRING_SIZE_LENGTH;
+            size += history.dataBlob.length;
+        } else
             m_log.error("Unknown history type:" + history.type);
         return size;
     }
@@ -509,14 +526,19 @@ public class BridgeWorker extends Thread {
             m_byteBuffer.putInt(history.dataString.length());
         else if (history.type == HistoryData.TYPE_UINT64)
             m_byteBuffer.putLong(history.dataUint64);
+        else if (history.type == HistoryData.TYPE_BLOB)
+            m_byteBuffer.putInt(history.dataBlob.length);
+        else
+            m_log.error("Unknown history type:" + history.type);
 
-        // Send data (except string body)
+        // Send data (except string body and blob)
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
 
-        // String body
+        // String body and Blob
         if (history.type == HistoryData.TYPE_STRING) {
             m_ostream.write(history.dataString.getBytes(), 0,
                             history.dataString.length());
-        }
+        } else if (history.type == HistoryData.TYPE_BLOB)
+            m_ostream.write(history.dataBlob, 0, history.dataBlob.length);
     }
 }

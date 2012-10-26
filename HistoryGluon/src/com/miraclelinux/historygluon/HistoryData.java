@@ -15,9 +15,10 @@ public class HistoryData implements Comparable<HistoryData> {
     // -----------------------------------------------------------------------
     public static final int TYPE_UNKNOWN = -1;
 
-    public static final int TYPE_FLOAT = 0;
+    public static final int TYPE_FLOAT  = 0;
     public static final int TYPE_STRING = 1;
     public static final int TYPE_UINT64 = 2;
+    public static final int TYPE_BLOB   = 3;
 
     public static final int SEC_UNKNOWN = -1;
 
@@ -35,6 +36,7 @@ public class HistoryData implements Comparable<HistoryData> {
     public long dataUint64 = 0;
     public double dataFloat = 0;
     public String dataString = null;
+    public byte[] dataBlob = null;
 
     // used temporarily
     public byte[] data = null;
@@ -102,6 +104,8 @@ public class HistoryData implements Comparable<HistoryData> {
             dataStr = "data (String): " + dataString;
         else if (type == TYPE_UINT64)
             dataStr = "data (Uint64): " + dataUint64;
+        else if (type == TYPE_BLOB)
+            dataStr = "data (Blobl): ";
         else
             dataStr = "data: Unknown";
         String str = String.format("<<HistoryData>> type: %d, id: %016x, sec: %08x, ns: %08x, %s", type, id, sec, ns, dataStr);
@@ -115,6 +119,8 @@ public class HistoryData implements Comparable<HistoryData> {
             return Utils.longToByteBuffer(dataUint64);
         else if (type == TYPE_STRING)
             return Utils.stringToByteBuffer(dataString);
+        else if (type == TYPE_BLOB)
+            return ByteBuffer.wrap(dataBlob);
         return null;
     }
 
@@ -129,6 +135,8 @@ public class HistoryData implements Comparable<HistoryData> {
             dataString = Utils.byteArrayToString(data);
         else if (type == TYPE_UINT64)
             dataUint64 = Utils.byteArrayToLong(data);
+        else if (type == TYPE_BLOB)
+            dataBlob = data;
         else
             return false;
         return true;

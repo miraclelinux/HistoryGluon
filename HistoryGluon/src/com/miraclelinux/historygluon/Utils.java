@@ -60,6 +60,12 @@ public class Utils {
             return 1;
     }
 
+    public static long toUnsignedInt(int v) {
+        if (v >= 0)
+            return v;
+        return v + 0x100000000L;
+    }
+
     public static short byteArrayToShort(byte[] bytes) {
         return ByteBuffer.wrap(bytes).getShort();
     }
