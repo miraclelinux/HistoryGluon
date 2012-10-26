@@ -16,16 +16,18 @@
 #define DEFAULT_PORT 30010
 #define DEFAULT_SERVER_NAME "localhost"
 
+#define MAX_STRING_LENGTH 0x7fffffff
+
 /* Common header */
 #define PKT_SIZE_LENGTH           4
 #define PKT_TYPE_LENGTH           2
 #define PKT_DATA_TYPE_LENGTH      2
 #define PKT_ITEM_ID_LENGTH        8
-#define PKT_CLOCK_LENGTH          4
+#define PKT_SEC_LENGTH            4
 #define PKT_NS_LENGTH             4
 
 /* Common reply */
-#define REPLY_RESULT_LENGTH  4
+#define REPLY_RESULT_LENGTH       4
 
 /* Add packets */
 #define PKT_DATA_FLOAT_LENGTH     8
@@ -33,7 +35,7 @@
 #define PKT_DATA_STRING_SIZE_LENGTH  4
 
 #define PKT_ADD_DATA_HEADER_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_DATA_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_CLOCK_LENGTH + PKT_NS_LENGTH)
+(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_DATA_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH + PKT_NS_LENGTH)
 
 
 /* Get data */
@@ -41,30 +43,30 @@
 #define PKT_DATA_ORDER_LENGTH  2
 
 #define PKT_GET_DATA_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_CLOCK_LENGTH*2 + PKT_NUM_ENTRIES_LENGTH + PKT_DATA_ORDER_LENGTH)
+(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH*2 + PKT_NUM_ENTRIES_LENGTH + PKT_DATA_ORDER_LENGTH)
 
 /* Get data with timestamp */
 #define PKT_SEARCH_NEAR_LENGTH 1
 #define PKT_GET_DATA_WITH_TIMESTAMP_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_CLOCK_LENGTH + PKT_NS_LENGTH + PKT_SEARCH_NEAR_LENGTH)
+(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH + PKT_NS_LENGTH + PKT_SEARCH_NEAR_LENGTH)
 
-/* Get Min clock packets */
-#define PKT_GET_MIN_CLOCK_LENGTH \
+/* Get Min sec packets */
+#define PKT_GET_MIN_SEC_LENGTH \
 (PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH)
 
-#define REPLY_GET_MIN_CLOCK_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_CLOCK_LENGTH)
+#define REPLY_GET_MIN_SEC_LENGTH \
+(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_SEC_LENGTH)
 
 /* Get statistics */
 #define PKT_GET_STATISTICS_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_CLOCK_LENGTH*2)
+(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH*2)
 
 #define REPLY_STATISTICS_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_ITEM_ID_LENGTH + PKT_CLOCK_LENGTH*2 + PKT_DATA_UINT64_LENGTH + PKT_DATA_FLOAT_LENGTH*3)
+(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH*2 + PKT_DATA_UINT64_LENGTH + PKT_DATA_FLOAT_LENGTH*3)
 
 /* Delete packets */
 #define PKT_DELETE_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_CLOCK_LENGTH)
+(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH)
 
 #define REPLY_DELETE_NUMBER_LENGTH 4
 #define REPLY_DELETE_LENGTH \
@@ -75,7 +77,7 @@ enum {
 	PKT_TYPE_ADD_DATA           = 100,
 	PKT_TYPE_GET                = 1000,
 	PKT_TYPE_GET_WITH_TIMESTAMP = 1050,
-	PKT_TYPE_GET_MIN_CLOCK      = 1100,
+	PKT_TYPE_GET_MIN_SEC        = 1100,
 	PKT_TYPE_GET_STATISTICS     = 1200,
 	PKT_TYPE_DELETE             = 2000,
 };
@@ -266,9 +268,9 @@ static int fill_common_header(private_context_t *ctx, uint64_t id,
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
 	idx += PKT_ITEM_ID_LENGTH;
 
-	/* clock */
+	/* sec */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, time->tv_sec);
-	idx += PKT_CLOCK_LENGTH;
+	idx += PKT_SEC_LENGTH;
 
 	/* ns */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, time->tv_nsec);
@@ -300,9 +302,9 @@ static int fill_add_data_header(private_context_t *ctx, uint64_t id,
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
 	idx += PKT_ITEM_ID_LENGTH;
 
-	/* clock */
+	/* sec */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, time->tv_sec);
-	idx += PKT_CLOCK_LENGTH;
+	idx += PKT_SEC_LENGTH;
 
 	/* ns */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, time->tv_nsec);
@@ -311,16 +313,16 @@ static int fill_add_data_header(private_context_t *ctx, uint64_t id,
 	return idx;
 }
 
-static int fill_get_min_clock_packet(private_context_t *ctx, uint8_t *buf, uint64_t id)
+static int fill_get_min_sec_packet(private_context_t *ctx, uint8_t *buf, uint64_t id)
 {
 	int idx = 0;
 
 	/* pkt size */
-	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_GET_MIN_CLOCK_LENGTH - PKT_SIZE_LENGTH);
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_GET_MIN_SEC_LENGTH - PKT_SIZE_LENGTH);
 	idx += PKT_SIZE_LENGTH;
 
 	/* type */
-	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_GET_MIN_CLOCK);
+	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_GET_MIN_SEC);
 	idx += PKT_TYPE_LENGTH;
 
 	/* Item ID */
@@ -347,9 +349,9 @@ static int fill_delete_packet(private_context_t *ctx, uint8_t *buf, uint64_t id,
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
 	idx += PKT_ITEM_ID_LENGTH;
 
-	/* min clock */
+	/* min sec */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, threshold->tv_sec);
-	idx += PKT_CLOCK_LENGTH;
+	idx += PKT_SEC_LENGTH;
 
 	return idx;
 }
@@ -371,13 +373,13 @@ static int fill_get_statistics(private_context_t *ctx, uint8_t *buf, uint64_t id
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
 	idx += PKT_ITEM_ID_LENGTH;
 
-	/* clock0 */
+	/* sec0 */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, time0->tv_sec);
-	idx += PKT_CLOCK_LENGTH;
+	idx += PKT_SEC_LENGTH;
 
-	/* clock1 */
+	/* sec1 */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, time1->tv_sec);
-	idx += PKT_CLOCK_LENGTH;
+	idx += PKT_SEC_LENGTH;
 
 	return idx;
 }
@@ -464,19 +466,19 @@ static int parse_common_reply_header
 	return idx;
 }
 
-static int parse_reply_get_min_clock(private_context_t *ctx, uint8_t *buf,
+static int parse_reply_get_min_sec(private_context_t *ctx, uint8_t *buf,
                                      struct timespec *minimum_time)
 {
-	uint32_t expected_length = REPLY_GET_MIN_CLOCK_LENGTH - PKT_SIZE_LENGTH;
+	uint32_t expected_length = REPLY_GET_MIN_SEC_LENGTH - PKT_SIZE_LENGTH;
 	int idx = parse_common_reply_header(ctx, buf, NULL, expected_length,
-	                                    PKT_TYPE_GET_MIN_CLOCK);
+	                                    PKT_TYPE_GET_MIN_SEC);
 	if (idx == -1)
 		return -1;
 
-	// min_clock
-	uint32_t _min_clock = restore_le32(ctx, &buf[idx]);
-	idx += PKT_CLOCK_LENGTH;
-	minimum_time->tv_sec = _min_clock;
+	// min_sec
+	uint32_t _min_sec = restore_le32(ctx, &buf[idx]);
+	idx += PKT_SEC_LENGTH;
+	minimum_time->tv_sec = _min_sec;
 	minimum_time->tv_nsec = 0;
 
 	return 0;
@@ -574,8 +576,34 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 	if (ctx == NULL)
 		return -1;
 
-	ERR_MSG("Not implemented yet\n");
-	return -1;
+	uint32_t len_string = strlen(value);
+	if (len_string > MAX_STRING_LENGTH) {
+		ERR_MSG("string length is too long: %d", len_string);
+		return -1;
+	}
+	uint32_t pkt_size =
+	  PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_STRING_SIZE_LENGTH + len_string;
+	uint8_t *buf = malloc(pkt_size);
+	uint8_t *ptr = buf;
+
+	/* header */
+	ptr += fill_add_data_header(ctx, id, time, ptr,
+	                            HISTORY_GLUON_TYPE_STRING, pkt_size);
+
+	/* length */
+	*((uint32_t *)ptr) = conv_le32(ctx, len_string);
+	ptr += PKT_DATA_STRING_SIZE_LENGTH;
+
+	/* string body */
+	memcpy(ptr, value, len_string);
+
+	/* write data */
+	int ret = write_data(ctx, buf, pkt_size);
+
+	free(buf);
+	if (ret == -1)
+		return -1;
+	return 0;
 }
 
 int history_gluon_add_blob(history_gluon_context_t _ctx,
@@ -598,16 +626,16 @@ int history_gluon_get_minmum_time(history_gluon_context_t _ctx,
 		return -1;
 
 	// request
-	uint8_t request[PKT_GET_MIN_CLOCK_LENGTH];
-	fill_get_min_clock_packet(ctx, request, id);
-	if (write_data(ctx, request, PKT_GET_MIN_CLOCK_LENGTH) == -1)
+	uint8_t request[PKT_GET_MIN_SEC_LENGTH];
+	fill_get_min_sec_packet(ctx, request, id);
+	if (write_data(ctx, request, PKT_GET_MIN_SEC_LENGTH) == -1)
 		return -1;
 
 	// reply
-	uint8_t reply[REPLY_GET_MIN_CLOCK_LENGTH];
-	if (read_data(ctx, reply, REPLY_GET_MIN_CLOCK_LENGTH) == -1)
+	uint8_t reply[REPLY_GET_MIN_SEC_LENGTH];
+	if (read_data(ctx, reply, REPLY_GET_MIN_SEC_LENGTH) == -1)
 		return -1;
-	if (parse_reply_get_min_clock(ctx, reply, minimum_time))
+	if (parse_reply_get_min_sec(ctx, reply, minimum_time))
 		return -1;
 	return 0;
 }
@@ -701,15 +729,15 @@ int history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
 	statistics->itemid = restore_le64(ctx, &reply[idx]);
 	idx += PKT_ITEM_ID_LENGTH;
 
-	// clock0
+	// sec0
 	statistics->time0.tv_sec = restore_le32(ctx, &reply[idx]);
 	statistics->time0.tv_nsec = 0;
-	idx += PKT_CLOCK_LENGTH;
+	idx += PKT_SEC_LENGTH;
 
-	// clock1
+	// sec1
 	statistics->time1.tv_sec = restore_le32(ctx, &reply[idx]);
 	statistics->time1.tv_nsec = 0;
-	idx += PKT_CLOCK_LENGTH;
+	idx += PKT_SEC_LENGTH;
 
 	// count
 	statistics->count = restore_le64(ctx, &reply[idx]);
