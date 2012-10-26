@@ -92,12 +92,7 @@ public class HBaseDriver extends BasicStorageDriver {
 
             byte[] qualifierBytes = Bytes.toBytes(QUALIFIER_DATA);
             byte[] dataBytes = history.getDataAsByteArray();
-            if (history.type == HistoryData.TYPE_FLOAT)
-                putData.add(familyBytes, qualifierBytes, dataBytes);
-            else if (history.type == HistoryData.TYPE_STRING)
-                putData.add(familyBytes, qualifierBytes, dataBytes);
-            else if (history.type == HistoryData.TYPE_UINT64)
-                putData.add(familyBytes, qualifierBytes, dataBytes);
+            putData.add(familyBytes, qualifierBytes, dataBytes);
             table.put(putData);
         } catch (IOException e) {
             e.printStackTrace();
