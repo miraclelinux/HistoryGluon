@@ -26,7 +26,7 @@ public class BridgeWorker extends Thread {
     private static final int PKT_DATA_FLOAT_LENGTH = 8;
     private static final int PKT_DATA_UINT64_LENGTH = 8;
     private static final int PKT_DATA_STRING_SIZE_LENGTH = 4;
-    private static final int PKT_DATA_BLOB_SIZE_LENGTH = 4;
+    private static final int PKT_DATA_BLOB_SIZE_LENGTH = 8;
     private static final int PKT_NUM_ENTRIES_LENGTH = 4;
     private static final int PKT_SORT_ORDER_LENGTH = 2;
     private static final int PKT_SEARCH_NEAR_LENGTH = 1;
@@ -188,17 +188,22 @@ public class BridgeWorker extends Thread {
         idx += PKT_NS_LENGTH;
 
         // parse each data
+        boolean ret = false;
         if (history.type == HistoryData.TYPE_FLOAT)
-            procFloatData(pktBuf, idx, history);
+            ret = procFloatData(pktBuf, idx, history);
         else if (history.type == HistoryData.TYPE_STRING)
-            procStringData(pktBuf, idx, history);
+            ret = procStringData(pktBuf, idx, history);
         else if (history.type == HistoryData.TYPE_UINT64)
-            procUint64Data(pktBuf, idx, history);
+            ret = procUint64Data(pktBuf, idx, history);
         else if (history.type == HistoryData.TYPE_BLOB)
-            procBlobData(pktBuf, idx, history);
+            ret = procBlobData(pktBuf, idx, history);
         else {
             // TODO: return error
             m_log.error("Got unknown data type: " + history.type);
+            return false;
+        }
+        if (!ret) {
+            // TODO: return error
             return false;
         }
 
@@ -459,41 +464,63 @@ public class BridgeWorker extends Thread {
         return true;
     }
 
-    private long procFloatData(byte[] pktBuf, int idx, HistoryData history) {
+    private boolean procFloatData(byte[] pktBuf, int idx, HistoryData history) {
         m_byteBuffer.clear();
         m_byteBuffer.put(pktBuf, idx, PKT_DATA_FLOAT_LENGTH);
         idx += PKT_DATA_FLOAT_LENGTH;
         history.dataFloat = m_byteBuffer.getDouble(0);
-        return idx;
+        return true;
     }
 
-    private long procStringData(byte[] pktBuf, int idx, HistoryData history) {
+    private boolean procStringData(byte[] pktBuf, int idx, HistoryData history)
+      throws IOException {
         m_byteBuffer.clear();
         m_byteBuffer.put(pktBuf, idx, PKT_DATA_STRING_SIZE_LENGTH);
         idx += PKT_DATA_STRING_SIZE_LENGTH;
         int stringLength = m_byteBuffer.getInt(0);
-        history.dataString = new String(pktBuf, idx, stringLength);
+
+        // get string body
+        byte[] bodyBuf = new byte[stringLength];
+        if (m_istream.read(bodyBuf, 0, stringLength) == -1) {
+            m_log.error("Unexpectedly input stream reaches the end.");
+            return false;
+        }
+        history.dataString = new String(bodyBuf);
         idx += stringLength;
-        return idx;
+        return true;
     }
 
-    private int procUint64Data(byte[] pktBuf, int idx, HistoryData history) {
+    private boolean procUint64Data(byte[] pktBuf, int idx, HistoryData history) {
         m_byteBuffer.clear();
         m_byteBuffer.put(pktBuf, idx, PKT_DATA_UINT64_LENGTH);
         idx += PKT_DATA_UINT64_LENGTH;
         history.dataUint64 = m_byteBuffer.getLong(0);
-        return idx;
+        return true;
     }
 
-    private long procBlobData(byte[] pktBuf, int idx, HistoryData history) {
+    private boolean procBlobData(byte[] pktBuf, int idx, HistoryData history)
+    throws IOException {
         m_byteBuffer.clear();
         m_byteBuffer.put(pktBuf, idx, PKT_DATA_BLOB_SIZE_LENGTH);
         idx += PKT_DATA_BLOB_SIZE_LENGTH;
-        // TODO: Suport large size
-        int length = (m_byteBuffer.getInt(0));
-        history.dataBlob = new byte[length];
-        idx += length;
-        return idx;
+        long blobLength = m_byteBuffer.getLong(0);
+
+        // get string body
+        if (blobLength > 0x7fffffff) {
+            // TODO: large Blob support
+            m_log.error("Current implementation hasn't supported the large size blobl > 0x7fffffff.");
+            return false;
+        }
+
+        int _blobLength = (int)blobLength;
+        byte[] bodyBuf = new byte[_blobLength];
+        if (m_istream.read(bodyBuf, 0, _blobLength) == -1) {
+            m_log.error("Unexpectedly input stream reaches the end.");
+            return false;
+        }
+        history.dataBlob = bodyBuf;
+        idx += _blobLength;
+        return true;
     }
 
     private int calcReplyPktSize(HistoryData history) {

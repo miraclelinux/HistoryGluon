@@ -30,10 +30,11 @@
 /* Common reply */
 #define REPLY_RESULT_LENGTH       4
 
-/* Add packets */
-#define PKT_DATA_FLOAT_LENGTH     8
-#define PKT_DATA_UINT64_LENGTH    8
+/* Add Data */
+#define PKT_DATA_FLOAT_LENGTH        8
+#define PKT_DATA_UINT64_LENGTH       8
 #define PKT_DATA_STRING_SIZE_LENGTH  4
+#define PKT_DATA_BLOB_SIZE_LENGTH    8
 
 #define PKT_ADD_DATA_HEADER_LENGTH \
 (PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_DATA_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH + PKT_NS_LENGTH)
@@ -253,8 +254,8 @@ static double read_ieee754_double(private_context_t *ctx, uint8_t *buf)
 }
 
 static int fill_add_data_header(private_context_t *ctx, uint64_t id,
-                                struct timespec *time, uint8_t *buf, uint16_t data_type,
-                                int pkt_size)
+                                struct timespec *time, uint8_t *buf,
+                                uint16_t data_type, uint32_t pkt_size)
 {
 	int idx = 0;
 
@@ -356,7 +357,7 @@ static int fill_get_statistics(private_context_t *ctx, uint8_t *buf, uint64_t id
 	return idx;
 }
 
-static int write_data(private_context_t *ctx, uint8_t *buf, size_t count)
+static int write_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
 {
 	uint8_t *ptr = buf;
 	while (count > 0) {
@@ -576,7 +577,7 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 		return -1;
 	}
 	uint32_t pkt_size =
-	  PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_STRING_SIZE_LENGTH + len_string;
+	  PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_STRING_SIZE_LENGTH;
 	uint8_t *buf = malloc(pkt_size);
 	if (!buf) {
 		ERR_MSG("Failed to malloc: %d", pkt_size);
@@ -595,11 +596,14 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 	/* string body */
 	memcpy(ptr, value, len_string);
 
-	/* write data */
+	/* write header */
 	int ret = write_data(ctx, buf, pkt_size);
-
 	free(buf);
 	if (ret == -1)
+		return -1;
+
+	/* write string body */
+	if(write_data(ctx, (uint8_t*)value, len_string) == -1)
 		return -1;
 
 	/* check result */
@@ -619,7 +623,8 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 		return -1;
 	}
 	uint32_t pkt_size =
-	  PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_STRING_SIZE_LENGTH + length;
+	  PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_BLOB_SIZE_LENGTH;
+	
 	uint8_t *buf = malloc(pkt_size);
 	if (!buf) {
 		ERR_MSG("Failed to malloc: %d", pkt_size);
@@ -632,17 +637,20 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 	                            HISTORY_GLUON_TYPE_BLOB, pkt_size);
 
 	/* length */
-	*((uint32_t *)ptr) = conv_le32(ctx, length);
-	ptr += PKT_DATA_STRING_SIZE_LENGTH;
+	*((uint64_t *)ptr) = conv_le64(ctx, length);
+	ptr += PKT_DATA_BLOB_SIZE_LENGTH;
 
 	/* string body */
 	memcpy(ptr, value, length);
 
-	/* write data */
+	/* write header */
 	int ret = write_data(ctx, buf, pkt_size);
-
 	free(buf);
 	if (ret == -1)
+		return -1;
+
+	/* write string body */
+	if(write_data(ctx, value, length) == -1)
 		return -1;
 
 	/* check result */
