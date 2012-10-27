@@ -46,19 +46,10 @@ public class HistoryData implements Comparable<HistoryData> {
     // -----------------------------------------------------------------------
     @Override
     public int compareTo(HistoryData history) {
-        int secComparedResult = Utils.compareAsUnsigned(sec, history.sec);
-        if (secComparedResult != 0)
-            return secComparedResult;
-
-        int nsComparedResult = Utils.compareAsUnsigned(ns, history.ns);
-        if (nsComparedResult != 0)
-            return nsComparedResult;
-
-        int idComparedResult = Utils.compareAsUnsigned(id, history.id);
-        if (idComparedResult != 0)
-            return idComparedResult;
-
-        return 0;
+        int timeComparedResult = compareTime(this, history);
+        if (timeComparedResult != 0)
+            return timeComparedResult;
+        return Utils.compareAsUnsigned(id, history.id);
     }
 
     // -----------------------------------------------------------------------
@@ -146,16 +137,14 @@ public class HistoryData implements Comparable<HistoryData> {
         int idComparedResult = Utils.compareAsUnsigned(h0.id, h1.id);
         if (idComparedResult != 0)
             return idComparedResult;
+        return compareTime(h0, h1);
+    }
 
+    public static int compareTime(HistoryData h0, HistoryData h1) {
         int secComparedResult = Utils.compareAsUnsigned(h0.sec, h1.sec);
         if (secComparedResult != 0)
             return secComparedResult;
-
-        int nsComparedResult = Utils.compareAsUnsigned(h0.ns, h1.ns);
-        if (nsComparedResult != 0)
-            return nsComparedResult;
-
-        return 0;
+        return Utils.compareAsUnsigned(h0.ns, h1.ns);
     }
 }
 
