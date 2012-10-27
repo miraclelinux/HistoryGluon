@@ -4,18 +4,38 @@
 
 typedef void * history_gluon_context_t;
 
-enum {
+typedef enum {
 	HISTORY_GLUON_TYPE_FLOAT  = 0,
 	HISTORY_GLUON_TYPE_STRING = 1,
 	HISTORY_GLUON_TYPE_UINT64 = 2,
 	HISTORY_GLUON_TYPE_BLOB   = 3,
-};
+} history_gluon_data_type_t;
+
+typedef enum {
+	HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH   = 0,
+	HISTORY_GLUON_QUERY_TYPE_LESS_DATA    = 1,
+	HISTORY_GLUON_QUERY_TYPE_GREATER_DATA = 2,
+} history_gluon_query_t;
+
+typedef enum {
+	HISTORY_GLUON_SORT_ASCENDING  = 0,
+	HISTORY_GLUON_SORT_DESDENDING = 1,
+	HISTORY_GLUON_SORT_NOT_SORTED = 2,
+} history_gluon_sort_order_t;
+
+typedef enum {
+	HISTORY_GLUON_DELTE_TYPE_ONLY_MATCH       = 0,
+	HISTORY_GLUON_DELTE_TYPE_EQUAL_OR_LESS    = 1,
+	HISTORY_GLUON_DELTE_TYPE_LESS             = 2,
+	HISTORY_GLUON_DELTE_TYPE_EQUAL_OR_GREATER = 3,
+	HISTORY_GLUON_DELTE_TYPE_GREATER          = 4,
+} history_gluon_delete_way_t;
 
 typedef struct
 {
-	uint64_t itemid;
-	struct timespec time0;
-	struct timespec time1;
+	uint64_t id;
+	struct timespec ts0;
+	struct timespec ts1;
 	uint64_t count;
 	uint64_t min;
 	uint64_t max;
@@ -28,24 +48,25 @@ history_gluon_statistics_t;
 typedef struct
 {
 	uint64_t id;
-	struct timespec time;
-	int type;
+	struct timespec ts;
+	history_gluon_data_type_t type;
 	union {
 		double    v_float;
 		char *    v_string;
 		uint64_t  v_uint64;
 		uint8_t * v_blob;
 	};
-	int length;
+	uint64_t length;
 }
-history_gluon_value_t;
+history_gluon_data_t;
 
 typedef struct
 {
-	uint64_t length;
-	history_gluon_value_t *array;
+	uint64_t num_data;
+	history_gluon_sort_order_t sort_order;
+	history_gluon_data_t *array;
 }
-history_gluon_value_array_t;
+history_gluon_data_array_t;
 
 /**
  * Create a History Gluon's context.
@@ -65,142 +86,162 @@ void history_gluon_free_context(history_gluon_context_t context);
  * Add interger type data.
  *
  * @param context A History Gluon's context.
- * @param id An item ID.
- * @param time A timestamp of the item.
- * @param value A value of the item.
+ * @param id A data ID.
+ * @param ts A ts of the data
+ * @param data A value of the data.
  * @return 0 if success. -1 if error occured.
  */
 int history_gluon_add_uint64(history_gluon_context_t context,
-                             uint64_t id, struct timespec *time, uint64_t value);
+                             uint64_t id, struct timespec *ts, uint64_t data);
 
 /**
  * Add floating-point type data.
  *
  * @param context A History Gluon's context.
- * @param id An item ID.
- * @param time A timestamp of the item.
- * @param value A value of the item.
+ * @param id A data ID.
+ * @param ts A ts of the data.
+ * @param data A value of the data.
  * @return 0 if success. -1 if error occured.
  */
 int history_gluon_add_float(history_gluon_context_t context,
-                            uint64_t id, struct timespec *time, double value);
+                            uint64_t id, struct timespec *ts,
+                            double data);
 
 /**
  * Add string type data.
  *
  * @param context A History Gluon's context.
- * @param id An item ID.
- * @param time A timestamp of the item.
- * @param value A value of the item.
+ * @param id A data ID.
+ * @param ts A ts of the data.
+ * @param data A null-terminated string.
  * @return 0 if success. -1 if error occured.
  */
 int history_gluon_add_string(history_gluon_context_t context,
-                             uint64_t id, struct timespec *time, char *valu);
+                             uint64_t id, struct timespec *ts, char *data);
 
 /**
  * Add blob type data.
  *
  * @param context A History Gluon's context.
- * @param id An item ID.
- * @param time A timestamp of the item.
- * @param value A value of the item.
- * @param length A value of the item.
+ * @param id A data ID.
+ * @param ts A ts of the data.
+ * @param data A pointer to the data.
+ * @param length The size of the data.
  * @return 0 if success. -1 if error occured.
  */
 int history_gluon_add_blob(history_gluon_context_t context,
-                           uint64_t id, struct timespec *time, uint8_t *value,
-                           uint64_t length);
+                           uint64_t id, struct timespec *timespec,
+                           uint8_t *data, uint64_t length);
 
 /**
- * Get the minimum time in items with the specified ID.
+ * Query data with the specified ID and the ts.
  *
  * @param context A History Gluon's context.
- * @param id An item ID.
- * @param minimum_time A pointer in which the minium time of the item with
- * the specfied ID is returned.
+ * @param id A data ID.
+ * @param ts A time to be queried.
+ * @param query_type A behavior when there is no matched data. If this
+ *                   parameter is \HISORY_GLUON_QUERY_TYPE_ONLY_MATCH,
+ *                   none of data is returned.
+ *                   If it is \HISTORY_GLUON_QUERY_TYPE_LESS_DATA and
+ *                   \HISTORY_GLUON_QUERY_TYPE_GREATER_DATA, the most near
+ *                   less and greater data is respectively returned.
+ * @param gluon_data An address where the created history_gluon_data_t
+ *                   variable's pointer is stored.
+ *                   The caller must call history_gluon_free_data() when
+ *                   no longer needed.
+ * @return 0 if success. -1 if error occured.
+ */
+int history_gluon_query(history_gluon_context_t context,
+                        uint64_t id, struct timespec *ts,
+                        history_gluon_query_t query_type,
+                        history_gluon_data_t **gluon_data);
+
+/**
+ * Free history_gluon_data_t variable .
+ *
+ * @param context A History Gluon's context.
+ * @param gluon_data A pointer to a history_gluon_data_t variable that is
+ *                   obtained by \history_gluon_query().
+ */
+void history_gluon_free_data(history_gluon_context_t context,
+                             history_gluon_data_t *gluon_data);
+
+/**
+ * Get data array with the specified ID and the interval.
+ *
+ * @param context A History Gluon's context.
+ * @param id A data ID.
+ * @param ts0 A start time of the interval.
+ *                   Data with the \time0 is included.
+ * @param ts1 An end time of the interval.
+ *                   Data with the \time1 is NOT included.
+ * @param sort_request A request of the sort order.
+ * @param array An address where the created history_gluon_data_array_t
+ *              variable is stored..
+ *              The caller must call history_gluon_free_data_array()
+ *              when no longer needed.
+ * @return 0 if success. -1 if error occured.
+ */
+int history_gluon_range_query(history_gluon_context_t context, uint64_t id,
+                              struct timespec *ts0, struct timespec *ts1,
+                              history_gluon_sort_order_t sort_request,
+                              history_gluon_data_array_t **array);
+/**
+ * Free a history-data array.
+ *
+ * @param context A History Gluon's context.
+ * @param array An array that is obtained by \history_gluon_range_query().
+ */
+void history_gluon_free_data_array(history_gluon_context_t context,
+                                   history_gluon_data_array_t *array);
+
+
+/**
+ * Get the minimum time of the data with the specified ID.
+ *
+ * @param context A History Gluon's context.
+ * @param id A data ID.
+ * @param minimum_time A pointer in which the minium time of the data with
+ *                     the specfied ID is returned.
  * @return 0 if success. -1 if error occured.
  */
 int history_gluon_get_minmum_time(history_gluon_context_t context,
                                   uint64_t id, struct timespec *minimum_time);
 
 /**
- * Delete items whose time is below the specified threshold.
- * The items with the same as the threshold is
+ * Get statistical information of the data with the specified ID
+ * and the time interval.
  *
  * @param context A History Gluon's context.
- * @param id An item ID.
- * @param threshold The threshold. The item with this time is NOT deleted.
- * @param num_deleted_entries A pointer in which the number of deleted items is stored,
- *                            or NULL when it is not needed. 
- * @return 0 if success. -1 if error occured. When the error, \num_deleted_entries is
- *         not changed.
- */
-int history_gluon_delete_below_threshold(history_gluon_context_t context,
-                                         uint64_t id, struct timespec *threshold,
-                                         uint32_t *num_deleted_entries);
-
-/**
- * Get a history-value array with the specified item and the interval.
- *
- * @param context A History Gluon's context.
- * @param id An item ID.
- * @param time0 A start time of the interval. The item with the \time0 is included.
- * @param time1 An end time of the interval. The item with the \time1 is NOT included.
- * @param array A pointer to an allocated history_gluon_value_array_t-type variable.
- *              The caller must call history_gluon_free_value_array()
- *              when no longer needed.
- * @return 0 if success. -1 if error occured. When the error, \num_entries, \type, and
- *         \array are not changed.
- */
-int history_gluon_range_query(history_gluon_context_t context, uint64_t id,
-                              struct timespec *time0, struct timespec *time1,
-                              history_gluon_value_array_t *array);
-/**
- * Free a history-value array.
- *
- * @param context A History Gluon's context.
- * @param array An array that is obtained by \history_gluon_range_query().
- */
-void history_gluon_free_value_array(history_gluon_context_t context,
-                                    history_gluon_value_array_t *array);
-
-/**
- * Get a history value with the specified item and the time.
- *
- * @param context A History Gluon's context.
- * @param id An item ID.
- * @param time A time of the history value.
- * @param search_near If this is 1 and the item with the specified time was not found,
- *                    the item with near time is returned.
- * @param value An pointer to an allocated history_gluon_valut_t-type variable.
- *              The caller must call history_gluon_free_value() when no longer needed.
- * @return 0 if success. -1 if error occured.
- */
-int history_gluon_query(history_gluon_context_t context,
-                        uint64_t id, struct timespec *time, int search_near,
-                        history_gluon_value_t *value);
-
-/**
- * Free a history value.
- *
- * @param context A History Gluon's context.
- * @param value A value that is obtained by \history_gluon_query().
- */
-void history_gluon_free_value(history_gluon_context_t context,
-                              history_gluon_value_t *value);
-
-/**
- * Get statistical information of the items with given ID and the time interval.
- *
- * @param context A History Gluon's context.
- * @param id An item ID.
- * @param time0 A start time of the interval. The item with the time is included.
- * @param time1 An end time of the interval. The item with the time is NOT included.
+ * @param id A data ID.
+ * @param ts0 A start time of the interval.
+ *                   The item with the time is included.
+ * @param ts1 An end time of the interval.
+ *                   The item with the time is NOT included.
  * @param statistics A pointer in which the result is returned.
  * @return 0 if success. -1 if error occured.
  */
 int history_gluon_get_statistics(history_gluon_context_t context, uint64_t id,
-                                 struct timespec *time0, struct timespec *time1,
+                                 struct timespec *ts0, struct timespec *ts1,
                                  history_gluon_statistics_t *statistics);
+
+/**
+ * Delete data
+ *
+ * @param context A History Gluon's context.
+ * @param id A data ID.
+ * @param ts The ts to be used to select deleted data.
+ * @param delete_type A type of deletion.
+ * @param num_deleted_entries A pointer in which the number of deleted data
+ *                            is stored. It can be NULL when the number is
+ *                            not needed.
+ * @return 0 if success. -1 if error occured.
+ *         When the error, \num_deleted_entries is not changed.
+ */
+int history_gluon_delete(history_gluon_context_t context, uint64_t id,
+                         struct timespec *ts,
+                         history_gluon_delete_way_t delete_type,
+                         uint64_t *num_deleted_entries);
+
 
 #endif // _history_gluon_h_

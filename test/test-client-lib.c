@@ -18,13 +18,13 @@ static void free_global_context()
 	g_ctx = NULL;
 }
 
-static void assert_delete_all_for_id(uint64_t id, uint32_t *num_deleted_entries)
+static void assert_delete_all_for_id(uint64_t id, uint64_t *num_deleted)
 {
-	struct timespec ts;
-	ts.tv_sec = 0xffffffff;
-	ts.tv_nsec = 0xffffffff;
-	int ret = history_gluon_delete_below_threshold(g_ctx, id, &ts,
-	                                               num_deleted_entries);
+	struct timespec ts = {0, 0};
+	int ret;
+	ret = history_gluon_delete(g_ctx, id, &ts,
+	                           HISTORY_GLUON_DELTE_TYPE_EQUAL_OR_GREATER,
+	                           num_deleted);
 	cut_assert_equal_int(0, ret);
 }
 
@@ -40,46 +40,46 @@ static void assert_add_float(uint64_t id, struct timespec *ts, double v)
 	cut_assert_equal_int(0, ret);
 }
 
-static history_gluon_value_t g_float_samples[] = {
+static history_gluon_data_t g_float_samples[] = {
 	{
 		.id = TEST_STD_ID,
-		.time.tv_sec = 1234567890,
-		.time.tv_nsec = 123456789,
+		.ts.tv_sec = 1234567890,
+		.ts.tv_nsec = 123456789,
 		.v_float = 0.1,
 	},
 	{
 		.id = TEST_STD_ID,
-		.time.tv_sec = 1506070800,
-		.time.tv_nsec = 100000000,
+		.ts.tv_sec = 1506070800,
+		.ts.tv_nsec = 100000000,
 		.v_float = 99.9,
 	},
 	{
 		.id = TEST_STD_ID,
-		.time.tv_sec = 1600000000,
-		.time.tv_nsec = 500000000,
+		.ts.tv_sec = 1600000000,
+		.ts.tv_nsec = 500000000,
 		.v_float = 100.0,
 	},
 	{
 		.id = TEST_STD_ID,
-		.time.tv_sec = 1600000001,
-		.time.tv_nsec = 200000000,
+		.ts.tv_sec = 1600000001,
+		.ts.tv_nsec = 200000000,
 		.v_float = -10.5,
 	},
 	{
 		.id = TEST_STD_ID,
-		.time.tv_sec = 2500000000,
-		.time.tv_nsec = 300000000,
+		.ts.tv_sec = 2500000000,
+		.ts.tv_nsec = 300000000,
 		.v_float = -3.2e5,
 	},
 };
 
-static const int NUM_SAMPLES = sizeof(g_float_samples) / sizeof(history_gluon_value_t);
+static const int NUM_SAMPLES = sizeof(g_float_samples) / sizeof(history_gluon_data_t);
 
 static void add_samples() {
 	int i;
 	for (i = 0; i < NUM_SAMPLES; i++) {
-		assert_add_float(g_float_samples[i].id, &g_float_samples[i].time,
-		                  g_float_samples[i].v_float);
+		assert_add_float(g_float_samples[i].id, &g_float_samples[i].ts,
+		                 g_float_samples[i].v_float);
 	}
 }
 
@@ -181,7 +181,7 @@ void test_delete_all(void)
 	ts.tv_nsec = 10;
 	assert_add_float(id, &ts, 3.14);
 
-	uint32_t num_deleted;
+	uint64_t num_deleted;
 	assert_delete_all_for_id(id, &num_deleted);
 	cut_assert_equal_int(2, num_deleted);
 
@@ -201,10 +201,10 @@ void test_get_minimum_time(void)
 	cut_assert_equal_int(0, ret);
 
 	// test the obtained time
-	cut_assert_equal_int(g_float_samples[0].time.tv_sec, ts.tv_sec);
+	cut_assert_equal_int(g_float_samples[0].ts.tv_sec, ts.tv_sec);
 }
 
-void test_delete_below_threshold(void)
+void test_delete_less(void)
 {
 	create_global_context();
 	assert_delete_all_for_id(TEST_STD_ID, NULL);
@@ -213,12 +213,12 @@ void test_delete_below_threshold(void)
 	// delete below threshold
 	int cut_idx = 3;
 	struct timespec ts;
-	memcpy(&ts, &g_float_samples[cut_idx].time, sizeof(struct timespec));
-	uint32_t num_deleted;
-	int ret = history_gluon_delete_below_threshold(g_ctx, TEST_STD_ID, &ts,
-	                                               &num_deleted);
+	memcpy(&ts, &g_float_samples[cut_idx].ts, sizeof(struct timespec));
+	uint64_t num_deleted;
+	int ret;
+	ret = history_gluon_delete(g_ctx, TEST_STD_ID, &ts,
+	                           HISTORY_GLUON_DELTE_TYPE_LESS,
+	                           &num_deleted);
 	cut_assert_equal_int(0, ret);
 	cut_assert_equal_int(cut_idx, num_deleted);
 }
-
-

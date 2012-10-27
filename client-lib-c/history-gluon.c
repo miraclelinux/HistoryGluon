@@ -48,7 +48,7 @@
 #define PKT_GET_DATA_LENGTH \
 (PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH*2 + PKT_NUM_ENTRIES_LENGTH + PKT_DATA_ORDER_LENGTH)
 
-/* Get data with timestamp */
+/* Get data with ts */
 #define PKT_SEARCH_NEAR_LENGTH 1
 #define PKT_GET_DATA_WITH_TIMESTAMP_LENGTH \
 (PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH + PKT_NS_LENGTH + PKT_SEARCH_NEAR_LENGTH)
@@ -83,11 +83,6 @@ enum {
 	PKT_TYPE_GET_MIN_SEC        = 1100,
 	PKT_TYPE_GET_STATISTICS     = 1200,
 	PKT_TYPE_DELETE             = 2000,
-};
-
-enum {
-	SORT_ASCENDING = 0,
-	SORT_DESDENDING = 1,
 };
 
 /* Result code */
@@ -513,7 +508,7 @@ void history_gluon_free_context(history_gluon_context_t _ctx)
 }
 
 int history_gluon_add_float(history_gluon_context_t _ctx,
-                            uint64_t id, struct timespec *time, double value)
+                            uint64_t id, struct timespec *time, double data)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
@@ -528,7 +523,7 @@ int history_gluon_add_float(history_gluon_context_t _ctx,
 	                            HISTORY_GLUON_TYPE_FLOAT, pkt_size);
 
 	/* data */
-	write_ieee754_double(ctx, ptr, value);
+	write_ieee754_double(ctx, ptr, data);
 
 	/* write data */
 	if (write_data(ctx, buf, pkt_size) == -1)
@@ -539,7 +534,7 @@ int history_gluon_add_float(history_gluon_context_t _ctx,
 }
 
 int history_gluon_add_uint64(history_gluon_context_t _ctx,
-                             uint64_t id, struct timespec *time, uint64_t value)
+                             uint64_t id, struct timespec *time, uint64_t data)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
@@ -554,7 +549,7 @@ int history_gluon_add_uint64(history_gluon_context_t _ctx,
 	                            HISTORY_GLUON_TYPE_UINT64, pkt_size);
 
 	/* data */
-	*((uint64_t *)ptr) = conv_le64(ctx, value);
+	*((uint64_t *)ptr) = conv_le64(ctx, data);
 
 	/* write data */
 	if (write_data(ctx, buf, pkt_size) == -1)
@@ -565,13 +560,13 @@ int history_gluon_add_uint64(history_gluon_context_t _ctx,
 }
 
 int history_gluon_add_string(history_gluon_context_t _ctx,
-                             uint64_t id, struct timespec *time, char *value)
+                             uint64_t id, struct timespec *time, char *data)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
 		return -1;
 
-	uint32_t len_string = strlen(value);
+	uint32_t len_string = strlen(data);
 	if (len_string > MAX_STRING_LENGTH) {
 		ERR_MSG("string length is too long: %d", len_string);
 		return -1;
@@ -594,7 +589,7 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 	ptr += PKT_DATA_STRING_SIZE_LENGTH;
 
 	/* string body */
-	memcpy(ptr, value, len_string);
+	memcpy(ptr, data, len_string);
 
 	/* write header */
 	int ret = write_data(ctx, buf, pkt_size);
@@ -603,7 +598,7 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 		return -1;
 
 	/* write string body */
-	if(write_data(ctx, (uint8_t*)value, len_string) == -1)
+	if(write_data(ctx, (uint8_t*)data, len_string) == -1)
 		return -1;
 
 	/* check result */
@@ -611,7 +606,7 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 }
 
 int history_gluon_add_blob(history_gluon_context_t _ctx,
-                           uint64_t id, struct timespec *time, uint8_t *value,
+                           uint64_t id, struct timespec *time, uint8_t *data,
                            uint64_t length)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
@@ -641,7 +636,7 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 	ptr += PKT_DATA_BLOB_SIZE_LENGTH;
 
 	/* string body */
-	memcpy(ptr, value, length);
+	memcpy(ptr, data, length);
 
 	/* write header */
 	int ret = write_data(ctx, buf, pkt_size);
@@ -650,11 +645,50 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 		return -1;
 
 	/* write string body */
-	if(write_data(ctx, value, length) == -1)
+	if(write_data(ctx, data, length) == -1)
 		return -1;
 
 	/* check result */
 	return wait_and_check_add_result(ctx);
+}
+
+int history_gluon_range_query(history_gluon_context_t _ctx, uint64_t id,
+                              struct timespec *ts0,
+                              struct timespec *ts1,
+                              history_gluon_sort_order_t sort_request,
+                              history_gluon_data_array_t **array)
+{
+	ERR_MSG("Not implemented yet\n");
+	return -1;
+}
+
+void history_gluon_free_data_array(history_gluon_context_t _ctx,
+                                    history_gluon_data_array_t *array)
+{
+	uint64_t i = 0;
+	for (i = 0; i < array->num_data; i++) {
+		history_gluon_data_t *data = &(array->array[i]);
+		history_gluon_free_data(_ctx, data);
+	}
+}
+
+int history_gluon_query(history_gluon_context_t _ctx,
+                        uint64_t id, struct timespec *ts,
+                        history_gluon_query_t query_type,
+                        history_gluon_data_t **gluon_data)
+{
+	ERR_MSG("Not implemented yet\n");
+	return -1;
+}
+
+void history_gluon_free_data(history_gluon_context_t _ctx,
+                              history_gluon_data_t *gluon_data)
+{
+	if (gluon_data->type == HISTORY_GLUON_TYPE_STRING)
+		free(gluon_data->v_string);
+	else if (gluon_data->type == HISTORY_GLUON_TYPE_BLOB)
+		free(gluon_data->v_blob);
+	free(gluon_data);
 }
 
 int history_gluon_get_minmum_time(history_gluon_context_t _ctx,
@@ -676,67 +710,6 @@ int history_gluon_get_minmum_time(history_gluon_context_t _ctx,
 		return -1;
 	if (parse_reply_get_min_sec(ctx, reply, minimum_time))
 		return -1;
-	return 0;
-}
-
-int history_gluon_range_query(history_gluon_context_t _ctx, uint64_t id,
-                              struct timespec *time0, struct timespec *time1,
-                              history_gluon_value_array_t *array)
-{
-	ERR_MSG("Not implemented yet\n");
-	return -1;
-}
-
-void history_gluon_free_value_array(history_gluon_context_t _ctx,
-                                    history_gluon_value_array_t *array)
-{
-	uint64_t i = 0;
-	for (i = 0; i < array->length; i++) {
-		history_gluon_value_t *value = &(array->array[i]);
-		history_gluon_free_value(_ctx, value);
-	}
-}
-
-int history_gluon_query(history_gluon_context_t _ctx,
-                        uint64_t id, struct timespec *time, int search_near,
-                        history_gluon_value_t *value)
-{
-	ERR_MSG("Not implemented yet\n");
-	return -1;
-}
-
-void history_gluon_free_value(history_gluon_context_t _ctx,
-                              history_gluon_value_t *value)
-{
-	if (value->type == HISTORY_GLUON_TYPE_STRING)
-		free(value->v_string);
-	else if (value->type == HISTORY_GLUON_TYPE_BLOB)
-		free(value->v_blob);
-}
-
-int history_gluon_delete_below_threshold(history_gluon_context_t _ctx,
-                                         uint64_t id, struct timespec *threshold,
-                                         uint32_t *num_deleted_entries)
-{
-	private_context_t *ctx = get_connected_private_context(_ctx);
-	if (ctx == NULL)
-		return -1;
-
-	// request
-	uint8_t request[PKT_DELETE_LENGTH];
-	fill_delete_packet(ctx, request, id, threshold);
-	if (write_data(ctx, request, PKT_DELETE_LENGTH) == -1)
-		return -1;
-
-	// reply
-	uint8_t reply[REPLY_DELETE_LENGTH];
-	if (read_data(ctx, reply, REPLY_DELETE_LENGTH) == -1)
-		return -1;
-	int num_deleted = parse_reply_delete(ctx, reply);
-	if (num_deleted == -1)
-		return -1;
-	if (num_deleted_entries)
-		*num_deleted_entries = num_deleted;
 	return 0;
 }
 
@@ -765,17 +738,17 @@ int history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
 		return -1;
 
 	// item ID
-	statistics->itemid = restore_le64(ctx, &reply[idx]);
+	statistics->id = restore_le64(ctx, &reply[idx]);
 	idx += PKT_ITEM_ID_LENGTH;
 
 	// sec0
-	statistics->time0.tv_sec = restore_le32(ctx, &reply[idx]);
-	statistics->time0.tv_nsec = 0;
+	statistics->ts0.tv_sec = restore_le32(ctx, &reply[idx]);
+	statistics->ts0.tv_nsec = 0;
 	idx += PKT_SEC_LENGTH;
 
 	// sec1
-	statistics->time1.tv_sec = restore_le32(ctx, &reply[idx]);
-	statistics->time1.tv_nsec = 0;
+	statistics->ts1.tv_sec = restore_le32(ctx, &reply[idx]);
+	statistics->ts1.tv_nsec = 0;
 	idx += PKT_SEC_LENGTH;
 
 	// count
@@ -796,6 +769,33 @@ int history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
 	statistics->average = statistics->sum / statistics->count;
 	statistics->delta = statistics->max - statistics->min;
 
+	return 0;
+}
+
+int history_gluon_delete(history_gluon_context_t _ctx, uint64_t id,
+                         struct timespec *ts,
+                         history_gluon_delete_way_t delete_type,
+                         uint64_t *num_deleted_entries)
+{
+	private_context_t *ctx = get_connected_private_context(_ctx);
+	if (ctx == NULL)
+		return -1;
+
+	// request
+	uint8_t request[PKT_DELETE_LENGTH];
+	fill_delete_packet(ctx, request, id, ts);
+	if (write_data(ctx, request, PKT_DELETE_LENGTH) == -1)
+		return -1;
+
+	// reply
+	uint8_t reply[REPLY_DELETE_LENGTH];
+	if (read_data(ctx, reply, REPLY_DELETE_LENGTH) == -1)
+		return -1;
+	int num_deleted = parse_reply_delete(ctx, reply);
+	if (num_deleted == -1)
+		return -1;
+	if (num_deleted_entries)
+		*num_deleted_entries = num_deleted;
 	return 0;
 }
 
