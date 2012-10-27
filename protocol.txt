@@ -1,67 +1,94 @@
-*** Basics ***
+History Gluon Server-client protocol specification
+
+Date: 2012/10/27
+Version: 0.1.0
+
+*** Basics rules ***
 Endian: Little
+[<Number>] means Length in Byte (decimal)
 
-===== COMMAND PKT: Add data ======
-* Packet length [4B] (not including this)
-* Command Type  [2B]
-    100: Add data
-* data type [2B]    
-    01:Write Double
-    01:Write UINT64
-    02: Write STRING
-* Item ID [8B]
-* sec [4B]
-* ns    [4B]
-* Data
-    Command Type: 00: 64bit IEEE 754
-    Command Type: 01: 64bit 
-    Command Type: 02: Length[4B], String body (The max size of string is 0x7fffffff)
-    Command Type: 03: Length[4B], Blob (The max size of string is 0xffff0000)
-===== PKT END =====
+=========================================
+COMMAND: Add Data
+=========================================
+[ 4] Packet length (not including this field)
+  When 'Data type' is String annd Blob, this doesn't include the size of
+  String body and Blob body respectively.
+[ 4] Command type
+  0100: Add Data
+[ 2] Data type 
+  00: Float (double precision: 64bit)
+  01: Integer (64bit)
+  02: String
+  03: Blob (binary large object)
+[ 8] ID
+[ 4] Time: second
+[ 4] Time: nano-second
+--- Data Type: 00 (Float) ---
+[ 8] Float Data IEEE 754 (64bit)
+--- Data type: 01 (Integer) ---
+[ 8] Integer Data
+--- Data type: 02 (String) ---
+[ 4] String length (The maximum: 0x7ffffff)
+[ v] String body (Null terminator is NOT needed)
+--- Data type: 03 (Blob) ---
+[ 8] Blob length (The maximum: 0x7fffffff ffffffff)
+[ v] Blobl body
 
-===== REPLY PKT: Add data =====
-* Packet length [4B] (not including this)
-* Reply Type  [2B]
-   100: reply: Add data
-* Result [4B]
-   0: Success
-   1: Error due to unknown reason
-   2: Error: theere is the entry that has the same id and time.
-===== PKT END =====
+-----------------------------------------
+REPLY: Add Data
+-----------------------------------------
+[ 4] Packet length (not including this)
+[ 2] Reply type
+  0100: reply: Add data
+[ 4] Result
+  0: Success
+  1: Error due to unknown reason
+  2: Error: theere is the entry that has the same id and time.
 
-===== COMMAND PKT: Get data =====
-* Packet length [4B] (not including this)
-* Command Type  [2B]
-   1000: get data
-* Item ID [8B]
-* sec0 [4B]
-* sec1 [4B]
-* maximum entries [4B]: 0 means no limit
-* order [2B]: 0: ascending, 1: descending
-===== PKT END =====
+=========================================
+COMMAND PKT: Range Query
+=========================================
+[ 4] Packet length (not including this field)
+[ 4] Command type
+  1000: Range Query
+[ 8] ID
+[ 4] Start Time:
+[ 4] End Time:
+[ 4] The number of the maximum entries
+  0: No limit
+[ 2] Sort order
+  0: ascending
+  1: descending
 
-===== REPLY PKT: Get data =====
-* Packet length [4B] (not including this)
-* Reply Type  [2B]
+-----------------------------------------
+REPLY: Range Query
+-----------------------------------------
+[ 4] Packet length (not including this)
+[ 2] Reply type
    1000: reply: get data
-* Result [4B]
-   0: Success
-   1: Error due to unknown reason
-   2: Too many records (overflow)
-* Number of Entries [4B]
+[ 4] Result
+  0: Success
+  1: Error due to unknown reason
+  2: Too many records (overflow)
+[ 4] The number of entries
 << REPEAT: Number of Entries >>
-* Item ID [8B]
-* sec [4B]
-* ns [4B]
-* type [2B]
-* Data
-    type: 00: 64bit IEEE 754
-    type: 01: 64bit 
-    type: 02: Length[4B], String body
+[ 8] ID
+[ 4] Time: second
+[ 4] Time: nano-second
+[ 2] Data type
+--- Data Type: 00 (Float) ---
+[ 8] Float Data IEEE 754 (64bit)
+--- Data type: 01 (Integer) ---
+[ 8] Integer Data
+--- Data type: 02 (String) ---
+[ 4] String length (The maximum: 0x7ffffff)
+[ v] String body (Null terminator is NOT needed)
+--- Data type: 03 (Blob) ---
+[ 8] Blob length (The maximum: 0x7fffffff ffffffff)
+[ v] Blobl body
 << REPEAT END >>
-===== PKT END =====
 
-===== COMMAND PKT: Get data with timestamp =====
+===== COMMAND PKT: Query data with timestamp =====
 * Packet length [4B] (not including this)
 * Command Type  [2B]
    1050: get data with limit
