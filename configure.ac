@@ -36,7 +36,7 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AC_OUTPUT([
 Makefile
-HistoryGluon/Makefile
+server/Makefile
 client-lib-c/Makefile
 history-gluon-1.0.pc
 test/Makefile
