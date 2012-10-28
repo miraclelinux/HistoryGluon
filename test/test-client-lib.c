@@ -31,7 +31,7 @@ static void assert_delete_all_for_id(uint64_t id, uint64_t *num_deleted)
 
 static void assert_add_uint(uint64_t id, struct timespec *ts, uint64_t value)
 {
-	int ret = history_gluon_add_uint64(g_ctx, id, ts, value);
+	int ret = history_gluon_add_uint(g_ctx, id, ts, value);
 	cut_assert_equal_int(0, ret);
 }
 

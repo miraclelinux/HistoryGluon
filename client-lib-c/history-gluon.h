@@ -91,8 +91,8 @@ void history_gluon_free_context(history_gluon_context_t context);
  * @param data A value of the data.
  * @return 0 if success. -1 if error occured.
  */
-int history_gluon_add_uint64(history_gluon_context_t context,
-                             uint64_t id, struct timespec *ts, uint64_t data);
+int history_gluon_add_uint(history_gluon_context_t context,
+                           uint64_t id, struct timespec *ts, uint64_t data);
 
 /**
  * Add floating-point type data.
