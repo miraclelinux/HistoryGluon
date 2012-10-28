@@ -178,7 +178,7 @@ public class BridgeWorker extends Thread {
             return false;
         }
 
-        // data type, Item ID, sec, and ns
+        // data type, ID, sec, and ns
         history.type = m_byteBuffer.getShort(idx);
         idx += PKT_DATA_TYPE_LENGTH;
 
@@ -236,7 +236,7 @@ public class BridgeWorker extends Thread {
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
-        // Item ID, sec0, and sec1
+        // ID, sec0, and sec1
         long id = m_byteBuffer.getLong(idx);
         idx += PKT_ID_LENGTH;
 
@@ -312,7 +312,7 @@ public class BridgeWorker extends Thread {
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
-        // Item ID, sec0, and sec1
+        // ID, sec0, and sec1
         long id = m_byteBuffer.getLong(idx);
         idx += PKT_ID_LENGTH;
 
@@ -355,7 +355,7 @@ public class BridgeWorker extends Thread {
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
-        // extract Item ID
+        // get ID
         long id = m_byteBuffer.getLong(idx);
         idx += PKT_ID_LENGTH;
 
@@ -391,7 +391,7 @@ public class BridgeWorker extends Thread {
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
-        // extract Item ID and secs
+        // get ID and ts0, and ts1
         long id = m_byteBuffer.getLong(idx);
         idx += PKT_ID_LENGTH;
 
@@ -441,7 +441,7 @@ public class BridgeWorker extends Thread {
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
-        // extract Item ID and thresClock
+        // get ID, sec, ns, and way
         long id = m_byteBuffer.getLong(idx);
         idx += PKT_ID_LENGTH;
 
