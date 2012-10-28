@@ -310,7 +310,7 @@ static int fill_add_data_header(private_context_t *ctx, uint64_t id,
 	*((uint16_t *)&buf[idx]) = conv_le16(ctx, data_type);
 	idx += PKT_DATA_TYPE_LENGTH;
 
-	/* Item ID */
+	/* ID */
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
 	idx += PKT_ITEM_ID_LENGTH;
 
@@ -333,11 +333,11 @@ static int fill_get_min_sec_packet(private_context_t *ctx, uint8_t *buf, uint64_
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_GET_MIN_TIME_LENGTH - PKT_SIZE_LENGTH);
 	idx += PKT_SIZE_LENGTH;
 
-	/* type */
+	/* command */
 	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_GET_MIN_SEC);
 	idx += PKT_CMD_TYPE_LENGTH;
 
-	/* Item ID */
+	/* ID */
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
 	idx += PKT_ITEM_ID_LENGTH;
 
@@ -357,7 +357,7 @@ static int fill_delete_packet(private_context_t *ctx, uint8_t *buf, uint64_t id,
 	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_DELETE);
 	idx += PKT_CMD_TYPE_LENGTH;
 
-	/* Item ID */
+	/* ID */
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
 	idx += PKT_ITEM_ID_LENGTH;
 
@@ -385,11 +385,11 @@ static int fill_get_statistics(private_context_t *ctx, uint8_t *buf, uint64_t id
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_GET_STATISTICS_LENGTH - PKT_SIZE_LENGTH);
 	idx += PKT_SIZE_LENGTH;
 
-	/* type */
+	/* command */
 	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_GET_STATISTICS);
 	idx += PKT_CMD_TYPE_LENGTH;
 
-	/* Item ID */
+	/* ID */
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
 	idx += PKT_ITEM_ID_LENGTH;
 
