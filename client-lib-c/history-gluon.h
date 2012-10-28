@@ -5,9 +5,10 @@
 typedef void * history_gluon_context_t;
 
 typedef enum {
+	HISTORY_GLUON_TYPE_INIT   = -1,
 	HISTORY_GLUON_TYPE_FLOAT  = 0,
 	HISTORY_GLUON_TYPE_STRING = 1,
-	HISTORY_GLUON_TYPE_UINT64 = 2,
+	HISTORY_GLUON_TYPE_UINT   = 2,
 	HISTORY_GLUON_TYPE_BLOB   = 3,
 } history_gluon_data_type_t;
 
@@ -56,6 +57,9 @@ typedef struct
 		uint64_t  v_uint;
 		uint8_t * v_blob;
 	};
+
+	/* When type is HISTORY_GLUON_TYPE_STRING, length doen't include
+	 * Null terminator */
 	uint64_t length;
 }
 history_gluon_data_t;
@@ -67,6 +71,14 @@ typedef struct
 	history_gluon_data_t *array;
 }
 history_gluon_data_array_t;
+
+enum {
+	HGL_SUCCESS              = 0,
+	HGLERR_MEM_ALLOC         = -1,
+	HGLERR_READ_STREAM_END   = -2,
+	HGLERR_READ_ERROR        = -3,
+	HGLERR_INVALID_DATA_TYPE = -100,
+};
 
 /**
  * Create a History Gluon's context.

@@ -9,6 +9,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "history-gluon.h"
 #include "message.h"
@@ -19,11 +20,13 @@
 #define MAX_STRING_LENGTH 0x7fffffff
 #define MAX_BLOB_LENGTH   0x7fffffffffffffff
 
+#define READ_CHUNK_SIZE   0x10000
+
 /* Common header */
 #define PKT_SIZE_LENGTH           4
 #define PKT_CMD_TYPE_LENGTH       2
 #define PKT_DATA_TYPE_LENGTH      2
-#define PKT_ITEM_ID_LENGTH        8
+#define PKT_ID_LENGTH             8
 #define PKT_SEC_LENGTH            4
 #define PKT_NS_LENGTH             4
 
@@ -32,7 +35,7 @@
 
 /* Add Data */
 #define PKT_DATA_FLOAT_LENGTH        8
-#define PKT_DATA_UINT64_LENGTH       8
+#define PKT_DATA_UINT_LENGTH         8
 #define PKT_DATA_STRING_SIZE_LENGTH  4
 #define PKT_DATA_BLOB_SIZE_LENGTH    8
 
@@ -40,7 +43,7 @@
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
  PKT_DATA_TYPE_LENGTH + \
- PKT_ITEM_ID_LENGTH + \
+ PKT_ID_LENGTH + \
  PKT_SEC_LENGTH + \
  PKT_NS_LENGTH)
 
@@ -55,7 +58,7 @@
 #define PKT_QUERY_DATA_LENGTH \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
- PKT_ITEM_ID_LENGTH + \
+ PKT_ID_LENGTH + \
  PKT_SEC_LENGTH + \
  PKT_NS_LENGTH + \
  PKT_SEARCH_WHEN_NOT_FOUND_LENGTH)
@@ -75,7 +78,7 @@
 #define PKT_RANGE_QUERY_LENGTH \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
- PKT_ITEM_ID_LENGTH + \
+ PKT_ID_LENGTH + \
  PKT_SEC_LENGTH * 2 + \
  PKT_NUM_ENTRIES_LENGTH + \
  PKT_DATA_ORDER_LENGTH)
@@ -84,7 +87,7 @@
 #define PKT_GET_MIN_TIME_LENGTH \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
- PKT_ITEM_ID_LENGTH)
+ PKT_ID_LENGTH)
 
 #define REPLY_GET_MIN_TIME_LENGTH \
 (PKT_SIZE_LENGTH + \
@@ -96,16 +99,16 @@
 #define PKT_GET_STATISTICS_LENGTH \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
- PKT_ITEM_ID_LENGTH + \
+ PKT_ID_LENGTH + \
  PKT_SEC_LENGTH*2)
 
 #define REPLY_STATISTICS_LENGTH \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
  REPLY_RESULT_LENGTH + \
- PKT_ITEM_ID_LENGTH + \
+ PKT_ID_LENGTH + \
  PKT_SEC_LENGTH*2 + \
- PKT_DATA_UINT64_LENGTH + \
+ PKT_DATA_UINT_LENGTH + \
  PKT_DATA_FLOAT_LENGTH*3)
 
 /* Delete Data */
@@ -114,7 +117,7 @@
 #define PKT_DELETE_LENGTH \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
- PKT_ITEM_ID_LENGTH + \
+ PKT_ID_LENGTH + \
  PKT_SEC_LENGTH + \
  PKT_NS_LENGTH + \
  PKT_DELETE_WAY_LENGTH)
@@ -320,7 +323,7 @@ static int fill_add_data_header(private_context_t *ctx, uint64_t id,
 
 	/* ID */
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
-	idx += PKT_ITEM_ID_LENGTH;
+	idx += PKT_ID_LENGTH;
 
 	/* sec */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts->tv_sec);
@@ -349,7 +352,7 @@ static int fill_query_data_header(private_context_t *ctx, uint64_t id,
 
 	/* ID */
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
-	idx += PKT_ITEM_ID_LENGTH;
+	idx += PKT_ID_LENGTH;
 
 	/* sec */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts->tv_sec);
@@ -380,7 +383,7 @@ static int fill_get_min_sec_packet(private_context_t *ctx, uint8_t *buf, uint64_
 
 	/* ID */
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
-	idx += PKT_ITEM_ID_LENGTH;
+	idx += PKT_ID_LENGTH;
 
 	return idx;
 }
@@ -400,7 +403,7 @@ static int fill_delete_packet(private_context_t *ctx, uint8_t *buf, uint64_t id,
 
 	/* ID */
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
-	idx += PKT_ITEM_ID_LENGTH;
+	idx += PKT_ID_LENGTH;
 
 	/* second */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts->tv_sec);
@@ -432,7 +435,7 @@ static int fill_get_statistics(private_context_t *ctx, uint8_t *buf, uint64_t id
 
 	/* ID */
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
-	idx += PKT_ITEM_ID_LENGTH;
+	idx += PKT_ID_LENGTH;
 
 	/* sec0 */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts0->tv_sec);
@@ -461,25 +464,30 @@ static int write_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
 	return 0;
 }
 
-static int read_data(private_context_t *ctx, uint8_t *buf, size_t count)
+static int read_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
 {
 	uint8_t *ptr = buf;
-	while (count > 0) {
-		ssize_t read_byte = read(ctx->socket, ptr, count);
+	while (1) {
+		size_t read_request_count = READ_CHUNK_SIZE;
+		if (count < read_request_count)
+			read_request_count = count;
+		ssize_t read_byte = read(ctx->socket, ptr, read_request_count);
 		if (read_byte == 0) {
-			ERR_MSG("file stream has unexpectedly closed. count: %zd\n",
-			        count);
+			ERR_MSG("file stream has unexpectedly closed @ "
+			        "remaing count: %" PRIu64 "\n", count);
 			reset_context(ctx);
-			return -1;
+			return HGLERR_READ_STREAM_END;
 		} else if (read_byte == -1) {
 			ERR_MSG("Failed to read data: %d\n", errno);
 			reset_context(ctx);
-			return -1;
+			return HGLERR_READ_ERROR;
 		}
+		if (read_byte >= count)
+			break;
 		count -= read_byte;
 		ptr += read_byte;
 	}
-	return 0;
+	return HGL_SUCCESS;
 }
 
 static int parse_common_reply_header
@@ -578,6 +586,160 @@ static int wait_and_check_add_result(private_context_t *ctx)
 	return parse_reply_add(ctx, reply);
 }
 
+static int parse_data_header(private_context_t *ctx,
+                             uint8_t *data_header,
+
+                             history_gluon_data_t *gluon_data)
+{
+	int idx = 0;
+	gluon_data->id = restore_le64(ctx, &data_header[idx]);
+	idx += PKT_ID_LENGTH;
+
+	gluon_data->ts.tv_sec = restore_le32(ctx, &data_header[idx]);
+	idx += PKT_SEC_LENGTH;
+
+	gluon_data->ts.tv_nsec = restore_le32(ctx, &data_header[idx]);
+	idx += PKT_NS_LENGTH;
+
+	gluon_data->type = restore_le16(ctx, &data_header[idx]);
+	idx += PKT_DATA_TYPE_LENGTH;
+
+	return HGL_SUCCESS;
+}
+
+static void init_gluon_data(history_gluon_data_t *gluon_data)
+{
+	gluon_data->id = -1;
+	gluon_data->ts.tv_sec = 0;
+	gluon_data->ts.tv_nsec = 0;
+	gluon_data->type = HISTORY_GLUON_TYPE_INIT;
+	gluon_data->length = 0;
+}
+
+static int read_gluon_data_body_float(private_context_t *ctx,
+                                      history_gluon_data_t *gluon_data)
+{
+	uint8_t buf[PKT_DATA_FLOAT_LENGTH];
+	int ret = read_data(ctx, buf, PKT_DATA_FLOAT_LENGTH);
+	if (ret < 0)
+		return ret;
+	gluon_data->v_float = read_ieee754_double(ctx, buf);
+	return HGL_SUCCESS;
+}
+
+static int read_gluon_data_body_string(private_context_t *ctx,
+                                       history_gluon_data_t *gluon_data)
+{
+	/* read body size */
+	uint8_t buf[PKT_DATA_STRING_SIZE_LENGTH];
+	int ret = read_data(ctx, buf, PKT_DATA_STRING_SIZE_LENGTH);
+	if (ret < 0)
+		return ret;
+	gluon_data->length = restore_le64(ctx, buf);
+
+	/* allocate body region */
+	uint64_t alloc_size = gluon_data->length + 1;
+	gluon_data->v_string = malloc(alloc_size);
+	if (!gluon_data->v_string) {
+		ERR_MSG("Failed to allocate: %" PRIu64 "\n", alloc_size);
+		return HGLERR_MEM_ALLOC;
+	}
+
+	/* read body */
+	ret = read_data(ctx, (uint8_t *)gluon_data->v_string,
+	                gluon_data->length);
+	if (ret < 0)
+		return ret;
+	gluon_data->v_string[alloc_size] = '\0';
+
+	return HGL_SUCCESS;
+}
+
+static int read_gluon_data_body_uint(private_context_t *ctx,
+                                     history_gluon_data_t *gluon_data)
+{
+	uint8_t buf[PKT_DATA_UINT_LENGTH];
+	int ret = read_data(ctx, buf, PKT_DATA_UINT_LENGTH);
+	if (ret < 0)
+		return ret;
+	gluon_data->v_uint = restore_le64(ctx, buf);
+	return HGL_SUCCESS;
+}
+
+static int read_gluon_data_body_blob(private_context_t *ctx,
+                                     history_gluon_data_t *gluon_data)
+{
+	/* read body size */
+	uint8_t buf[PKT_DATA_BLOB_SIZE_LENGTH];
+	int ret = read_data(ctx, buf, PKT_DATA_BLOB_SIZE_LENGTH);
+	if (ret < 0)
+		return ret;
+	gluon_data->length = restore_le64(ctx, buf);
+
+	/* allocate body region */
+	gluon_data->v_blob = malloc(gluon_data->length);
+	if (!gluon_data->v_blob) {
+		ERR_MSG("Failed to allocate: %" PRIu64 "\n",
+		        gluon_data->length);
+		return HGLERR_MEM_ALLOC;
+	}
+
+	/* read body */
+	ret = read_data(ctx, gluon_data->v_blob, gluon_data->length);
+	if (ret < 0)
+		return ret;
+
+	return HGL_SUCCESS;
+}
+
+static int read_gluon_data(private_context_t *ctx,
+                               history_gluon_data_t **gluon_data)
+{
+	/* allocate history_gluon_data_t variable */
+	history_gluon_data_t *data = malloc(sizeof(history_gluon_data_t));
+	if (!*gluon_data)
+		return HGLERR_MEM_ALLOC;
+	init_gluon_data(data);
+
+	/* read header */
+	int data_header_size = PKT_ID_LENGTH +
+	                       PKT_SEC_LENGTH + PKT_NS_LENGTH +
+	                       PKT_DATA_TYPE_LENGTH;
+	uint8_t data_header[data_header_size];
+	int ret = read_data(ctx, data_header, data_header_size);
+	if (ret < 0)
+		goto error;
+
+	/* parse header */
+	ret = parse_data_header(ctx, data_header, data);
+	if (ret < 0)
+		goto error;
+
+	/* read data body */
+	if (data->type == HISTORY_GLUON_TYPE_FLOAT)
+		ret = read_gluon_data_body_float(ctx, data);
+	else if (data->type == HISTORY_GLUON_TYPE_STRING)
+		ret = read_gluon_data_body_string(ctx, data);
+	else if (data->type == HISTORY_GLUON_TYPE_UINT)
+		ret = read_gluon_data_body_uint(ctx, data);
+	else if (data->type == HISTORY_GLUON_TYPE_BLOB)
+		ret = read_gluon_data_body_blob(ctx, data);
+	else {
+		ERR_MSG("Unknown data type: %d", data->type);
+		ret = HGLERR_INVALID_DATA_TYPE;
+		goto error;
+	}
+	if (ret < 0)
+		goto error;
+
+	*gluon_data = data;
+	return HGL_SUCCESS;
+
+error:
+	history_gluon_free_data(ctx, data);
+	return ret;
+}
+
 /* ---------------------------------------------------------------------------
  * Public functions                                                           *
  * ------------------------------------------------------------------------- */
@@ -633,13 +795,13 @@ int history_gluon_add_uint64(history_gluon_context_t _ctx,
 	if (ctx == NULL)
 		return -1;
 
-	int pkt_size = PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_UINT64_LENGTH;
+	int pkt_size = PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_UINT_LENGTH;
 	uint8_t buf[pkt_size];
 	uint8_t *ptr = buf;
 
 	/* header */
 	ptr += fill_add_data_header(ctx, id, ts, ptr,
-	                            HISTORY_GLUON_TYPE_UINT64, pkt_size);
+	                            HISTORY_GLUON_TYPE_UINT, pkt_size);
 
 	/* data */
 	*((uint64_t *)ptr) = conv_le64(ctx, data);
@@ -784,21 +946,26 @@ int history_gluon_query(history_gluon_context_t _ctx,
 
 	/* reply */
 	uint8_t reply[REPLY_QUERY_DATA_HEADER_LENGTH];
-	if (read_data(ctx, reply, REPLY_QUERY_DATA_HEADER_LENGTH) == -1)
-		return -1;
-	ret = parse_common_reply_header(ctx, reply, NULL, REPLY_QUERY_DATA_HEADER_LENGTH,
+	ret = read_data(ctx, reply, REPLY_QUERY_DATA_HEADER_LENGTH);
+	if (ret < 0)
+		return ret;
+	ret = parse_common_reply_header(ctx, reply, NULL,
+	                                REPLY_QUERY_DATA_HEADER_LENGTH,
 	                                PKT_CMD_QUERY_DATA);
 	if (ret < 0)
 		return ret;
-	int idx = ret;
 
 	/* found flag */
+	int idx = ret;
 	uint16_t found = restore_le16(ctx, &reply[idx]);
 	idx += REPLY_QUERY_DATA_FOUND_FLAG_LENGTH;
 	if (found == 0)
 		*gluon_data = NULL;
-	// TODO: parse data body.
-	return 0;
+
+	ret = read_gluon_data(ctx, gluon_data);
+	if (ret < 0)
+		return ret;
+	return HGL_SUCCESS;
 }
 
 void history_gluon_free_data(history_gluon_context_t _ctx,
@@ -859,7 +1026,7 @@ int history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
 
 	// item ID
 	statistics->id = restore_le64(ctx, &reply[idx]);
-	idx += PKT_ITEM_ID_LENGTH;
+	idx += PKT_ID_LENGTH;
 
 	// sec0
 	statistics->ts0.tv_sec = restore_le32(ctx, &reply[idx]);
@@ -873,7 +1040,7 @@ int history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
 
 	// count
 	statistics->count = restore_le64(ctx, &reply[idx]);
-	idx += PKT_DATA_UINT64_LENGTH;
+	idx += PKT_DATA_UINT_LENGTH;
 
 	// min and max
 	statistics->min = read_ieee754_double(ctx, &reply[idx]);
