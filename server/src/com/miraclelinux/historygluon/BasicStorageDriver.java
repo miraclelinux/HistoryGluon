@@ -57,8 +57,9 @@ public abstract class BasicStorageDriver implements StorageDriver {
     public HistoryData queryData(long id, int sec, int ns, int queryType)
       throws HistoryDataSet.TooManyException {
         HistoryDataSet dataSet = null;
-        String key = makeKey(id, sec, ns);
-        dataSet = getDataSet(id, key, key, 1);
+        String key0 = makeKey(id, sec, ns);
+        String key1 = makeKey(id, sec, ns+1);
+        dataSet = getDataSet(id, key0, key1, 1);
         if (!dataSet.isEmpty())
             return dataSet.first();
         if (queryType == QueryType.ONLY_MATCH)
@@ -66,8 +67,8 @@ public abstract class BasicStorageDriver implements StorageDriver {
 
         // search the closest large data
         if (queryType == QueryType.GREATER_DATA) {
-            String key0 = makeKey(id, sec, ns+1);
-            String key1 = makeKey(id+1, 0, 0);
+            key0 = key1;
+            key1 = makeKey(id+1, 0, 0);
             dataSet = getDataSet(id, key0, key1, 1);
             if (dataSet.isEmpty())
                 return null;
@@ -78,8 +79,8 @@ public abstract class BasicStorageDriver implements StorageDriver {
         // TODO: We should make this method more fast.
         // HBase doen't have inverse order scan, does it ?
         if (queryType == QueryType.LESS_DATA) {
-            String key0 = makeKey(id, 0, 0);
-            dataSet = getDataSet(id, key0, key, COUNT_UNLIMITED);
+            String keyS = makeKey(id, 0, 0);
+            dataSet = getDataSet(id, keyS, key0, COUNT_UNLIMITED);
             if (dataSet.isEmpty())
                 return null;
             return dataSet.descendingIterator().next();

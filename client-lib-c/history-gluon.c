@@ -697,7 +697,7 @@ static int read_gluon_data(private_context_t *ctx,
 {
 	/* allocate history_gluon_data_t variable */
 	history_gluon_data_t *data = malloc(sizeof(history_gluon_data_t));
-	if (!*gluon_data)
+	if (!data)
 		return HGLERR_MEM_ALLOC;
 	init_gluon_data(data);
 
