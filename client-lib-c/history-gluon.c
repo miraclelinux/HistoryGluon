@@ -788,8 +788,8 @@ int history_gluon_add_float(history_gluon_context_t _ctx,
 	return wait_and_check_add_result(ctx);
 }
 
-int history_gluon_add_uint64(history_gluon_context_t _ctx,
-                             uint64_t id, struct timespec *ts, uint64_t data)
+int history_gluon_add_uint(history_gluon_context_t _ctx,
+                           uint64_t id, struct timespec *ts, uint64_t data)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
