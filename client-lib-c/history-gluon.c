@@ -293,7 +293,7 @@ static double read_ieee754_double(private_context_t *ctx, uint8_t *buf)
 }
 
 static int fill_add_data_header(private_context_t *ctx, uint64_t id,
-                                struct timespec *time, uint8_t *buf,
+                                struct timespec *ts, uint8_t *buf,
                                 uint16_t data_type, uint32_t pkt_size)
 {
 	int idx = 0;
@@ -315,11 +315,11 @@ static int fill_add_data_header(private_context_t *ctx, uint64_t id,
 	idx += PKT_ITEM_ID_LENGTH;
 
 	/* sec */
-	*((uint32_t *)&buf[idx]) = conv_le32(ctx, time->tv_sec);
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts->tv_sec);
 	idx += PKT_SEC_LENGTH;
 
 	/* ns */
-	*((uint32_t *)&buf[idx]) = conv_le32(ctx, time->tv_nsec);
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts->tv_nsec);
 	idx += PKT_NS_LENGTH;
 
 	return idx;
@@ -377,7 +377,7 @@ static int fill_delete_packet(private_context_t *ctx, uint8_t *buf, uint64_t id,
 }
 
 static int fill_get_statistics(private_context_t *ctx, uint8_t *buf, uint64_t id,
-                               struct timespec *time0, struct timespec *time1)
+                               struct timespec *ts0, struct timespec *ts1)
 {
 	int idx = 0;
 
@@ -394,11 +394,11 @@ static int fill_get_statistics(private_context_t *ctx, uint8_t *buf, uint64_t id
 	idx += PKT_ITEM_ID_LENGTH;
 
 	/* sec0 */
-	*((uint32_t *)&buf[idx]) = conv_le32(ctx, time0->tv_sec);
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts0->tv_sec);
 	idx += PKT_SEC_LENGTH;
 
 	/* sec1 */
-	*((uint32_t *)&buf[idx]) = conv_le32(ctx, time1->tv_sec);
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts1->tv_sec);
 	idx += PKT_SEC_LENGTH;
 
 	return idx;
@@ -560,7 +560,7 @@ void history_gluon_free_context(history_gluon_context_t _ctx)
 }
 
 int history_gluon_add_float(history_gluon_context_t _ctx,
-                            uint64_t id, struct timespec *time, double data)
+                            uint64_t id, struct timespec *ts, double data)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
@@ -571,7 +571,7 @@ int history_gluon_add_float(history_gluon_context_t _ctx,
 	uint8_t *ptr = buf;
 
 	/* header */
-	ptr += fill_add_data_header(ctx, id, time, ptr,
+	ptr += fill_add_data_header(ctx, id, ts, ptr,
 	                            HISTORY_GLUON_TYPE_FLOAT, pkt_size);
 
 	/* data */
@@ -586,7 +586,7 @@ int history_gluon_add_float(history_gluon_context_t _ctx,
 }
 
 int history_gluon_add_uint64(history_gluon_context_t _ctx,
-                             uint64_t id, struct timespec *time, uint64_t data)
+                             uint64_t id, struct timespec *ts, uint64_t data)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
@@ -597,7 +597,7 @@ int history_gluon_add_uint64(history_gluon_context_t _ctx,
 	uint8_t *ptr = buf;
 
 	/* header */
-	ptr += fill_add_data_header(ctx, id, time, ptr,
+	ptr += fill_add_data_header(ctx, id, ts, ptr,
 	                            HISTORY_GLUON_TYPE_UINT64, pkt_size);
 
 	/* data */
@@ -612,7 +612,7 @@ int history_gluon_add_uint64(history_gluon_context_t _ctx,
 }
 
 int history_gluon_add_string(history_gluon_context_t _ctx,
-                             uint64_t id, struct timespec *time, char *data)
+                             uint64_t id, struct timespec *ts, char *data)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
@@ -633,7 +633,7 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 	uint8_t *ptr = buf;
 
 	/* header */
-	ptr += fill_add_data_header(ctx, id, time, ptr,
+	ptr += fill_add_data_header(ctx, id, ts, ptr,
 	                            HISTORY_GLUON_TYPE_STRING, pkt_size);
 
 	/* length */
@@ -658,7 +658,7 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 }
 
 int history_gluon_add_blob(history_gluon_context_t _ctx,
-                           uint64_t id, struct timespec *time, uint8_t *data,
+                           uint64_t id, struct timespec *ts, uint8_t *data,
                            uint64_t length)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
@@ -680,7 +680,7 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 	uint8_t *ptr = buf;
 
 	/* header */
-	ptr += fill_add_data_header(ctx, id, time, ptr,
+	ptr += fill_add_data_header(ctx, id, ts, ptr,
 	                            HISTORY_GLUON_TYPE_BLOB, pkt_size);
 
 	/* length */
@@ -744,7 +744,7 @@ void history_gluon_free_data(history_gluon_context_t _ctx,
 }
 
 int history_gluon_get_minmum_time(history_gluon_context_t _ctx,
-                                  uint64_t id, struct timespec *minimum_time)
+                                  uint64_t id, struct timespec *minimum_ts)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
@@ -760,13 +760,13 @@ int history_gluon_get_minmum_time(history_gluon_context_t _ctx,
 	uint8_t reply[REPLY_GET_MIN_TIME_LENGTH];
 	if (read_data(ctx, reply, REPLY_GET_MIN_TIME_LENGTH) == -1)
 		return -1;
-	if (parse_reply_get_min_sec(ctx, reply, minimum_time))
+	if (parse_reply_get_min_sec(ctx, reply, minimum_ts))
 		return -1;
 	return 0;
 }
 
 int history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
-                                 struct timespec *time0, struct timespec *time1,
+                                 struct timespec *ts0, struct timespec *ts1,
                                  history_gluon_statistics_t *statistics)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
@@ -775,7 +775,7 @@ int history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
 
 	// request
 	uint8_t request[PKT_GET_STATISTICS_LENGTH];
-	int cmd_length = fill_get_statistics(ctx, request, id, time0, time1);
+	int cmd_length = fill_get_statistics(ctx, request, id, ts0, ts1);
 	if (write_data(ctx, request, cmd_length) == -1)
 		return -1;
 

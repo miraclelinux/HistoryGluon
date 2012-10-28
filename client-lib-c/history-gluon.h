@@ -206,7 +206,7 @@ void history_gluon_free_data_array(history_gluon_context_t context,
  * @return 0 if success. -1 if error occured.
  */
 int history_gluon_get_minmum_time(history_gluon_context_t context,
-                                  uint64_t id, struct timespec *minimum_time);
+                                  uint64_t id, struct timespec *minimum_ts);
 
 /**
  * Get statistical information of the data with the specified ID
