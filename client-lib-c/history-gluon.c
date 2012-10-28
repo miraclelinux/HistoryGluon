@@ -907,26 +907,6 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 	return wait_and_check_add_result(ctx);
 }
 
-int history_gluon_range_query(history_gluon_context_t _ctx, uint64_t id,
-                              struct timespec *ts0,
-                              struct timespec *ts1,
-                              history_gluon_sort_order_t sort_request,
-                              history_gluon_data_array_t **array)
-{
-	ERR_MSG("Not implemented yet\n");
-	return -1;
-}
-
-void history_gluon_free_data_array(history_gluon_context_t _ctx,
-                                    history_gluon_data_array_t *array)
-{
-	uint64_t i = 0;
-	for (i = 0; i < array->num_data; i++) {
-		history_gluon_data_t *data = &(array->array[i]);
-		history_gluon_free_data(_ctx, data);
-	}
-}
-
 int history_gluon_query(history_gluon_context_t _ctx,
                         uint64_t id, struct timespec *ts,
                         history_gluon_query_t query_type,
@@ -949,8 +929,8 @@ int history_gluon_query(history_gluon_context_t _ctx,
 	ret = read_data(ctx, reply, REPLY_QUERY_DATA_HEADER_LENGTH);
 	if (ret < 0)
 		return ret;
-	ret = parse_common_reply_header(ctx, reply, NULL,
-	                                REPLY_QUERY_DATA_HEADER_LENGTH,
+	uint32_t expect_len = REPLY_QUERY_DATA_HEADER_LENGTH - PKT_SIZE_LENGTH;
+	ret = parse_common_reply_header(ctx, reply, NULL, expect_len,
 	                                PKT_CMD_QUERY_DATA);
 	if (ret < 0)
 		return ret;
@@ -960,7 +940,7 @@ int history_gluon_query(history_gluon_context_t _ctx,
 	uint16_t found = restore_le16(ctx, &reply[idx]);
 	idx += REPLY_QUERY_DATA_FOUND_FLAG_LENGTH;
 	if (found == 0)
-		*gluon_data = NULL;
+		return HGLERR_NOT_FOUND;
 
 	ret = read_gluon_data(ctx, gluon_data);
 	if (ret < 0)
@@ -976,6 +956,26 @@ void history_gluon_free_data(history_gluon_context_t _ctx,
 	else if (gluon_data->type == HISTORY_GLUON_TYPE_BLOB)
 		free(gluon_data->v_blob);
 	free(gluon_data);
+}
+
+int history_gluon_range_query(history_gluon_context_t _ctx, uint64_t id,
+                              struct timespec *ts0,
+                              struct timespec *ts1,
+                              history_gluon_sort_order_t sort_request,
+                              history_gluon_data_array_t **array)
+{
+	ERR_MSG("Not implemented yet\n");
+	return -1;
+}
+
+void history_gluon_free_data_array(history_gluon_context_t _ctx,
+                                    history_gluon_data_array_t *array)
+{
+	uint64_t i = 0;
+	for (i = 0; i < array->num_data; i++) {
+		history_gluon_data_t *data = &(array->array[i]);
+		history_gluon_free_data(_ctx, data);
+	}
 }
 
 int history_gluon_get_minmum_time(history_gluon_context_t _ctx,

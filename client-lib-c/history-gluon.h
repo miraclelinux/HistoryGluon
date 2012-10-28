@@ -78,6 +78,7 @@ enum {
 	HGLERR_READ_STREAM_END   = -2,
 	HGLERR_READ_ERROR        = -3,
 	HGLERR_INVALID_DATA_TYPE = -100,
+	HGLERR_NOT_FOUND         = -200,
 };
 
 /**
