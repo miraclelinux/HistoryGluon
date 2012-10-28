@@ -1,7 +1,7 @@
 History Gluon Server-client protocol specification
 
 Date: 2012/10/27
-Version: 0.6.1
+Version: 0.6.2
 
 *** Basics rules ***
 Endian: Little
@@ -54,7 +54,7 @@ COMMAND PKT: Query Data
 [ 8] ID
 [ 4] Time: second
 [ 4] Time: nano-second
-[ 1] Search when no entries
+[ 2] Search when no entries
   0: None
   1: less
   2: Greater
@@ -104,7 +104,7 @@ COMMAND PKT: Range Query
   Data with the End Time is Not returned.
 [ 4] The number of the maximum entries
   0: No limit
-[ 1] Sort order request
+[ 2] Sort order request
   0: ascending
   1: descending
   2: not sorted
@@ -119,7 +119,7 @@ REPLY: Range Query
   0: Success
   1: Error due to unknown reason
   2: Too many records (overflow)
-[ 1] Sort order
+[ 2] Sort order
   0: ascending
   1: descending
   2: not sorted
@@ -190,7 +190,7 @@ COMMAND PKT: Delete Data
 [ 8] ID
 [ 4] Time: second
 [ 4] Time: nano-second
-[ 1] Delete way:
+[ 2] Delete way:
   0: Just matched data
   1: Data with the time that is equal to or less than Time
   2: Data with the time that is less than Time
