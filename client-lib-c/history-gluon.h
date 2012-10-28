@@ -53,7 +53,7 @@ typedef struct
 	union {
 		double    v_float;
 		char *    v_string;
-		uint64_t  v_uint64;
+		uint64_t  v_uint;
 		uint8_t * v_blob;
 	};
 	uint64_t length;
