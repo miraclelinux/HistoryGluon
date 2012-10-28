@@ -146,8 +146,10 @@ int history_gluon_add_blob(history_gluon_context_t context,
  *                   \HISTORY_GLUON_QUERY_TYPE_GREATER_DATA, the most near
  *                   less and greater data is respectively returned.
  * @param gluon_data An address where the created history_gluon_data_t
- *                   variable's pointer is stored.
- *                   The caller must call history_gluon_free_data() when
+ *                   variable's pointer is stored. If the matched data is
+ *                   not found, NULL is stored.
+ *                   If non NULL \gluon_data was returned,
+ *                   the caller must call history_gluon_free_data() when
  *                   no longer needed.
  * @return 0 if success. -1 if error occured.
  */
