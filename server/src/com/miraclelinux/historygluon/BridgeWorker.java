@@ -20,7 +20,7 @@ public class BridgeWorker extends Thread {
     private static final int PKT_SIZE_LENGTH = 4;
     private static final int PKT_TYPE_LENGTH = 2;
     private static final int PKT_ITEM_ID_LENGTH = 8;
-    private static final int PKT_CLOCK_LENGTH = 4;
+    private static final int PKT_SEC_LENGTH = 4;
     private static final int PKT_NS_LENGTH = 4;
     private static final int PKT_DATA_TYPE_LENGTH = 2;
     private static final int PKT_DATA_FLOAT_LENGTH = 8;
@@ -30,11 +30,12 @@ public class BridgeWorker extends Thread {
     private static final int PKT_NUM_ENTRIES_LENGTH = 4;
     private static final int PKT_SORT_ORDER_LENGTH = 2;
     private static final int PKT_SEARCH_NEAR_LENGTH = 1;
+    private static final int PKT_DELETE_WAY_LENGTH = 1;
 
     private static final short PKT_TYPE_ADD_DATA       = 100;
     private static final short PKT_TYPE_GET            = 1000;
     private static final short PKT_TYPE_GET_WITH_TS    = 1050;
-    private static final short PKT_TYPE_GET_MIN_CLOCK  = 1100;
+    private static final short PKT_TYPE_GET_MIN_SEC  = 1100;
     private static final short PKT_TYPE_GET_STATISTICS = 1200;
     private static final short PKT_TYPE_DELETE         = 2000;
 
@@ -141,7 +142,7 @@ public class BridgeWorker extends Thread {
             ret = getHistoryData(pktBuf, idx);
         else if (type == PKT_TYPE_GET_WITH_TS)
             ret = getHistoryDataWithTimestamp(pktBuf, idx);
-        else if (type == PKT_TYPE_GET_MIN_CLOCK)
+        else if (type == PKT_TYPE_GET_MIN_SEC)
             ret = getMinClock(pktBuf, idx);
         else if (type == PKT_TYPE_GET_STATISTICS)
             ret = getStatistics(pktBuf, idx);
@@ -168,7 +169,7 @@ public class BridgeWorker extends Thread {
         HistoryData history = new HistoryData();
 
         int putLength = PKT_DATA_TYPE_LENGTH + PKT_ITEM_ID_LENGTH
-                        + PKT_CLOCK_LENGTH + PKT_NS_LENGTH;
+                        + PKT_SEC_LENGTH + PKT_NS_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
             // TODO: return error
             return false;
@@ -182,7 +183,7 @@ public class BridgeWorker extends Thread {
         idx += PKT_ITEM_ID_LENGTH;
 
         history.sec = m_byteBuffer.getInt(idx);
-        idx += PKT_CLOCK_LENGTH;
+        idx += PKT_SEC_LENGTH;
 
         history. ns = m_byteBuffer.getInt(idx);
         idx += PKT_NS_LENGTH;
@@ -227,7 +228,7 @@ public class BridgeWorker extends Thread {
     }
 
     private boolean getHistoryData(byte[] pktBuf, int idx) throws IOException {
-        int putLength = PKT_ITEM_ID_LENGTH + 2 * PKT_CLOCK_LENGTH
+        int putLength = PKT_ITEM_ID_LENGTH + 2 * PKT_SEC_LENGTH
                         + PKT_NUM_ENTRIES_LENGTH + PKT_SORT_ORDER_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
@@ -237,10 +238,10 @@ public class BridgeWorker extends Thread {
         idx += PKT_ITEM_ID_LENGTH;
 
         int sec0 = m_byteBuffer.getInt(idx);
-        idx += PKT_CLOCK_LENGTH;
+        idx += PKT_SEC_LENGTH;
 
         int sec1 = m_byteBuffer.getInt(idx);
-        idx += PKT_CLOCK_LENGTH;
+        idx += PKT_SEC_LENGTH;
 
         int maxEntries = m_byteBuffer.getInt(idx);
         idx += PKT_NUM_ENTRIES_LENGTH;
@@ -279,7 +280,7 @@ public class BridgeWorker extends Thread {
         }
 
         int commonDataSize = PKT_ITEM_ID_LENGTH
-                             + PKT_CLOCK_LENGTH + PKT_NS_LENGTH
+                             + PKT_SEC_LENGTH + PKT_NS_LENGTH
                              + PKT_DATA_TYPE_LENGTH;
         totalSize += numEntries * commonDataSize;
 
@@ -303,7 +304,7 @@ public class BridgeWorker extends Thread {
     }
 
     private boolean getHistoryDataWithTimestamp(byte[] pktBuf, int idx) throws IOException {
-        int putLength = PKT_ITEM_ID_LENGTH + PKT_CLOCK_LENGTH
+        int putLength = PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH
                         + PKT_NS_LENGTH + PKT_SEARCH_NEAR_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
@@ -313,7 +314,7 @@ public class BridgeWorker extends Thread {
         idx += PKT_ITEM_ID_LENGTH;
 
         int sec = m_byteBuffer.getInt(idx);
-        idx += PKT_CLOCK_LENGTH;
+        idx += PKT_SEC_LENGTH;
 
         int ns = m_byteBuffer.getInt(idx);
         idx += PKT_NS_LENGTH;
@@ -335,7 +336,7 @@ public class BridgeWorker extends Thread {
         int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH +
                      PKT_NUM_ENTRIES_LENGTH;
         if (history != null) {
-            length += PKT_ITEM_ID_LENGTH + PKT_CLOCK_LENGTH * 2 +
+            length += PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH * 2 +
                       PKT_DATA_TYPE_LENGTH + calcReplyPktSize(history);
         }
         m_byteBuffer.clear();
@@ -374,10 +375,10 @@ public class BridgeWorker extends Thread {
             minClock = history.sec;
 
         // write reply to the socket
-        int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_CLOCK_LENGTH;
+        int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_SEC_LENGTH;
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
-        m_byteBuffer.putShort(PKT_TYPE_GET_MIN_CLOCK);
+        m_byteBuffer.putShort(PKT_TYPE_GET_MIN_SEC);
         m_byteBuffer.putInt(RESULT_SUCCESS);
         m_byteBuffer.putInt(minClock);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
@@ -388,7 +389,7 @@ public class BridgeWorker extends Thread {
 
     private boolean getStatistics(byte[] pktBuf, int idx) throws IOException {
 
-        int putLength = PKT_ITEM_ID_LENGTH + PKT_CLOCK_LENGTH * 2;
+        int putLength = PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH * 2;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
@@ -397,9 +398,9 @@ public class BridgeWorker extends Thread {
         idx += PKT_ITEM_ID_LENGTH;
 
         int sec0 = m_byteBuffer.getInt(idx);
-        idx += PKT_CLOCK_LENGTH;
+        idx += PKT_SEC_LENGTH;
         int sec1 = m_byteBuffer.getInt(idx);
-        idx += PKT_CLOCK_LENGTH;
+        idx += PKT_SEC_LENGTH;
 
         Statistics statistics = null;
         try {
@@ -415,7 +416,7 @@ public class BridgeWorker extends Thread {
 
         // write reply
         int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH +
-                     PKT_ITEM_ID_LENGTH + PKT_CLOCK_LENGTH * 2 +
+                     PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH * 2 +
                      PKT_DATA_FLOAT_LENGTH * 3 + PKT_DATA_UINT64_LENGTH;
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
@@ -437,7 +438,7 @@ public class BridgeWorker extends Thread {
 
     private boolean deleteData(byte[] pktBuf, int idx) throws IOException {
 
-        int putLength = PKT_ITEM_ID_LENGTH + PKT_CLOCK_LENGTH;
+        int putLength = PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
@@ -445,11 +446,17 @@ public class BridgeWorker extends Thread {
         long id = m_byteBuffer.getLong(idx);
         idx += PKT_ITEM_ID_LENGTH;
 
-        int thresClock = m_byteBuffer.getInt(idx);
-        idx += PKT_CLOCK_LENGTH;
+        int sec = m_byteBuffer.getInt(idx);
+        idx += PKT_SEC_LENGTH;
+
+        int sec = m_byteBuffer.getInt(idx);
+        idx += PKT_NS_LENGTH;
+
+        int way = m_byteBuffer.getByte(idx);
+        idx += PKT_DELETE_WAY_LENGTH;
 
         // get min sec
-        int numDeleted = m_driver.delete(id, thresClock);
+        int numDeleted = m_driver.delete(id, sec, ns, way);
 
         // write reply to the socket
         int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_NUM_ENTRIES_LENGTH;

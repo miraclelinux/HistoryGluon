@@ -16,8 +16,6 @@ interface StorageDriver {
     public HistoryData getDataWithMinimumClock(long itemId)
       throws HistoryDataSet.TooManyException;
 
-    public int delete(long itemId, int thresClock);
-
    /**
     * Get the minimum value, the maximum value, and the total count
     * in the specified condition.
@@ -32,6 +30,9 @@ interface StorageDriver {
     */
     public Statistics getStatistics(long itemId, int clock0, int clock1)
       throws HistoryDataSet.TooManyException;
+
+    public int delete(long itemId, int clock, int ns, int way);
+
 
     public boolean deleteDB();
 }

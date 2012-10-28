@@ -231,7 +231,7 @@ int history_gluon_get_statistics(history_gluon_context_t context, uint64_t id,
  * @param context A History Gluon's context.
  * @param id A data ID.
  * @param ts The ts to be used to select deleted data.
- * @param delete_type A type of deletion.
+ * @param delete_way A type of deletion.
  * @param num_deleted_entries A pointer in which the number of deleted data
  *                            is stored. It can be NULL when the number is
  *                            not needed.
@@ -240,7 +240,7 @@ int history_gluon_get_statistics(history_gluon_context_t context, uint64_t id,
  */
 int history_gluon_delete(history_gluon_context_t context, uint64_t id,
                          struct timespec *ts,
-                         history_gluon_delete_way_t delete_type,
+                         history_gluon_delete_way_t delete_way,
                          uint64_t *num_deleted_entries);
 
 

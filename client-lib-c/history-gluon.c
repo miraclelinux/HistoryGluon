@@ -17,11 +17,11 @@
 #define DEFAULT_SERVER_NAME "localhost"
 
 #define MAX_STRING_LENGTH 0x7fffffff
-#define MAX_BLOB_LENGTH 0xffff0000
+#define MAX_BLOB_LENGTH   0x7fffffffffffffff
 
 /* Common header */
 #define PKT_SIZE_LENGTH           4
-#define PKT_TYPE_LENGTH           2
+#define PKT_CMD_TYPE_LENGTH       2
 #define PKT_DATA_TYPE_LENGTH      2
 #define PKT_ITEM_ID_LENGTH        8
 #define PKT_SEC_LENGTH            4
@@ -37,43 +37,87 @@
 #define PKT_DATA_BLOB_SIZE_LENGTH    8
 
 #define PKT_ADD_DATA_HEADER_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_DATA_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH + PKT_NS_LENGTH)
+(PKT_SIZE_LENGTH + \
+ PKT_CMD_TYPE_LENGTH + \
+ PKT_DATA_TYPE_LENGTH + \
+ PKT_ITEM_ID_LENGTH + \
+ PKT_SEC_LENGTH + \
+ PKT_NS_LENGTH)
 
-#define REPLY_ADD_LENGTH (PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH)
+#define REPLY_ADD_LENGTH \
+(PKT_SIZE_LENGTH + \
+ PKT_CMD_TYPE_LENGTH + \
+ REPLY_RESULT_LENGTH)
 
-/* Get data */
+/* Query Data */
+#define PKT_SEARCH_NEAR_LENGTH 1
+
+#define PKT_GET_DATA_WITH_TIMESTAMP_LENGTH \
+(PKT_SIZE_LENGTH + \
+ PKT_CMD_TYPE_LENGTH + \
+ PKT_ITEM_ID_LENGTH + \
+ PKT_SEC_LENGTH + \
+ PKT_NS_LENGTH + \
+ PKT_SEARCH_NEAR_LENGTH)
+
+/* Range Query */
 #define PKT_NUM_ENTRIES_LENGTH 4
-#define PKT_DATA_ORDER_LENGTH  2
+#define PKT_SORT_ORDER_LENGTH  1
 
 #define PKT_GET_DATA_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH*2 + PKT_NUM_ENTRIES_LENGTH + PKT_DATA_ORDER_LENGTH)
+(PKT_SIZE_LENGTH + \
+ PKT_CMD_TYPE_LENGTH + \
+ PKT_ITEM_ID_LENGTH + \
+ PKT_SEC_LENGTH * 2 + \
+ PKT_NUM_ENTRIES_LENGTH + \
+ PKT_DATA_ORDER_LENGTH)
 
-/* Get data with ts */
-#define PKT_SEARCH_NEAR_LENGTH 1
-#define PKT_GET_DATA_WITH_TIMESTAMP_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH + PKT_NS_LENGTH + PKT_SEARCH_NEAR_LENGTH)
+/* Get Minimum Time */
+#define PKT_GET_MIN_TIME_LENGTH \
+(PKT_SIZE_LENGTH + \
+ PKT_CMD_TYPE_LENGTH + \
+ PKT_ITEM_ID_LENGTH)
 
-/* Get Min sec packets */
-#define PKT_GET_MIN_SEC_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH)
+#define REPLY_GET_MIN_TIME_LENGTH \
+(PKT_SIZE_LENGTH + \
+ PKT_CMD_TYPE_LENGTH + \
+ REPLY_RESULT_LENGTH + \
+ PKT_SEC_LENGTH)
 
-#define REPLY_GET_MIN_SEC_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_SEC_LENGTH)
-
-/* Get statistics */
+/* Get Statistics */
 #define PKT_GET_STATISTICS_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH*2)
+(PKT_SIZE_LENGTH + \
+ PKT_CMD_TYPE_LENGTH + \
+ PKT_ITEM_ID_LENGTH + \
+ PKT_SEC_LENGTH*2)
 
 #define REPLY_STATISTICS_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH*2 + PKT_DATA_UINT64_LENGTH + PKT_DATA_FLOAT_LENGTH*3)
+(PKT_SIZE_LENGTH + \
+ PKT_CMD_TYPE_LENGTH + \
+ REPLY_RESULT_LENGTH + \
+ PKT_ITEM_ID_LENGTH + \
+ PKT_SEC_LENGTH*2 + \
+ PKT_DATA_UINT64_LENGTH + \
+ PKT_DATA_FLOAT_LENGTH*3)
 
-/* Delete packets */
+/* Delete Data */
+#define  PKT_DELETE_WAY_LENGTH 1
+
 #define PKT_DELETE_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH)
+(PKT_SIZE_LENGTH + \
+ PKT_CMD_TYPE_LENGTH + \
+ PKT_ITEM_ID_LENGTH + \
+ PKT_SEC_LENGTH + \
+ PKT_NS_LENGTH + \
+ PKT_DELETE_WAY_LENGTH)
 
-#define REPLY_DELETE_NUMBER_LENGTH 4
+#define REPLY_COUNT_DELETED_LENGTH 8
+
 #define REPLY_DELETE_LENGTH \
-(PKT_SIZE_LENGTH + PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + REPLY_DELETE_NUMBER_LENGTH)
+(PKT_SIZE_LENGTH + \
+ PKT_CMD_TYPE_LENGTH + \
+ REPLY_RESULT_LENGTH + \
+ REPLY_COUNT_DELETED_LENGTH)
 
 /* Packet type */
 enum {
@@ -82,7 +126,7 @@ enum {
 	PKT_TYPE_GET_WITH_TIMESTAMP = 1050,
 	PKT_TYPE_GET_MIN_SEC        = 1100,
 	PKT_TYPE_GET_STATISTICS     = 1200,
-	PKT_TYPE_DELETE             = 2000,
+	PKT_TYPE_DELETE             = 600,
 };
 
 /* Result code */
@@ -219,6 +263,11 @@ static uint16_t conv_le16(private_context_t *ctx, uint16_t val)
 	return ret;
 }
 
+static uint16_t conv_le8(private_context_t *ctx, uint8_t val)
+{
+	return val;
+}
+
 static uint64_t restore_le64(private_context_t *ctx, void *buf)
 {
 	return conv_le64(ctx, *((uint64_t *)buf));
@@ -260,7 +309,7 @@ static int fill_add_data_header(private_context_t *ctx, uint64_t id,
 
 	/* command */
 	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_ADD_DATA);
-	idx += PKT_TYPE_LENGTH;
+	idx += PKT_CMD_TYPE_LENGTH;
 
 	/* data type */
 	*((uint16_t *)&buf[idx]) = conv_le16(ctx, data_type);
@@ -286,12 +335,12 @@ static int fill_get_min_sec_packet(private_context_t *ctx, uint8_t *buf, uint64_
 	int idx = 0;
 
 	/* pkt size */
-	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_GET_MIN_SEC_LENGTH - PKT_SIZE_LENGTH);
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_GET_MIN_TIME_LENGTH - PKT_SIZE_LENGTH);
 	idx += PKT_SIZE_LENGTH;
 
 	/* type */
 	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_GET_MIN_SEC);
-	idx += PKT_TYPE_LENGTH;
+	idx += PKT_CMD_TYPE_LENGTH;
 
 	/* Item ID */
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
@@ -301,7 +350,8 @@ static int fill_get_min_sec_packet(private_context_t *ctx, uint8_t *buf, uint64_
 }
 
 static int fill_delete_packet(private_context_t *ctx, uint8_t *buf, uint64_t id,
-                              struct timespec *threshold)
+                              struct timespec *threshold,
+                              history_gluon_delete_way_t delete_way)
 {
 	int idx = 0;
 
@@ -311,15 +361,23 @@ static int fill_delete_packet(private_context_t *ctx, uint8_t *buf, uint64_t id,
 
 	/* type */
 	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_DELETE);
-	idx += PKT_TYPE_LENGTH;
+	idx += PKT_CMD_TYPE_LENGTH;
 
 	/* Item ID */
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
 	idx += PKT_ITEM_ID_LENGTH;
 
-	/* min sec */
+	/* second */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, threshold->tv_sec);
 	idx += PKT_SEC_LENGTH;
+
+	/* nano second */
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, threshold->tv_nsec);
+	idx += PKT_NS_LENGTH;
+
+	/* delete way */
+	*((uint8_t *)&buf[idx]) = conv_le8(ctx, delete_way);
+	idx += PKT_DELETE_WAY_LENGTH;
 
 	return idx;
 }
@@ -335,7 +393,7 @@ static int fill_get_statistics(private_context_t *ctx, uint8_t *buf, uint64_t id
 
 	/* type */
 	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_GET_STATISTICS);
-	idx += PKT_TYPE_LENGTH;
+	idx += PKT_CMD_TYPE_LENGTH;
 
 	/* Item ID */
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
@@ -416,7 +474,7 @@ static int parse_common_reply_header
 
 	// Reply type
 	uint16_t reply_type = restore_le16(ctx, &buf[idx]);
-	idx += PKT_TYPE_LENGTH;
+	idx += PKT_CMD_TYPE_LENGTH;
 	if (reply_type != expected_pkt_type) {
 		ERR_MSG("reply type is not PKT_TYPE_DELETE: %d: %d\n",
 		        reply_type, PKT_TYPE_DELETE);
@@ -437,7 +495,7 @@ static int parse_common_reply_header
 static int parse_reply_get_min_sec(private_context_t *ctx, uint8_t *buf,
                                      struct timespec *minimum_time)
 {
-	uint32_t expected_length = REPLY_GET_MIN_SEC_LENGTH - PKT_SIZE_LENGTH;
+	uint32_t expected_length = REPLY_GET_MIN_TIME_LENGTH - PKT_SIZE_LENGTH;
 	int idx = parse_common_reply_header(ctx, buf, NULL, expected_length,
 	                                    PKT_TYPE_GET_MIN_SEC);
 	if (idx == -1)
@@ -452,7 +510,7 @@ static int parse_reply_get_min_sec(private_context_t *ctx, uint8_t *buf,
 	return 0;
 }
 
-static int parse_reply_delete(private_context_t *ctx, uint8_t *buf)
+static uint64_t parse_reply_delete(private_context_t *ctx, uint8_t *buf)
 {
 	uint32_t expected_length = REPLY_DELETE_LENGTH - PKT_SIZE_LENGTH;
 	int idx = parse_common_reply_header(ctx, buf, NULL, expected_length,
@@ -461,8 +519,8 @@ static int parse_reply_delete(private_context_t *ctx, uint8_t *buf)
 		return -1;
 
 	// Number of the deleted
-	uint32_t num_deleted = restore_le32(ctx, &buf[idx]);
-	idx += REPLY_DELETE_NUMBER_LENGTH;
+	uint64_t num_deleted = restore_le64(ctx, &buf[idx]);
+	idx += REPLY_COUNT_DELETED_LENGTH;
 
 	return num_deleted;
 }
@@ -699,14 +757,14 @@ int history_gluon_get_minmum_time(history_gluon_context_t _ctx,
 		return -1;
 
 	// request
-	uint8_t request[PKT_GET_MIN_SEC_LENGTH];
+	uint8_t request[PKT_GET_MIN_TIME_LENGTH];
 	fill_get_min_sec_packet(ctx, request, id);
-	if (write_data(ctx, request, PKT_GET_MIN_SEC_LENGTH) == -1)
+	if (write_data(ctx, request, PKT_GET_MIN_TIME_LENGTH) == -1)
 		return -1;
 
 	// reply
-	uint8_t reply[REPLY_GET_MIN_SEC_LENGTH];
-	if (read_data(ctx, reply, REPLY_GET_MIN_SEC_LENGTH) == -1)
+	uint8_t reply[REPLY_GET_MIN_TIME_LENGTH];
+	if (read_data(ctx, reply, REPLY_GET_MIN_TIME_LENGTH) == -1)
 		return -1;
 	if (parse_reply_get_min_sec(ctx, reply, minimum_time))
 		return -1;
@@ -774,7 +832,7 @@ int history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
 
 int history_gluon_delete(history_gluon_context_t _ctx, uint64_t id,
                          struct timespec *ts,
-                         history_gluon_delete_way_t delete_type,
+                         history_gluon_delete_way_t delete_way,
                          uint64_t *num_deleted_entries)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
@@ -783,7 +841,7 @@ int history_gluon_delete(history_gluon_context_t _ctx, uint64_t id,
 
 	// request
 	uint8_t request[PKT_DELETE_LENGTH];
-	fill_delete_packet(ctx, request, id, ts);
+	fill_delete_packet(ctx, request, id, ts, delete_way);
 	if (write_data(ctx, request, PKT_DELETE_LENGTH) == -1)
 		return -1;
 
