@@ -1,7 +1,7 @@
 History Gluon Server-client protocol specification
 
 Date: 2012/10/27
-Version: 0.6.5
+Version: 0.6.6
 
 *** Basics rules ***
 Endian: Little
@@ -54,10 +54,10 @@ COMMAND PKT: Query Data
 [ 8] ID
 [ 4] Time: second
 [ 4] Time: nano-second
-[ 2] Search when no entries
-  0: None
-  1: less
-  2: Greater
+[ 2] Query type
+  0: only match
+  1: less data when not found
+  2: greater data when not found
 
 -----------------------------------------
 REPLY: Query Data
