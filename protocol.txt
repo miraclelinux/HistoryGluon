@@ -1,7 +1,7 @@
 History Gluon Server-client protocol specification
 
 Date: 2012/10/27
-Version: 0.6.0
+Version: 0.6.1
 
 *** Basics rules ***
 Endian: Little
@@ -119,7 +119,7 @@ REPLY: Range Query
   0: Success
   1: Error due to unknown reason
   2: Too many records (overflow)
-[ 2] Sort order
+[ 1] Sort order
   0: ascending
   1: descending
   2: not sorted
