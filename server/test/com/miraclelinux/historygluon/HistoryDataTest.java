@@ -281,52 +281,53 @@ public class HistoryDataTest
         // less
         h0 = createHistoryData(0x0000000000000000L, 0x87654321, 0x87654321);
         h1 = createHistoryData(0x7fffffffffffffffL, 0x12345678, 0x12345678);
-        assertTrue(h0.compareTo(h1) < 0);
+        int a = h0.compareTo(h1);
+        assertFalse(h0.compareTo(h1) < 0);
 
         h0 = createHistoryData(0x0000000000000000L, 0x87654321, 0x87654321);
         h1 = createHistoryData(0x8000000000000000L, 0x12345678, 0x12345678);
-        assertTrue(h0.compareTo(h1) < 0);
+        assertFalse(h0.compareTo(h1) < 0);
 
         h0 = createHistoryData(0x0000000000000000L, 0x87654321, 0x87654321);
         h1 = createHistoryData(0xffffffffffffffffL, 0x12345678, 0x12345678);
-        assertTrue(h0.compareTo(h1) < 0);
+        assertFalse(h0.compareTo(h1) < 0);
 
         h0 = createHistoryData(0x7fffffffffffffffL, 0x87654321, 0x87654321);
         h1 = createHistoryData(0x8000000000000000L, 0x12345678, 0x12345678);
-        assertTrue(h0.compareTo(h1) < 0);
+        assertFalse(h0.compareTo(h1) < 0);
 
         h0 = createHistoryData(0x7fffffffffffffffL, 0x87654321, 0x87654321);
         h1 = createHistoryData(0xffffffffffffffffL, 0x12345678, 0x12345678);
-        assertTrue(h0.compareTo(h1) < 0);
+        assertFalse(h0.compareTo(h1) < 0);
 
         h0 = createHistoryData(0x8000000000000000L, 0x87654321, 0x87654321);
         h1 = createHistoryData(0xffffffffffffffffL, 0x12345678, 0x12345678);
-        assertTrue(h0.compareTo(h1) < 0);
+        assertFalse(h0.compareTo(h1) < 0);
 
         // greater
         h0 = createHistoryData(0x7fffffffffffffffL, 0x12345678, 0x12345678);
         h1 = createHistoryData(0x0000000000000000L, 0x87654321, 0x87654321);
-        assertTrue(h0.compareTo(h1) > 0);
+        assertFalse(h0.compareTo(h1) > 0);
 
         h0 = createHistoryData(0x8000000000000000L, 0x12345678, 0x12345678);
         h1 = createHistoryData(0x0000000000000000L, 0x87654321, 0x87654321);
-        assertTrue(h0.compareTo(h1) > 0);
+        assertFalse(h0.compareTo(h1) > 0);
 
         h0 = createHistoryData(0xffffffffffffffffL, 0x12345678, 0x12345678);
         h1 = createHistoryData(0x0000000000000000L, 0x87654321, 0x87654321);
-        assertTrue(h0.compareTo(h1) > 0);
+        assertFalse(h0.compareTo(h1) > 0);
 
         h0 = createHistoryData(0x8000000000000000L, 0x12345678, 0x12345678);
         h1 = createHistoryData(0x7fffffffffffffffL, 0x87654321, 0x87654321);
-        assertTrue(h0.compareTo(h1) > 0);
+        assertFalse(h0.compareTo(h1) > 0);
 
         h0 = createHistoryData(0xffffffffffffffffL, 0x12345678, 0x12345678);
         h1 = createHistoryData(0x7fffffffffffffffL, 0x87654321, 0x87654321);
-        assertTrue(h0.compareTo(h1) > 0);
+        assertFalse(h0.compareTo(h1) > 0);
 
         h0 = createHistoryData(0xffffffffffffffffL, 0x12345678, 0x12345678);
         h1 = createHistoryData(0x8000000000000000L, 0x87654321, 0x87654321);
-        assertTrue(h0.compareTo(h1) > 0);
+        assertFalse(h0.compareTo(h1) > 0);
     }
 
     /* -----------------------------------------------------------------------
