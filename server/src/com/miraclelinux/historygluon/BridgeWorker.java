@@ -18,7 +18,7 @@ public class BridgeWorker extends Thread {
      * Private constant
      * -------------------------------------------------------------------- */
     private static final int PKT_SIZE_LENGTH = 4;
-    private static final int PKT_TYPE_LENGTH = 2;
+    private static final int PKT_CMD_LENGTH = 2;
     private static final int PKT_ID_LENGTH = 8;
     private static final int PKT_SEC_LENGTH = 4;
     private static final int PKT_NS_LENGTH = 4;
@@ -29,22 +29,23 @@ public class BridgeWorker extends Thread {
     private static final int PKT_DATA_BLOB_SIZE_LENGTH = 8;
     private static final int PKT_NUM_ENTRIES_LENGTH = 4;
     private static final int PKT_SORT_ORDER_LENGTH = 2;
-    private static final int PKT_SEARCH_NEAR_LENGTH = 2;
+    private static final int PKT_QUERY_TYPE_LENGTH = 2;
     private static final int PKT_DELETE_WAY_LENGTH = 2;
     private static final int PKT_NUM_DELETED_LENGTH = 8;
 
-    private static final short PKT_TYPE_ADD_DATA       = 100;
-    private static final short PKT_TYPE_DELETE         = 600;
-    private static final short PKT_TYPE_GET            = 1000;
-    private static final short PKT_TYPE_GET_WITH_TS    = 1050;
-    private static final short PKT_TYPE_GET_MIN_SEC    = 1100;
-    private static final short PKT_TYPE_GET_STATISTICS = 1200;
+    private static final short PKT_CMD_ADD_DATA       = 100;
+    private static final short PKT_CMD_QUERY_DATA     = 200;
+    private static final short PKT_CMD_DELETE         = 600;
+    private static final short PKT_CMD_GET            = 1000;
+    private static final short PKT_CMD_GET_MIN_SEC    = 1100;
+    private static final short PKT_CMD_GET_STATISTICS = 1200;
 
     private static final short PKT_SORT_ORDER_ASCENDING  = 0;
     private static final short PKT_SORT_ORDER_DESCENDING = 1;
     private static final short PKT_SORT_ORDER_NOT_SORTED = 2;
 
     private static final int REPLY_RESULT_LENGTH = 4;
+    private static final int REPLY_QUERY_FOUND_FLAG_LENGTH = 2;
 
     private static final int RESULT_SUCCESS = 0;
     private static final int RESULT_ERROR_UNKNOWN_REASON = 1;
@@ -129,32 +130,32 @@ public class BridgeWorker extends Thread {
         // start measurement
         m_cmdProcTimeObserver.start();
 
-        // get command type
+        // get command
         m_byteBuffer.clear();
-        m_byteBuffer.put(pktBuf, 0, PKT_TYPE_LENGTH);
+        m_byteBuffer.put(pktBuf, 0, PKT_CMD_LENGTH);
         int idx = 0;
-        short type = m_byteBuffer.getShort(idx);
-        idx += PKT_TYPE_LENGTH;
+        short cmd = m_byteBuffer.getShort(idx);
+        idx += PKT_CMD_LENGTH;
 
         // do processing
         boolean ret = false;
-        if (type == PKT_TYPE_ADD_DATA)
+        if (cmd == PKT_CMD_ADD_DATA)
             ret = addHistoryData(pktBuf, idx);
-        else if (type == PKT_TYPE_GET)
+        else if (cmd == PKT_CMD_QUERY_DATA)
+            ret = queryData(pktBuf, idx);
+        else if (cmd == PKT_CMD_GET)
             ret = getHistoryData(pktBuf, idx);
-        else if (type == PKT_TYPE_GET_WITH_TS)
-            ret = getHistoryDataWithTimestamp(pktBuf, idx);
-        else if (type == PKT_TYPE_GET_MIN_SEC)
+        else if (cmd == PKT_CMD_GET_MIN_SEC)
             ret = getMinClock(pktBuf, idx);
-        else if (type == PKT_TYPE_GET_STATISTICS)
+        else if (cmd == PKT_CMD_GET_STATISTICS)
             ret = getStatistics(pktBuf, idx);
-        else if (type == PKT_TYPE_DELETE)
+        else if (cmd == PKT_CMD_DELETE)
             ret = deleteData(pktBuf, idx);
         else
-            m_log.error("Got unknown command type: " + type);
+            m_log.error("Got unknown command: " + cmd);
 
         // stop measurement and log it
-        m_cmdProcTimeObserver.stopAndLog("type: " + type);
+        m_cmdProcTimeObserver.stopAndLog("cmd: " + cmd);
         return ret;
     }
 
@@ -218,10 +219,10 @@ public class BridgeWorker extends Thread {
         }
 
         // write reply to the socket
-        int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH;
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH;
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
-        m_byteBuffer.putShort(PKT_TYPE_ADD_DATA);
+        m_byteBuffer.putShort(PKT_CMD_ADD_DATA);
         m_byteBuffer.putInt(RESULT_SUCCESS);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         m_ostream.flush();
@@ -270,7 +271,7 @@ public class BridgeWorker extends Thread {
             return false;
         }
 
-        int totalSize = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH
+        int totalSize = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH
                         + PKT_NUM_ENTRIES_LENGTH;
         int numEntries = 0;
         while (it.hasNext()) {
@@ -289,7 +290,7 @@ public class BridgeWorker extends Thread {
         // write reply header to the socket
         m_byteBuffer.clear();
         m_byteBuffer.putInt(totalSize);
-        m_byteBuffer.putShort(PKT_TYPE_GET);
+        m_byteBuffer.putShort(PKT_CMD_GET);
         m_byteBuffer.putInt(RESULT_SUCCESS);
         m_byteBuffer.putInt(numEntries);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
@@ -305,9 +306,9 @@ public class BridgeWorker extends Thread {
         return true;
     }
 
-    private boolean getHistoryDataWithTimestamp(byte[] pktBuf, int idx) throws IOException {
+    private boolean queryData(byte[] pktBuf, int idx) throws IOException {
         int putLength = PKT_ID_LENGTH + PKT_SEC_LENGTH
-                        + PKT_NS_LENGTH + PKT_SEARCH_NEAR_LENGTH;
+                        + PKT_NS_LENGTH + PKT_QUERY_TYPE_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
@@ -321,31 +322,26 @@ public class BridgeWorker extends Thread {
         int ns = m_byteBuffer.getInt(idx);
         idx += PKT_NS_LENGTH;
 
-        boolean searchNear = (m_byteBuffer.getChar(idx) == 0x01);
-        idx += PKT_SEARCH_NEAR_LENGTH;
+        short queryType = m_byteBuffer.getShort(idx);
+        idx += PKT_QUERY_TYPE_LENGTH;
 
         HistoryData history = null;
         try {
-            history = m_driver.getDataWithTimestamp(id, sec,
-                                                    ns, searchNear);
+            history = m_driver.queryData(id, sec, ns, queryType);
         } catch (HistoryDataSet.TooManyException e) {
             // FIXME: return the error
             return false;
         }
-        int numEntries = (history == null) ? 0 : 1;
+        short found = (short)((history == null) ? 0 : 1);
 
         // write reply to the socket
-        int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH +
-                     PKT_NUM_ENTRIES_LENGTH;
-        if (history != null) {
-            length += PKT_ID_LENGTH + PKT_SEC_LENGTH * 2 +
-                      PKT_DATA_TYPE_LENGTH + calcReplyPktSize(history);
-        }
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH +
+                     REPLY_QUERY_FOUND_FLAG_LENGTH;
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
-        m_byteBuffer.putShort(PKT_TYPE_GET_WITH_TS);
+        m_byteBuffer.putShort(PKT_CMD_QUERY_DATA);
         m_byteBuffer.putInt(RESULT_SUCCESS);
-        m_byteBuffer.putInt(numEntries);
+        m_byteBuffer.putShort(found);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         if (history != null)
             sendOneHistoryData(history);
@@ -377,10 +373,10 @@ public class BridgeWorker extends Thread {
             minClock = history.sec;
 
         // write reply to the socket
-        int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_SEC_LENGTH;
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH + PKT_SEC_LENGTH;
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
-        m_byteBuffer.putShort(PKT_TYPE_GET_MIN_SEC);
+        m_byteBuffer.putShort(PKT_CMD_GET_MIN_SEC);
         m_byteBuffer.putInt(RESULT_SUCCESS);
         m_byteBuffer.putInt(minClock);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
@@ -417,12 +413,12 @@ public class BridgeWorker extends Thread {
         }
 
         // write reply
-        int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH +
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH +
                      PKT_ID_LENGTH + PKT_SEC_LENGTH * 2 +
                      PKT_DATA_FLOAT_LENGTH * 3 + PKT_DATA_UINT64_LENGTH;
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
-        m_byteBuffer.putShort(PKT_TYPE_GET_STATISTICS);
+        m_byteBuffer.putShort(PKT_CMD_GET_STATISTICS);
         m_byteBuffer.putInt(RESULT_SUCCESS);
         m_byteBuffer.putLong(id);
         m_byteBuffer.putInt(statistics.sec0);
@@ -462,10 +458,10 @@ public class BridgeWorker extends Thread {
         long numDeleted = m_driver.delete(id, sec, ns, way);
 
         // write reply to the socket
-        int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_NUM_DELETED_LENGTH;
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH + PKT_NUM_DELETED_LENGTH;
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
-        m_byteBuffer.putShort(PKT_TYPE_DELETE);
+        m_byteBuffer.putShort(PKT_CMD_DELETE);
         m_byteBuffer.putInt(RESULT_SUCCESS);
         m_byteBuffer.putLong(numDeleted);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
@@ -564,7 +560,7 @@ public class BridgeWorker extends Thread {
         else if (history.type == HistoryData.TYPE_UINT64)
             m_byteBuffer.putLong(history.dataUint64);
         else if (history.type == HistoryData.TYPE_BLOB)
-            m_byteBuffer.putInt(history.dataBlob.length);
+            m_byteBuffer.putLong(history.dataBlob.length);
         else
             m_log.error("Unknown history type:" + history.type);
 

@@ -11,7 +11,9 @@ interface StorageDriver {
     public HistoryDataSet getData(long itemId, int clock0, int clock1)
       throws HistoryDataSet.TooManyException;
 
-    public HistoryData getDataWithTimestamp(long itemId, int clock, int ns, boolean searchNear) throws HistoryDataSet.TooManyException;
+    public HistoryData queryData(long itemId, int clock, int ns,
+                                 int searchWhenNotFound)
+      throws HistoryDataSet.TooManyException;
 
     public HistoryData getDataWithMinimumClock(long itemId)
       throws HistoryDataSet.TooManyException;

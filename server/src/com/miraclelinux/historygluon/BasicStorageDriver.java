@@ -54,25 +54,39 @@ public abstract class BasicStorageDriver implements StorageDriver {
     }
 
     @Override
-    public HistoryData getDataWithTimestamp(long id, int sec,
-                                            int ns, boolean searchNear)
+    public HistoryData queryData(long id, int sec, int ns, int queryType)
       throws HistoryDataSet.TooManyException {
         HistoryDataSet dataSet = null;
         String key = makeKey(id, sec, ns);
         dataSet = getDataSet(id, key, key, 1);
         if (!dataSet.isEmpty())
             return dataSet.first();
-        if (searchNear == false)
+        if (queryType == QueryType.ONLY_MATCH)
             return null;
 
-        // search the near data
+        // search the closest large data
+        if (queryType == QueryType.GREATER_DATA) {
+            String key0 = makeKey(id, sec, ns+1);
+            String key1 = makeKey(id+1, 0, 0);
+            dataSet = getDataSet(id, key0, key1, 1);
+            if (dataSet.isEmpty())
+                return null;
+            return dataSet.first();
+        }
+
+        // search the closest small data
         // TODO: We should make this method more fast.
         // HBase doen't have inverse order scan, does it ?
-        String key0 = makeKey(id, 0, 0);
-        dataSet = getDataSet(id, key0, key, COUNT_UNLIMITED);
-        if (dataSet.isEmpty())
-            return null;
-        return dataSet.descendingIterator().next();
+        if (queryType == QueryType.LESS_DATA) {
+            String key0 = makeKey(id, 0, 0);
+            dataSet = getDataSet(id, key0, key, COUNT_UNLIMITED);
+            if (dataSet.isEmpty())
+                return null;
+            return dataSet.descendingIterator().next();
+        }
+
+        String msg = "Unknown query type: " + queryType;
+        throw new InternalCheckException(msg);
     }
 
     @Override
