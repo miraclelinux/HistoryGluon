@@ -19,7 +19,7 @@ public class BridgeWorker extends Thread {
      * -------------------------------------------------------------------- */
     private static final int PKT_SIZE_LENGTH = 4;
     private static final int PKT_TYPE_LENGTH = 2;
-    private static final int PKT_ITEM_ID_LENGTH = 8;
+    private static final int PKT_ID_LENGTH = 8;
     private static final int PKT_SEC_LENGTH = 4;
     private static final int PKT_NS_LENGTH = 4;
     private static final int PKT_DATA_TYPE_LENGTH = 2;
@@ -29,18 +29,20 @@ public class BridgeWorker extends Thread {
     private static final int PKT_DATA_BLOB_SIZE_LENGTH = 8;
     private static final int PKT_NUM_ENTRIES_LENGTH = 4;
     private static final int PKT_SORT_ORDER_LENGTH = 2;
-    private static final int PKT_SEARCH_NEAR_LENGTH = 1;
-    private static final int PKT_DELETE_WAY_LENGTH = 1;
+    private static final int PKT_SEARCH_NEAR_LENGTH = 2;
+    private static final int PKT_DELETE_WAY_LENGTH = 2;
+    private static final int PKT_NUM_DELETED_LENGTH = 8;
 
     private static final short PKT_TYPE_ADD_DATA       = 100;
+    private static final short PKT_TYPE_DELETE         = 600;
     private static final short PKT_TYPE_GET            = 1000;
     private static final short PKT_TYPE_GET_WITH_TS    = 1050;
-    private static final short PKT_TYPE_GET_MIN_SEC  = 1100;
+    private static final short PKT_TYPE_GET_MIN_SEC    = 1100;
     private static final short PKT_TYPE_GET_STATISTICS = 1200;
-    private static final short PKT_TYPE_DELETE         = 2000;
 
-    private static final short PKT_SORT_ORDER_ASCENDING = 0;
+    private static final short PKT_SORT_ORDER_ASCENDING  = 0;
     private static final short PKT_SORT_ORDER_DESCENDING = 1;
+    private static final short PKT_SORT_ORDER_NOT_SORTED = 2;
 
     private static final int REPLY_RESULT_LENGTH = 4;
 
@@ -168,7 +170,7 @@ public class BridgeWorker extends Thread {
     private boolean addHistoryData(byte[] pktBuf, int idx) throws IOException {
         HistoryData history = new HistoryData();
 
-        int putLength = PKT_DATA_TYPE_LENGTH + PKT_ITEM_ID_LENGTH
+        int putLength = PKT_DATA_TYPE_LENGTH + PKT_ID_LENGTH
                         + PKT_SEC_LENGTH + PKT_NS_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
             // TODO: return error
@@ -180,7 +182,7 @@ public class BridgeWorker extends Thread {
         idx += PKT_DATA_TYPE_LENGTH;
 
         history.id = m_byteBuffer.getLong(idx);
-        idx += PKT_ITEM_ID_LENGTH;
+        idx += PKT_ID_LENGTH;
 
         history.sec = m_byteBuffer.getInt(idx);
         idx += PKT_SEC_LENGTH;
@@ -228,14 +230,14 @@ public class BridgeWorker extends Thread {
     }
 
     private boolean getHistoryData(byte[] pktBuf, int idx) throws IOException {
-        int putLength = PKT_ITEM_ID_LENGTH + 2 * PKT_SEC_LENGTH
+        int putLength = PKT_ID_LENGTH + 2 * PKT_SEC_LENGTH
                         + PKT_NUM_ENTRIES_LENGTH + PKT_SORT_ORDER_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
         // Item ID, sec0, and sec1
         long id = m_byteBuffer.getLong(idx);
-        idx += PKT_ITEM_ID_LENGTH;
+        idx += PKT_ID_LENGTH;
 
         int sec0 = m_byteBuffer.getInt(idx);
         idx += PKT_SEC_LENGTH;
@@ -279,7 +281,7 @@ public class BridgeWorker extends Thread {
                 break;
         }
 
-        int commonDataSize = PKT_ITEM_ID_LENGTH
+        int commonDataSize = PKT_ID_LENGTH
                              + PKT_SEC_LENGTH + PKT_NS_LENGTH
                              + PKT_DATA_TYPE_LENGTH;
         totalSize += numEntries * commonDataSize;
@@ -304,14 +306,14 @@ public class BridgeWorker extends Thread {
     }
 
     private boolean getHistoryDataWithTimestamp(byte[] pktBuf, int idx) throws IOException {
-        int putLength = PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH
+        int putLength = PKT_ID_LENGTH + PKT_SEC_LENGTH
                         + PKT_NS_LENGTH + PKT_SEARCH_NEAR_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
         // Item ID, sec0, and sec1
         long id = m_byteBuffer.getLong(idx);
-        idx += PKT_ITEM_ID_LENGTH;
+        idx += PKT_ID_LENGTH;
 
         int sec = m_byteBuffer.getInt(idx);
         idx += PKT_SEC_LENGTH;
@@ -336,7 +338,7 @@ public class BridgeWorker extends Thread {
         int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH +
                      PKT_NUM_ENTRIES_LENGTH;
         if (history != null) {
-            length += PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH * 2 +
+            length += PKT_ID_LENGTH + PKT_SEC_LENGTH * 2 +
                       PKT_DATA_TYPE_LENGTH + calcReplyPktSize(history);
         }
         m_byteBuffer.clear();
@@ -353,13 +355,13 @@ public class BridgeWorker extends Thread {
 
     private boolean getMinClock(byte[] pktBuf, int idx) throws IOException {
 
-        int putLength = PKT_ITEM_ID_LENGTH;
+        int putLength = PKT_ID_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
         // extract Item ID
         long id = m_byteBuffer.getLong(idx);
-        idx += PKT_ITEM_ID_LENGTH;
+        idx += PKT_ID_LENGTH;
 
         // get boundary of sec
         HistoryData history = null;
@@ -389,13 +391,13 @@ public class BridgeWorker extends Thread {
 
     private boolean getStatistics(byte[] pktBuf, int idx) throws IOException {
 
-        int putLength = PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH * 2;
+        int putLength = PKT_ID_LENGTH + PKT_SEC_LENGTH * 2;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
         // extract Item ID and secs
         long id = m_byteBuffer.getLong(idx);
-        idx += PKT_ITEM_ID_LENGTH;
+        idx += PKT_ID_LENGTH;
 
         int sec0 = m_byteBuffer.getInt(idx);
         idx += PKT_SEC_LENGTH;
@@ -416,7 +418,7 @@ public class BridgeWorker extends Thread {
 
         // write reply
         int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH +
-                     PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH * 2 +
+                     PKT_ID_LENGTH + PKT_SEC_LENGTH * 2 +
                      PKT_DATA_FLOAT_LENGTH * 3 + PKT_DATA_UINT64_LENGTH;
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
@@ -438,33 +440,34 @@ public class BridgeWorker extends Thread {
 
     private boolean deleteData(byte[] pktBuf, int idx) throws IOException {
 
-        int putLength = PKT_ITEM_ID_LENGTH + PKT_SEC_LENGTH;
+        int putLength =
+          PKT_ID_LENGTH + PKT_SEC_LENGTH + PKT_NS_LENGTH + PKT_DELETE_WAY_LENGTH;;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
 
         // extract Item ID and thresClock
         long id = m_byteBuffer.getLong(idx);
-        idx += PKT_ITEM_ID_LENGTH;
+        idx += PKT_ID_LENGTH;
 
         int sec = m_byteBuffer.getInt(idx);
         idx += PKT_SEC_LENGTH;
 
-        int sec = m_byteBuffer.getInt(idx);
+        int ns = m_byteBuffer.getInt(idx);
         idx += PKT_NS_LENGTH;
 
-        int way = m_byteBuffer.getByte(idx);
+        short way = m_byteBuffer.getShort(idx);
         idx += PKT_DELETE_WAY_LENGTH;
 
         // get min sec
-        int numDeleted = m_driver.delete(id, sec, ns, way);
+        long numDeleted = m_driver.delete(id, sec, ns, way);
 
         // write reply to the socket
-        int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_NUM_ENTRIES_LENGTH;
+        int length = PKT_TYPE_LENGTH + REPLY_RESULT_LENGTH + PKT_NUM_DELETED_LENGTH;
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
         m_byteBuffer.putShort(PKT_TYPE_DELETE);
         m_byteBuffer.putInt(RESULT_SUCCESS);
-        m_byteBuffer.putInt(numDeleted);
+        m_byteBuffer.putLong(numDeleted);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         m_ostream.flush();
 

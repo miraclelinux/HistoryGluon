@@ -105,10 +105,28 @@ public abstract class BasicStorageDriver implements StorageDriver {
         return statistics;
     }
 
-    public int delete(long id, int thresClock) {
+    public long delete(long id, int sec, int ns, short way) {
         int numDeleted = 0;
-        String startKey = makeKey(id, 0, 0);
-        String stopKey = makeKey(id, thresClock, 0);
+        String startKey;
+        String stopKey;
+        if (way == DeleteType.ONLY_MATCH) {
+            startKey = makeKey(id, sec, ns);
+            stopKey = startKey;
+        } else if (way == DeleteType.EQUAL_OR_LESS) {
+            startKey = makeKey(id, 0, 0);
+            stopKey = makeKey(id, sec, ns+1);
+        } else if (way == DeleteType.LESS) {
+            startKey = makeKey(id, 0, 0);
+            stopKey = makeKey(id, sec, ns);
+        } else if (way == DeleteType.EQUAL_OR_GREATER) {
+            startKey = makeKey(id, sec, ns);
+            stopKey = makeKey(id+1, 0, 0);
+        } else if (way == DeleteType.GREATER) {
+            startKey = makeKey(id, sec, ns+1);
+            stopKey = makeKey(id+1, 0, 0);
+        } else
+            throw new InternalCheckException("Unknown way type: " + way);
+
         HistoryDataSet dataSet = null;
         try {
             dataSet = getDataSet(id, startKey, stopKey, COUNT_UNLIMITED);
@@ -152,6 +170,10 @@ public abstract class BasicStorageDriver implements StorageDriver {
     }
 
     protected String makeKey(long id, int sec, int ns) {
+        if (ns > 1000000000) {
+            ns = ns % 1000000000;
+            sec += (ns / 1000000000);
+        }
         return String.format("%016x%08x%08x", id, sec, ns);
     }
 

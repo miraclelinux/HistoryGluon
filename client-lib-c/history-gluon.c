@@ -50,7 +50,7 @@
  REPLY_RESULT_LENGTH)
 
 /* Query Data */
-#define PKT_SEARCH_NEAR_LENGTH 1
+#define PKT_SEARCH_NEAR_LENGTH 2
 
 #define PKT_GET_DATA_WITH_TIMESTAMP_LENGTH \
 (PKT_SIZE_LENGTH + \
@@ -62,7 +62,7 @@
 
 /* Range Query */
 #define PKT_NUM_ENTRIES_LENGTH 4
-#define PKT_SORT_ORDER_LENGTH  1
+#define PKT_SORT_ORDER_LENGTH  2
 
 #define PKT_GET_DATA_LENGTH \
 (PKT_SIZE_LENGTH + \
@@ -101,7 +101,7 @@
  PKT_DATA_FLOAT_LENGTH*3)
 
 /* Delete Data */
-#define  PKT_DELETE_WAY_LENGTH 1
+#define  PKT_DELETE_WAY_LENGTH 2
 
 #define PKT_DELETE_LENGTH \
 (PKT_SIZE_LENGTH + \
@@ -263,11 +263,6 @@ static uint16_t conv_le16(private_context_t *ctx, uint16_t val)
 	return ret;
 }
 
-static uint16_t conv_le8(private_context_t *ctx, uint8_t val)
-{
-	return val;
-}
-
 static uint64_t restore_le64(private_context_t *ctx, void *buf)
 {
 	return conv_le64(ctx, *((uint64_t *)buf));
@@ -350,8 +345,7 @@ static int fill_get_min_sec_packet(private_context_t *ctx, uint8_t *buf, uint64_
 }
 
 static int fill_delete_packet(private_context_t *ctx, uint8_t *buf, uint64_t id,
-                              struct timespec *threshold,
-                              history_gluon_delete_way_t delete_way)
+                              struct timespec *ts, history_gluon_delete_way_t delete_way)
 {
 	int idx = 0;
 
@@ -359,7 +353,7 @@ static int fill_delete_packet(private_context_t *ctx, uint8_t *buf, uint64_t id,
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_DELETE_LENGTH - PKT_SIZE_LENGTH);
 	idx += PKT_SIZE_LENGTH;
 
-	/* type */
+	/* command */
 	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_DELETE);
 	idx += PKT_CMD_TYPE_LENGTH;
 
@@ -368,15 +362,15 @@ static int fill_delete_packet(private_context_t *ctx, uint8_t *buf, uint64_t id,
 	idx += PKT_ITEM_ID_LENGTH;
 
 	/* second */
-	*((uint32_t *)&buf[idx]) = conv_le32(ctx, threshold->tv_sec);
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts->tv_sec);
 	idx += PKT_SEC_LENGTH;
 
 	/* nano second */
-	*((uint32_t *)&buf[idx]) = conv_le32(ctx, threshold->tv_nsec);
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts->tv_nsec);
 	idx += PKT_NS_LENGTH;
 
 	/* delete way */
-	*((uint8_t *)&buf[idx]) = conv_le8(ctx, delete_way);
+	*((uint16_t *)&buf[idx]) = conv_le16(ctx, delete_way);
 	idx += PKT_DELETE_WAY_LENGTH;
 
 	return idx;
