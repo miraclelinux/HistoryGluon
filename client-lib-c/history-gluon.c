@@ -788,8 +788,8 @@ int history_gluon_add_float(history_gluon_context_t _ctx,
 	return wait_and_check_add_result(ctx);
 }
 
-int history_gluon_add_uint64(history_gluon_context_t _ctx,
-                             uint64_t id, struct timespec *ts, uint64_t data)
+int history_gluon_add_uint(history_gluon_context_t _ctx,
+                           uint64_t id, struct timespec *ts, uint64_t data)
 {
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
@@ -907,26 +907,6 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 	return wait_and_check_add_result(ctx);
 }
 
-int history_gluon_range_query(history_gluon_context_t _ctx, uint64_t id,
-                              struct timespec *ts0,
-                              struct timespec *ts1,
-                              history_gluon_sort_order_t sort_request,
-                              history_gluon_data_array_t **array)
-{
-	ERR_MSG("Not implemented yet\n");
-	return -1;
-}
-
-void history_gluon_free_data_array(history_gluon_context_t _ctx,
-                                    history_gluon_data_array_t *array)
-{
-	uint64_t i = 0;
-	for (i = 0; i < array->num_data; i++) {
-		history_gluon_data_t *data = &(array->array[i]);
-		history_gluon_free_data(_ctx, data);
-	}
-}
-
 int history_gluon_query(history_gluon_context_t _ctx,
                         uint64_t id, struct timespec *ts,
                         history_gluon_query_t query_type,
@@ -976,6 +956,26 @@ void history_gluon_free_data(history_gluon_context_t _ctx,
 	else if (gluon_data->type == HISTORY_GLUON_TYPE_BLOB)
 		free(gluon_data->v_blob);
 	free(gluon_data);
+}
+
+int history_gluon_range_query(history_gluon_context_t _ctx, uint64_t id,
+                              struct timespec *ts0,
+                              struct timespec *ts1,
+                              history_gluon_sort_order_t sort_request,
+                              history_gluon_data_array_t **array)
+{
+	ERR_MSG("Not implemented yet\n");
+	return -1;
+}
+
+void history_gluon_free_data_array(history_gluon_context_t _ctx,
+                                    history_gluon_data_array_t *array)
+{
+	uint64_t i = 0;
+	for (i = 0; i < array->num_data; i++) {
+		history_gluon_data_t *data = &(array->array[i]);
+		history_gluon_free_data(_ctx, data);
+	}
 }
 
 int history_gluon_get_minmum_time(history_gluon_context_t _ctx,
