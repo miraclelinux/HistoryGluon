@@ -1,7 +1,7 @@
 History Gluon Server-client protocol specification
 
 Date: 2012/10/27
-Version: 0.6.3
+Version: 0.6.5
 
 *** Basics rules ***
 Endian: Little
@@ -70,9 +70,6 @@ REPLY: Query Data
   1: Error due to unknown reason
 [ 2] Found
 << Body part: If Found is 0, this part is omitted>>
-[ 4] Body length (Not including this)
-  When 'Data type' is String and Blob, this doesn't include the size of
-  String body and Blob body respectively.
 [ 8] ID
 [ 4] Time: second
 [ 4] Time: nano-second
