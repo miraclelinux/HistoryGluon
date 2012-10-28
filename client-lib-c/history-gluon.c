@@ -50,21 +50,29 @@
  REPLY_RESULT_LENGTH)
 
 /* Query Data */
-#define PKT_SEARCH_NEAR_LENGTH 2
+#define PKT_SEARCH_WHEN_NOT_FOUND_LENGTH 2
 
-#define PKT_GET_DATA_WITH_TIMESTAMP_LENGTH \
+#define PKT_QUERY_DATA_LENGTH \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
  PKT_ITEM_ID_LENGTH + \
  PKT_SEC_LENGTH + \
  PKT_NS_LENGTH + \
- PKT_SEARCH_NEAR_LENGTH)
+ PKT_SEARCH_WHEN_NOT_FOUND_LENGTH)
+
+#define REPLY_QUERY_DATA_FOUND_FLAG_LENGTH 2
+
+#define REPLY_QUERY_DATA_HEADER_LENGTH \
+(PKT_SIZE_LENGTH + \
+ PKT_CMD_TYPE_LENGTH + \
+ REPLY_RESULT_LENGTH + \
+ REPLY_QUERY_DATA_FOUND_FLAG_LENGTH)
 
 /* Range Query */
 #define PKT_NUM_ENTRIES_LENGTH 4
 #define PKT_SORT_ORDER_LENGTH  2
 
-#define PKT_GET_DATA_LENGTH \
+#define PKT_RANGE_QUERY_LENGTH \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
  PKT_ITEM_ID_LENGTH + \
@@ -121,12 +129,12 @@
 
 /* Packet type */
 enum {
-	PKT_TYPE_ADD_DATA           = 100,
-	PKT_TYPE_GET                = 1000,
-	PKT_TYPE_GET_WITH_TIMESTAMP = 1050,
-	PKT_TYPE_GET_MIN_SEC        = 1100,
-	PKT_TYPE_GET_STATISTICS     = 1200,
-	PKT_TYPE_DELETE             = 600,
+	PKT_CMD_ADD_DATA           = 100,
+	PKT_CMD_QUERY_DATA         = 200,
+	PKT_CMD_GET                = 1000,
+	PKT_CMD_GET_MIN_SEC        = 1100,
+	PKT_CMD_GET_STATISTICS     = 1200,
+	PKT_CMD_DELETE             = 600,
 };
 
 /* Result code */
@@ -303,7 +311,7 @@ static int fill_add_data_header(private_context_t *ctx, uint64_t id,
 	idx += PKT_SIZE_LENGTH;
 
 	/* command */
-	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_ADD_DATA);
+	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_CMD_ADD_DATA);
 	idx += PKT_CMD_TYPE_LENGTH;
 
 	/* data type */
@@ -325,6 +333,39 @@ static int fill_add_data_header(private_context_t *ctx, uint64_t id,
 	return idx;
 }
 
+static int fill_query_data_header(private_context_t *ctx, uint64_t id,
+                                  struct timespec *ts, uint8_t *buf,
+                                  history_gluon_query_t query_type)
+{
+	int idx = 0;
+
+	/* pkt size */
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_QUERY_DATA_LENGTH - PKT_SIZE_LENGTH);
+	idx += PKT_SIZE_LENGTH;
+
+	/* command */
+	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_CMD_QUERY_DATA);
+	idx += PKT_CMD_TYPE_LENGTH;
+
+	/* ID */
+	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
+	idx += PKT_ITEM_ID_LENGTH;
+
+	/* sec */
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts->tv_sec);
+	idx += PKT_SEC_LENGTH;
+
+	/* ns */
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts->tv_nsec);
+	idx += PKT_NS_LENGTH;
+
+	/* query type  */
+	*((uint16_t *)&buf[idx]) = conv_le16(ctx, query_type);
+	idx += PKT_SORT_ORDER_LENGTH;
+
+	return idx;
+}
+
 static int fill_get_min_sec_packet(private_context_t *ctx, uint8_t *buf, uint64_t id)
 {
 	int idx = 0;
@@ -334,7 +375,7 @@ static int fill_get_min_sec_packet(private_context_t *ctx, uint8_t *buf, uint64_
 	idx += PKT_SIZE_LENGTH;
 
 	/* type */
-	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_GET_MIN_SEC);
+	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_CMD_GET_MIN_SEC);
 	idx += PKT_CMD_TYPE_LENGTH;
 
 	/* Item ID */
@@ -354,7 +395,7 @@ static int fill_delete_packet(private_context_t *ctx, uint8_t *buf, uint64_t id,
 	idx += PKT_SIZE_LENGTH;
 
 	/* command */
-	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_DELETE);
+	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_CMD_DELETE);
 	idx += PKT_CMD_TYPE_LENGTH;
 
 	/* Item ID */
@@ -386,7 +427,7 @@ static int fill_get_statistics(private_context_t *ctx, uint8_t *buf, uint64_t id
 	idx += PKT_SIZE_LENGTH;
 
 	/* type */
-	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_TYPE_GET_STATISTICS);
+	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_CMD_GET_STATISTICS);
 	idx += PKT_CMD_TYPE_LENGTH;
 
 	/* Item ID */
@@ -470,8 +511,8 @@ static int parse_common_reply_header
 	uint16_t reply_type = restore_le16(ctx, &buf[idx]);
 	idx += PKT_CMD_TYPE_LENGTH;
 	if (reply_type != expected_pkt_type) {
-		ERR_MSG("reply type is not PKT_TYPE_DELETE: %d: %d\n",
-		        reply_type, PKT_TYPE_DELETE);
+		ERR_MSG("reply type is not PKT_CMD_DELETE: %d: %d\n",
+		        reply_type, PKT_CMD_DELETE);
 		return -1;
 	}
 
@@ -491,7 +532,7 @@ static int parse_reply_get_min_sec(private_context_t *ctx, uint8_t *buf,
 {
 	uint32_t expected_length = REPLY_GET_MIN_TIME_LENGTH - PKT_SIZE_LENGTH;
 	int idx = parse_common_reply_header(ctx, buf, NULL, expected_length,
-	                                    PKT_TYPE_GET_MIN_SEC);
+	                                    PKT_CMD_GET_MIN_SEC);
 	if (idx == -1)
 		return -1;
 
@@ -508,7 +549,7 @@ static uint64_t parse_reply_delete(private_context_t *ctx, uint8_t *buf)
 {
 	uint32_t expected_length = REPLY_DELETE_LENGTH - PKT_SIZE_LENGTH;
 	int idx = parse_common_reply_header(ctx, buf, NULL, expected_length,
-	                                    PKT_TYPE_DELETE);
+	                                    PKT_CMD_DELETE);
 	if (idx == -1)
 		return -1;
 
@@ -523,7 +564,7 @@ static int parse_reply_add(private_context_t *ctx, uint8_t *buf)
 {
 	uint32_t expected_length = REPLY_ADD_LENGTH - PKT_SIZE_LENGTH;
 	int idx = parse_common_reply_header(ctx, buf, NULL, expected_length,
-	                                    PKT_TYPE_ADD_DATA);
+	                                    PKT_CMD_ADD_DATA);
 	if (idx == -1)
 		return -1;
 	return 0;
@@ -729,8 +770,35 @@ int history_gluon_query(history_gluon_context_t _ctx,
                         history_gluon_query_t query_type,
                         history_gluon_data_t **gluon_data)
 {
-	ERR_MSG("Not implemented yet\n");
-	return -1;
+	int ret;
+	private_context_t *ctx = get_connected_private_context(_ctx);
+	if (ctx == NULL)
+		return -1;
+
+	/* make a request packet and write it */
+	uint8_t request[PKT_QUERY_DATA_LENGTH];
+	fill_query_data_header(ctx, id, ts, request, query_type);
+	ret = write_data(ctx, request, PKT_QUERY_DATA_LENGTH);
+	if (ret < 0)
+		return ret;
+
+	/* reply */
+	uint8_t reply[REPLY_QUERY_DATA_HEADER_LENGTH];
+	if (read_data(ctx, reply, REPLY_QUERY_DATA_HEADER_LENGTH) == -1)
+		return -1;
+	ret = parse_common_reply_header(ctx, reply, NULL, REPLY_QUERY_DATA_HEADER_LENGTH,
+	                                PKT_CMD_QUERY_DATA);
+	if (ret < 0)
+		return ret;
+	int idx = ret;
+
+	/* found flag */
+	uint16_t found = restore_le16(ctx, &buf[idx]);
+	idx += REPLY_QUERY_DATA_FOUND_FLAG_LENGTH;
+	if (found == 0)
+		*gluon_data = NULL;
+	// TODO: parse data.
+	return 0;
 }
 
 void history_gluon_free_data(history_gluon_context_t _ctx,
@@ -785,7 +853,7 @@ int history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
 		return -1;
 	uint32_t expected_length = REPLY_STATISTICS_LENGTH - PKT_SIZE_LENGTH;
 	int idx = parse_common_reply_header(ctx, reply, NULL, expected_length,
-	                                    PKT_TYPE_GET_STATISTICS);
+	                                    PKT_CMD_GET_STATISTICS);
 	if (idx == -1)
 		return -1;
 
