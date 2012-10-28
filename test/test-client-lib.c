@@ -2,6 +2,7 @@
 #include "history-gluon.h"
 
 static history_gluon_context_t g_ctx = NULL;
+static history_gluon_data_t *g_data = NULL;
 
 #define TEST_STD_ID  0x65536
 
@@ -28,7 +29,7 @@ static void assert_delete_all_for_id(uint64_t id, uint64_t *num_deleted)
 	cut_assert_equal_int(0, ret);
 }
 
-static void assert_add_uint64(uint64_t id, struct timespec *ts, uint64_t value)
+static void assert_add_uint(uint64_t id, struct timespec *ts, uint64_t value)
 {
 	int ret = history_gluon_add_uint64(g_ctx, id, ts, value);
 	cut_assert_equal_int(0, ret);
@@ -39,6 +40,40 @@ static void assert_add_float(uint64_t id, struct timespec *ts, double v)
 	int ret = history_gluon_add_float(g_ctx, id, ts, v);
 	cut_assert_equal_int(0, ret);
 }
+
+static history_gluon_data_t g_uint_samples[] = {
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1234567890,
+		.ts.tv_nsec = 123456789,
+		.v_uint = 1,
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 2500000000,
+		.ts.tv_nsec = 300000000,
+		.v_uint = 0xfedcba9876543210,
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1506070800,
+		.ts.tv_nsec = 100000000,
+		.v_uint = 10,
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1600000000,
+		.ts.tv_nsec = 500000000,
+		.v_uint = 12340,
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1600000001,
+		.ts.tv_nsec = 200000000,
+		.v_uint = 0x123456789abcdef0,
+	},
+};
+static const int NUM_UINT_SAMPLES = sizeof(g_uint_samples) / sizeof(history_gluon_data_t);
 
 static history_gluon_data_t g_float_samples[] = {
 	{
@@ -73,11 +108,11 @@ static history_gluon_data_t g_float_samples[] = {
 	},
 };
 
-static const int NUM_SAMPLES = sizeof(g_float_samples) / sizeof(history_gluon_data_t);
+static const int NUM_FLOAT_SAMPLES = sizeof(g_float_samples) / sizeof(history_gluon_data_t);
 
 static void add_samples() {
 	int i;
-	for (i = 0; i < NUM_SAMPLES; i++) {
+	for (i = 0; i < NUM_FLOAT_SAMPLES; i++) {
 		assert_add_float(g_float_samples[i].id, &g_float_samples[i].ts,
 		                 g_float_samples[i].v_float);
 	}
@@ -90,6 +125,10 @@ void setup(void)
 
 void teardown(void)
 {
+	if (g_data) {
+		history_gluon_free_data(g_ctx, g_data);
+		g_data = NULL;
+	}
 	if (g_ctx) {
 		history_gluon_free_context(g_ctx);
 		g_ctx = NULL;
@@ -107,7 +146,7 @@ void test_free_context(void)
 	free_global_context();
 }
 
-void test_add_uint64(void)
+void test_add_uint(void)
 {
 	create_global_context();
 
@@ -118,7 +157,7 @@ void test_add_uint64(void)
 	ts.tv_sec = 1;
 	ts.tv_nsec = 2;
 	uint64_t value = 3;
-	assert_add_uint64(id, &ts, value);
+	assert_add_uint(id, &ts, value);
 }
 
 void test_add_float(void)
@@ -162,6 +201,24 @@ void test_add_blob(void)
 	uint8_t value[] = {0x21, 0x22, 0xff, 0x80, 0x95};
 	int ret = history_gluon_add_blob(g_ctx, id, &ts, value, sizeof(value));
 	cut_assert_equal_int(0, ret);
+}
+
+void test_add_uint_and_query(void)
+{
+	int idx = 2;
+	history_gluon_data_t *sample = &g_uint_samples[idx];
+
+	create_global_context();
+	assert_delete_all_for_id(sample->id, NULL);
+
+	assert_add_uint(sample->id, &sample->ts, sample->v_uint);
+
+	// query
+	int ret;
+	ret = history_gluon_query(g_ctx, sample->id, &sample->ts,
+	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
+	cut_assert_equal_int(0, ret);
+	cut_assert_equal_int_least64(sample->v_uint, g_data->v_uint);
 }
 
 void test_delete_all(void)
