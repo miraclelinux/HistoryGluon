@@ -171,8 +171,8 @@ public abstract class BasicStorageDriver implements StorageDriver {
 
     protected String makeKey(long id, int sec, int ns) {
         if (ns > 1000000000) {
-            ns = ns % 1000000000;
             sec += (ns / 1000000000);
+            ns = ns % 1000000000;
         }
         return String.format("%016x%08x%08x", id, sec, ns);
     }
