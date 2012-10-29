@@ -163,54 +163,63 @@ static history_gluon_data_t g_float_samples[] = {
 static const int NUM_FLOAT_SAMPLES =
   sizeof(g_float_samples) / sizeof(history_gluon_data_t);
 
+static char string_sample0[] = "Hello, World!";
+static char string_sample1[] = 
+  "Linux is a Unix-like computer operating system assembled under the model of free "
+  "and open source software development and distribution. The defining component of "
+  "Linux is the Linux kernel, an operating system kernel first released 5 October 1991 "
+  "by Linus Torvalds.";
+static char string_sample2[] = 
+  "C++ (pronounced \"see plus plus\") is a statically typed, free-form, multi-paradigm, "
+  "compiled, general-purpose programming language. It is regarded as an "
+  "intermediate-level language, as it comprises a combination of both high-level and "
+  "low-level language features. Developed by Bjarne Stroustrup starting in 1979 at Bell "
+  "Labs, it adds object oriented features, such as classes, and other enhancements to "
+  "the C programming language. Originally named C with Classes, the language was renamed "
+  "C++ in 1983, as a pun involving the increment operator.\n";
+static char string_sample3[] = "walrus";
+static char string_sample4[] = "Are you hungry?";
+
 static history_gluon_data_t g_string_samples[] = {
 	{
 		.id = TEST_STD_ID_STRING,
 		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 1234567890,
 		.ts.tv_nsec = 123456789,
-		.v_string = "Hello, World!",
+		.v_string = string_sample0,
+		.length = sizeof(string_sample0) - 1,
 	},
 	{
 		.id = TEST_STD_ID_STRING,
 		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 1506070800,
 		.ts.tv_nsec = 100000000,
-		.v_string =
-		  "Linux is a Unix-like computer operating system assembled under the "
-		  "model of free and open source software development and distribution. "
-		  "The defining component of Linux is the Linux kernel, an operating "
-		  "system kernel first released 5 October 1991 by Linus Torvalds.",
+		.v_string = string_sample1,
+		.length = sizeof(string_sample1) - 1,
 	},
 	{
 		.id = TEST_STD_ID_STRING,
 		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 1600000000,
 		.ts.tv_nsec = 500000000,
-		.v_string =
-		  "C++ (pronounced \"see plus plus\") is a statically typed, free-form, "
-		  "multi-paradigm, compiled, general-purpose programming language. It is "
-		  "regarded as an intermediate-level language, as it comprises a "
-		  "combination of both high-level and low-level language features. "
-		  "Developed by Bjarne Stroustrup starting in 1979 at Bell Labs, it adds "
-		  "object oriented features, such as classes, and other enhancements to "
-		  "the C programming language. Originally named C with Classes, the "
-		  "language was renamed C++ in 1983, as a pun involving the increment "
-		  "operator.\n",
+		.v_string = string_sample2,
+		.length = sizeof(string_sample2) - 1,
 	},
 	{
 		.id = TEST_STD_ID_STRING,
 		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 1600000001,
 		.ts.tv_nsec = 200000000,
-		.v_string = "walrus",
+		.v_string = string_sample3,
+		.length = sizeof(string_sample3) - 1,
 	},
 	{
 		.id = TEST_STD_ID_STRING,
 		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 2500000000,
 		.ts.tv_nsec = 300000000,
-		.v_string = "Are you hungry?",
+		.v_string = string_sample4,
+		.length = sizeof(string_sample4) - 1,
 	},
 };
 static const int NUM_STRING_SAMPLES =
@@ -268,25 +277,25 @@ static history_gluon_data_t g_blob_samples[] = {
 static const int NUM_BLOB_SAMPLES =
   sizeof(g_blob_samples) / sizeof(history_gluon_data_t);
 
-static void assert_add_uint_samples() {
+static void assert_add_uint_samples(void) {
 	int i;
 	for (i = 0; i < NUM_UINT_SAMPLES; i++)
 		assert_add_uint_hgl_data(&g_uint_samples[i]);
 }
 
-static void add_float_samples() {
+static void assert_add_float_samples(void) {
 	int i;
 	for (i = 0; i < NUM_FLOAT_SAMPLES; i++)
 		assert_add_float_hgl_data(&g_float_samples[i]);
 }
 
-static void add_string_samples() {
+static void assert_add_string_samples(void) {
 	int i;
 	for (i = 0; i < NUM_STRING_SAMPLES; i++)
 		assert_add_string_hgl_data(&g_string_samples[i]);
 }
 
-static void add_blob_samples() {
+static void assert_add_blob_samples(void) {
 	int i;
 	for (i = 0; i < NUM_BLOB_SAMPLES; i++)
 		assert_add_blob_hgl_data(&g_blob_samples[i]);
@@ -553,7 +562,7 @@ void test_add_float_and_query_less(void)
 
 	// delete and add data
 	assert_delete_all_for_id(TEST_STD_ID_FLOAT, NULL);
-	add_float_samples();
+	assert_add_float_samples();
 
 	// query
 	int idx = 1;
@@ -574,7 +583,7 @@ void test_add_float_and_query_greater(void)
 
 	// delete and add data
 	assert_delete_all_for_id(TEST_STD_ID_FLOAT, NULL);
-	add_float_samples();
+	assert_add_float_samples();
 
 	// query
 	int idx = 1;
@@ -633,7 +642,7 @@ void test_add_string_and_query_less(void)
 
 	// delete and add data
 	assert_delete_all_for_id(TEST_STD_ID_STRING, NULL);
-	add_string_samples();
+	assert_add_string_samples();
 
 	// query
 	int idx = 1;
@@ -653,7 +662,7 @@ void test_add_string_and_query_greater(void)
 
 	// delete and add data
 	assert_delete_all_for_id(TEST_STD_ID_STRING, NULL);
-	add_string_samples();
+	assert_add_string_samples();
 
 	// query
 	int idx = 1;
@@ -711,7 +720,7 @@ void test_add_blob_and_query_less(void)
 
 	// delete and add data
 	assert_delete_all_for_id(TEST_STD_ID_BLOB, NULL);
-	add_blob_samples();
+	assert_add_blob_samples();
 
 	// query
 	int idx = 1;
@@ -732,7 +741,7 @@ void test_add_blob_and_query_greater(void)
 
 	// delete and add data
 	assert_delete_all_for_id(TEST_STD_ID_BLOB, NULL);
-	add_blob_samples();
+	assert_add_blob_samples();
 
 	// query
 	int idx = 1;
@@ -752,7 +761,16 @@ void test_add_blob_and_query_greater(void)
  * Range Query
  * ----------------------------------------------------------------------------------- */
 static void
-asset_range_query_common(uint64_t id, struct timespec *ts0, struct timespec *ts1,
+assert_make_context_delete_add_samples(uint64_t id, void (*add_samples_fn)(void))
+{
+	create_global_context();
+	assert_delete_all_for_id(id, NULL);
+	(*add_samples_fn)();
+}
+
+static void
+asset_range_query_common(uint64_t id, history_gluon_data_t *samples,
+                         struct timespec *ts0, struct timespec *ts1,
                          history_gluon_sort_order_t sort_order, uint64_t num_max_entries,
                          uint64_t num_expected_entries, int idx_offset)
 {
@@ -768,87 +786,188 @@ asset_range_query_common(uint64_t id, struct timespec *ts0, struct timespec *ts1
 		int exp_idx = idx_offset + i;
 		if (sort_order == HISTORY_GLUON_SORT_DESCENDING)
 			exp_idx = idx_offset + (g_array->num_data - i - 1);
-		history_gluon_data_t *expect_data = &g_uint_samples[exp_idx];
+		history_gluon_data_t *expect_data = &samples[exp_idx];
 		history_gluon_data_t *actual_data = g_array->array[i];
 		assert_equal_hgl_data(expect_data, actual_data);
 	}
 }
 
-void test_range_query_uint_asc(void)
+/* asc/dsc */
+static void
+assert_range_query_1_3(uint64_t id, void (*add_samples_fn)(void), 
+                      history_gluon_data_t *samples, history_gluon_sort_order_t sort_order)
 {
-	create_global_context();
-	assert_delete_all_for_id(TEST_STD_ID_UINT, NULL);
-	assert_add_uint_samples();
+	assert_make_context_delete_add_samples(id, add_samples_fn);
 
 	// range query
 	int idx0 = 1;
 	int idx1 = 3;
-	asset_range_query_common(TEST_STD_ID_UINT,
-	                         &g_uint_samples[idx0].ts, &g_uint_samples[idx1].ts,
-	                         HISTORY_GLUON_SORT_ASCENDING, 
-	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED,
-	                         idx1 - idx0, idx0);
+	asset_range_query_common(id, samples,
+	                         &samples[idx0].ts, &samples[idx1].ts, sort_order,
+	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED, idx1 - idx0, idx0);
+}
+
+void test_range_query_uint_asc(void)
+{
+	assert_range_query_1_3(TEST_STD_ID_UINT, assert_add_uint_samples, g_uint_samples,
+	                      HISTORY_GLUON_SORT_ASCENDING);
 }
 
 void test_range_query_uint_dsc(void)
 {
-	create_global_context();
-	assert_delete_all_for_id(TEST_STD_ID_UINT, NULL);
-	assert_add_uint_samples();
+	assert_range_query_1_3(TEST_STD_ID_UINT, assert_add_uint_samples, g_uint_samples,
+	                      HISTORY_GLUON_SORT_DESCENDING);
+}
+
+void test_range_query_float_asc(void)
+{
+	assert_range_query_1_3(TEST_STD_ID_FLOAT, assert_add_float_samples,
+	                      g_float_samples, HISTORY_GLUON_SORT_ASCENDING);
+}
+
+void test_range_query_float_dsc(void)
+{
+	assert_range_query_1_3(TEST_STD_ID_FLOAT, assert_add_float_samples,
+	                      g_float_samples, HISTORY_GLUON_SORT_DESCENDING);
+}
+
+void test_range_query_string_asc(void)
+{
+	assert_range_query_1_3(TEST_STD_ID_STRING, assert_add_string_samples,
+	                      g_string_samples, HISTORY_GLUON_SORT_ASCENDING);
+}
+
+void test_range_query_string_dsc(void)
+{
+	assert_range_query_1_3(TEST_STD_ID_STRING, assert_add_string_samples,
+	                      g_string_samples, HISTORY_GLUON_SORT_DESCENDING);
+}
+
+void test_range_query_blob_asc(void)
+{
+	assert_range_query_1_3(TEST_STD_ID_BLOB, assert_add_blob_samples,
+	                      g_blob_samples, HISTORY_GLUON_SORT_ASCENDING);
+}
+
+void test_range_query_blob_dsc(void)
+{
+	assert_range_query_1_3(TEST_STD_ID_BLOB, assert_add_blob_samples,
+	                      g_blob_samples, HISTORY_GLUON_SORT_DESCENDING);
+}
+
+/* not found head */
+void assert_range_query_not_found_head(uint64_t id, void (*add_samples_fn)(void),
+                                       history_gluon_data_t *samples)
+{
+	assert_make_context_delete_add_samples(id, add_samples_fn);
 
 	// range query
-	int idx0 = 1;
-	int idx1 = 3;
-	asset_range_query_common(TEST_STD_ID_UINT,
-	                         &g_uint_samples[idx0].ts, &g_uint_samples[idx1].ts,
-	                         HISTORY_GLUON_SORT_DESCENDING, 
-	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED,
-	                         idx1 - idx0, idx0);
+	struct timespec *ts0 = &HISTORY_GLUON_TIMESPEC_START;
+	struct timespec *ts1 = &samples[0].ts;
+	asset_range_query_common(id, samples, ts0, ts1,
+	                         HISTORY_GLUON_SORT_ASCENDING, 
+	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED, 0, 0);
 }
 
 void test_range_query_uint_not_found_head(void)
 {
-	create_global_context();
-	assert_delete_all_for_id(TEST_STD_ID_UINT, NULL);
-	assert_add_uint_samples();
+	assert_range_query_not_found_head(TEST_STD_ID_UINT, assert_add_uint_samples,
+	                                  g_uint_samples);
+}
+
+void test_range_query_float_not_found_head(void)
+{
+	assert_range_query_not_found_head(TEST_STD_ID_FLOAT, assert_add_float_samples,
+	                                  g_float_samples);
+}
+
+void test_range_query_string_not_found_head(void)
+{
+	assert_range_query_not_found_head(TEST_STD_ID_STRING, assert_add_string_samples,
+	                                  g_string_samples);
+}
+
+void test_range_query_blob_not_found_head(void)
+{
+	assert_range_query_not_found_head(TEST_STD_ID_BLOB, assert_add_blob_samples,
+	                                  g_blob_samples);
+}
+
+/* not_found_tail */
+void assert_range_query_not_found_tail(uint64_t id, void (*add_samples_fn)(void),
+                                       history_gluon_data_t *samples, int num_samples)
+{
+	assert_make_context_delete_add_samples(id, add_samples_fn);
 
 	// range query
-	struct timespec *ts0 = &HISTORY_GLUON_TIMESPEC_START;
-	struct timespec *ts1 = &g_uint_samples[0].ts;
-	asset_range_query_common(TEST_STD_ID_UINT, ts0, ts1,
+	struct timespec ts0;
+	memcpy(&ts0, &samples[num_samples-1].ts, sizeof(struct timespec));
+	ts0.tv_sec++;
+	struct timespec *ts1 = &HISTORY_GLUON_TIMESPEC_END;
+	asset_range_query_common(id, samples,  &ts0, ts1,
 	                         HISTORY_GLUON_SORT_ASCENDING, 
 	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED, 0, 0);
 }
 
 void test_range_query_uint_not_found_tail(void)
 {
-	create_global_context();
-	assert_delete_all_for_id(TEST_STD_ID_UINT, NULL);
-	assert_add_uint_samples();
+	assert_range_query_not_found_tail(TEST_STD_ID_UINT, assert_add_uint_samples,
+	                                  g_uint_samples, NUM_UINT_SAMPLES);
+}
+
+void test_range_query_float_not_found_tail(void)
+{
+	assert_range_query_not_found_tail(TEST_STD_ID_FLOAT, assert_add_float_samples,
+	                                  g_float_samples, NUM_FLOAT_SAMPLES);
+}
+
+void test_range_query_string_not_found_tail(void)
+{
+	assert_range_query_not_found_tail(TEST_STD_ID_STRING, assert_add_string_samples,
+	                                  g_string_samples, NUM_STRING_SAMPLES);
+}
+
+void test_range_query_blob_not_found_tail(void)
+{
+	assert_range_query_not_found_tail(TEST_STD_ID_BLOB, assert_add_blob_samples,
+	                                  g_blob_samples, NUM_BLOB_SAMPLES);
+}
+
+/* get_tail */
+void assert_range_query_get_tail(uint64_t id, void (*add_samples_fn)(void),
+                                 history_gluon_data_t *samples, int num_samples)
+{
+	assert_make_context_delete_add_samples(id, add_samples_fn);
 
 	// range query
-	struct timespec ts0;
-	memcpy(&ts0, &g_uint_samples[NUM_UINT_SAMPLES-1].ts, sizeof(struct timespec));
-	ts0.tv_sec++;
+	struct timespec *ts0 = &(samples[num_samples-1].ts);
 	struct timespec *ts1 = &HISTORY_GLUON_TIMESPEC_END;
-	asset_range_query_common(TEST_STD_ID_UINT, &ts0, ts1,
-	                         HISTORY_GLUON_SORT_ASCENDING, 
-	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED, 0, 0);
+	asset_range_query_common(id, samples,  ts0, ts1, HISTORY_GLUON_SORT_ASCENDING, 
+	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED, 1, num_samples-1);
 }
 
 void test_range_query_uint_get_tail(void)
 {
-	create_global_context();
-	assert_delete_all_for_id(TEST_STD_ID_UINT, NULL);
-	assert_add_uint_samples();
+	assert_range_query_get_tail(TEST_STD_ID_UINT, assert_add_uint_samples,
+	                            g_uint_samples, NUM_UINT_SAMPLES);
+}
 
-	// range query
-	struct timespec *ts0 = &(g_uint_samples[NUM_UINT_SAMPLES-1].ts);
-	struct timespec *ts1 = &HISTORY_GLUON_TIMESPEC_END;
-	asset_range_query_common(TEST_STD_ID_UINT, ts0, ts1,
-	                         HISTORY_GLUON_SORT_ASCENDING, 
-	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED,
-	                         1, NUM_UINT_SAMPLES-1);
+void test_range_query_float_get_tail(void)
+{
+	assert_range_query_get_tail(TEST_STD_ID_FLOAT, assert_add_float_samples,
+	                            g_float_samples, NUM_FLOAT_SAMPLES);
+}
+
+void test_range_query_string_get_tail(void)
+{
+	assert_range_query_get_tail(TEST_STD_ID_STRING, assert_add_string_samples,
+	                            g_string_samples, NUM_STRING_SAMPLES);
+}
+
+void test_range_query_blob_get_tail(void)
+{
+	assert_range_query_get_tail(TEST_STD_ID_BLOB, assert_add_blob_samples,
+	                            g_blob_samples, NUM_BLOB_SAMPLES);
 }
 
 /* --------------------------------------------------------------------------------------
@@ -858,7 +977,7 @@ void test_get_minimum_time(void)
 {
 	create_global_context();
 	assert_delete_all_for_id(TEST_STD_ID_FLOAT, NULL);
-	add_float_samples();
+	assert_add_float_samples();
 
 	// get the minimum
 	struct timespec ts;
@@ -906,7 +1025,7 @@ void test_delete_less(void)
 {
 	create_global_context();
 	assert_delete_all_for_id(TEST_STD_ID_FLOAT, NULL);
-	add_float_samples();
+	assert_add_float_samples();
 
 	// delete below threshold
 	int cut_idx = 3;
