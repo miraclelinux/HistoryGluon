@@ -113,7 +113,8 @@ do { \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
  REPLY_RESULT_LENGTH + \
- PKT_SEC_LENGTH)
+ PKT_SEC_LENGTH + \
+ PKT_NS_LENGTH)
 
 /* Get Statistics */
 #define PKT_GET_STATISTICS_LENGTH \
@@ -155,7 +156,7 @@ enum {
 	PKT_CMD_ADD_DATA           = 100,
 	PKT_CMD_QUERY_DATA         = 200,
 	PKT_CMD_RANGE_QUERY        = 300,
-	PKT_CMD_GET_MIN_SEC        = 1100,
+	PKT_CMD_GET_MINIMUM_TIME   = 400,
 	PKT_CMD_GET_STATISTICS     = 1200,
 	PKT_CMD_DELETE             = 600,
 };
@@ -450,7 +451,7 @@ static int fill_get_min_sec_packet(private_context_t *ctx, uint8_t *buf, uint64_
 	idx += PKT_SIZE_LENGTH;
 
 	/* command */
-	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_CMD_GET_MIN_SEC);
+	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_CMD_GET_MINIMUM_TIME);
 	idx += PKT_CMD_TYPE_LENGTH;
 
 	/* ID */
@@ -622,14 +623,18 @@ parse_reply_get_min_sec(private_context_t *ctx, uint8_t *buf,
 	uint32_t expected_length = REPLY_GET_MIN_TIME_LENGTH - PKT_SIZE_LENGTH;
 	int idx;
 	ret = parse_common_reply_header(ctx, buf, NULL, expected_length,
-	                                PKT_CMD_GET_MIN_SEC, &idx);
+	                                PKT_CMD_GET_MINIMUM_TIME, &idx);
 	RETURN_IF_ERROR(ret);
 
-	// min_sec
-	uint32_t _min_sec = restore_le32(ctx, &buf[idx]);
+	// sec
+	uint32_t min_sec = restore_le32(ctx, &buf[idx]);
 	idx += PKT_SEC_LENGTH;
-	minimum_time->tv_sec = _min_sec;
-	minimum_time->tv_nsec = 0;
+	minimum_time->tv_sec = min_sec;
+
+	// ns
+	uint32_t min_ns = restore_le32(ctx, &buf[idx]);
+	idx += PKT_NS_LENGTH;
+	minimum_time->tv_nsec = min_ns;
 
 	return HGL_SUCCESS;;
 }
@@ -1134,9 +1139,10 @@ history_gluon_get_minmum_time(history_gluon_context_t _ctx,
 	ret = read_data(ctx, reply, REPLY_GET_MIN_TIME_LENGTH);
 	RETURN_IF_ERROR(ret);
 
-	if (parse_reply_get_min_sec(ctx, reply, minimum_ts))
-		return -1;
-	return 0;
+	ret = parse_reply_get_min_sec(ctx, reply, minimum_ts);
+	RETURN_IF_ERROR(ret);
+
+	return HGL_SUCCESS;
 }
 
 history_gluon_result_t
