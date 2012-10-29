@@ -720,7 +720,7 @@ read_gluon_data_body_string(private_context_t *ctx, history_gluon_data_t *gluon_
 	uint8_t buf[PKT_DATA_STRING_SIZE_LENGTH];
 	ret = read_data(ctx, buf, PKT_DATA_STRING_SIZE_LENGTH);
 	RETURN_IF_ERROR(ret);
-	gluon_data->length = restore_le64(ctx, buf);
+	gluon_data->length = restore_le32(ctx, buf);
 
 	/* allocate body region */
 	uint64_t alloc_size = gluon_data->length + 1;
