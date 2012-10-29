@@ -42,7 +42,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
     }
 
     @Override
-    public HistoryData getDataWithMinimumClock(long id)
+    public HistoryData getMinimumTime(long id)
       throws HistoryDataSet.TooManyException {
         final int max_count = 1;
         String startKey = makeKey(id, 0, 0);

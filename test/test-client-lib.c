@@ -356,6 +356,15 @@ static void set_mean_ts(struct timespec *ts0, struct timespec *ts1, struct times
 	ts->tv_nsec -= NS_500MS;
 }
 
+static void
+assert_make_context_delete_add_samples(uint64_t id, void (*add_samples_fn)(void))
+{
+	create_global_context();
+	assert_delete_all_for_id(id, NULL);
+	(*add_samples_fn)();
+}
+
+
 /* --------------------------------------------------------------------------------------
  * Teset cases
  * ----------------------------------------------------------------------------------- */
@@ -454,14 +463,6 @@ void test_add_blob(void)
 /* --------------------------------------------------------------------------------------
  * Query
  * ----------------------------------------------------------------------------------- */
-static void
-assert_make_context_delete_add_samples(uint64_t id, void (*add_samples_fn)(void))
-{
-	create_global_context();
-	assert_delete_all_for_id(id, NULL);
-	(*add_samples_fn)();
-}
-
 static void
 assert_query_common(uint64_t id, struct timespec *ts, history_gluon_query_t query_type,
                     int expected_result)
@@ -837,9 +838,11 @@ void test_range_query_blob_get_tail(void)
  * ----------------------------------------------------------------------------------- */
 void test_get_minimum_time(void)
 {
-	create_global_context();
+	assert_make_context_delete_add_samples(TEST_STD_ID_FLOAT, assert_add_float_samples);
+	/*create_global_context();
 	assert_delete_all_for_id(TEST_STD_ID_FLOAT, NULL);
 	assert_add_float_samples();
+	*/
 
 	// get the minimum
 	struct timespec ts;

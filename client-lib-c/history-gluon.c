@@ -442,7 +442,7 @@ static int fill_range_query_header(private_context_t *ctx, uint8_t *buf, uint64_
 	return idx;
 }
 
-static int fill_get_min_sec_packet(private_context_t *ctx, uint8_t *buf, uint64_t id)
+static int fill_get_minimum_time_packet(private_context_t *ctx, uint8_t *buf, uint64_t id)
 {
 	int idx = 0;
 
@@ -616,8 +616,8 @@ parse_common_reply_header(private_context_t *ctx, uint8_t *buf,
 }
 
 static history_gluon_result_t
-parse_reply_get_min_sec(private_context_t *ctx, uint8_t *buf,
-                                     struct timespec *minimum_time)
+parse_reply_get_minimum_time(private_context_t *ctx, uint8_t *buf,
+                             struct timespec *minimum_time)
 {
 	history_gluon_result_t ret;
 	uint32_t expected_length = REPLY_GET_MIN_TIME_LENGTH - PKT_SIZE_LENGTH;
@@ -1130,7 +1130,7 @@ history_gluon_get_minmum_time(history_gluon_context_t _ctx,
 
 	// request
 	uint8_t request[PKT_GET_MIN_TIME_LENGTH];
-	fill_get_min_sec_packet(ctx, request, id);
+	fill_get_minimum_time_packet(ctx, request, id);
 	ret = write_data(ctx, request, PKT_GET_MIN_TIME_LENGTH);
 	RETURN_IF_ERROR(ret);
 
@@ -1139,7 +1139,7 @@ history_gluon_get_minmum_time(history_gluon_context_t _ctx,
 	ret = read_data(ctx, reply, REPLY_GET_MIN_TIME_LENGTH);
 	RETURN_IF_ERROR(ret);
 
-	ret = parse_reply_get_min_sec(ctx, reply, minimum_ts);
+	ret = parse_reply_get_minimum_time(ctx, reply, minimum_ts);
 	RETURN_IF_ERROR(ret);
 
 	return HGL_SUCCESS;

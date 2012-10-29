@@ -36,8 +36,8 @@ public class BridgeWorker extends Thread {
     private static final short PKT_CMD_ADD_DATA       = 100;
     private static final short PKT_CMD_QUERY_DATA     = 200;
     private static final short PKT_CMD_RANGE_QUERY    = 300;
+    private static final short PKT_CMD_GET_MIN_TIME   = 400;
     private static final short PKT_CMD_DELETE         = 600;
-    private static final short PKT_CMD_GET_MIN_SEC    = 1100;
     private static final short PKT_CMD_GET_STATISTICS = 1200;
 
     private static final short PKT_SORT_ORDER_ASCENDING  = 0;
@@ -148,8 +148,8 @@ public class BridgeWorker extends Thread {
             ret = queryData(pktBuf, idx);
         else if (cmd == PKT_CMD_RANGE_QUERY)
             ret = rangeQuery(pktBuf, idx);
-        else if (cmd == PKT_CMD_GET_MIN_SEC)
-            ret = getMinClock(pktBuf, idx);
+        else if (cmd == PKT_CMD_GET_MIN_TIME)
+            ret = getMinimumTime(pktBuf, idx);
         else if (cmd == PKT_CMD_GET_STATISTICS)
             ret = getStatistics(pktBuf, idx);
         else if (cmd == PKT_CMD_DELETE)
@@ -192,7 +192,7 @@ public class BridgeWorker extends Thread {
         history.sec = m_byteBuffer.getInt(idx);
         idx += PKT_SEC_LENGTH;
 
-        history. ns = m_byteBuffer.getInt(idx);
+        history.ns = m_byteBuffer.getInt(idx);
         idx += PKT_NS_LENGTH;
 
         // parse each data
@@ -356,7 +356,7 @@ public class BridgeWorker extends Thread {
         return true;
     }
 
-    private boolean getMinClock(byte[] pktBuf, int idx) throws IOException {
+    private boolean getMinimumTime(byte[] pktBuf, int idx) throws IOException {
 
         int putLength = PKT_ID_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
@@ -369,23 +369,27 @@ public class BridgeWorker extends Thread {
         // get boundary of sec
         HistoryData history = null;
         try {
-            history = m_driver.getDataWithMinimumClock(id);
+            history = m_driver.getMinimumTime(id);
         } catch (HistoryDataSet.TooManyException e) {
             // FIXME: return the error
             return false;
         }
 
         int minClock = 0;
-        if (history != null)
-            minClock = history.sec;
+        if (history == null) {
+            // FIXME: return the error
+            return false;
+        }
 
         // write reply to the socket
-        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH + PKT_SEC_LENGTH;
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH
+                     + PKT_SEC_LENGTH + PKT_NS_LENGTH;;
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
-        m_byteBuffer.putShort(PKT_CMD_GET_MIN_SEC);
+        m_byteBuffer.putShort(PKT_CMD_GET_MIN_TIME);
         m_byteBuffer.putInt(RESULT_SUCCESS);
-        m_byteBuffer.putInt(minClock);
+        m_byteBuffer.putInt(history.sec);
+        m_byteBuffer.putInt(history.ns);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         m_ostream.flush();
 

@@ -15,7 +15,7 @@ interface StorageDriver {
                                  int searchWhenNotFound)
       throws HistoryDataSet.TooManyException;
 
-    public HistoryData getDataWithMinimumClock(long itemId)
+    public HistoryData getMinimumTime(long itemId)
       throws HistoryDataSet.TooManyException;
 
    /**
