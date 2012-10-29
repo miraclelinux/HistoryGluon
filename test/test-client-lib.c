@@ -40,10 +40,20 @@ static void assert_add_uint(uint64_t id, struct timespec *ts, uint64_t value)
 	cut_assert_equal_int(HGL_SUCCESS, ret);
 }
 
+static void assert_add_uint_gluon_data(history_gluon_data_t *gluon_data)
+{
+	assert_add_uint(gluon_data->id, &gluon_data->ts, gluon_data->v_uint);
+}
+
 static void assert_add_float(uint64_t id, struct timespec *ts, double v)
 {
 	history_gluon_result_t ret = history_gluon_add_float(g_ctx, id, ts, v);
 	cut_assert_equal_int(HGL_SUCCESS, ret);
+}
+
+static void assert_add_float_gluon_data(history_gluon_data_t *gluon_data)
+{
+	assert_add_float(gluon_data->id, &gluon_data->ts, gluon_data->v_float);
 }
 
 static void assert_add_string(uint64_t id, struct timespec *ts, char *v)
@@ -52,10 +62,21 @@ static void assert_add_string(uint64_t id, struct timespec *ts, char *v)
 	cut_assert_equal_int(HGL_SUCCESS, ret);
 }
 
+static void assert_add_string_gluon_data(history_gluon_data_t *gluon_data)
+{
+	assert_add_string(gluon_data->id, &gluon_data->ts, gluon_data->v_string);
+}
+
 static void assert_add_blob(uint64_t id, struct timespec *ts, uint8_t *v, uint64_t len)
 {
 	history_gluon_result_t ret = history_gluon_add_blob(g_ctx, id, ts, v, len);
 	cut_assert_equal_int(HGL_SUCCESS, ret);
+}
+
+static void assert_add_blob_gluon_data(history_gluon_data_t *gluon_data)
+{
+	assert_add_blob(gluon_data->id, &gluon_data->ts, gluon_data->v_blob,
+	                gluon_data->length);
 }
 
 static history_gluon_data_t g_uint_samples[] = {
@@ -93,6 +114,27 @@ static history_gluon_data_t g_uint_samples[] = {
 static const int NUM_UINT_SAMPLES =
   sizeof(g_uint_samples) / sizeof(history_gluon_data_t);
 
+history_gluon_data_t g_uint_time_asc_samples[] = {
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1,
+		.ts.tv_nsec = 123456789,
+		.v_uint = 27,
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 10,
+		.ts.tv_nsec = 100000000,
+		.v_uint = 105,
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 100,
+		.ts.tv_nsec = 500000000,
+		.v_uint = 999999,
+	},
+};
+
 static history_gluon_data_t g_float_samples[] = {
 	{
 		.id = TEST_STD_ID,
@@ -127,6 +169,27 @@ static history_gluon_data_t g_float_samples[] = {
 };
 static const int NUM_FLOAT_SAMPLES =
   sizeof(g_float_samples) / sizeof(history_gluon_data_t);
+
+history_gluon_data_t g_float_time_asc_samples[] = {
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1,
+		.ts.tv_nsec = 123456789,
+		.v_float = 0.1,
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 10,
+		.ts.tv_nsec = 100000000,
+		.v_float = 99.9,
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 100,
+		.ts.tv_nsec = 500000000,
+		.v_float = 100.0,
+	},
+};
 
 static history_gluon_data_t g_string_samples[] = {
 	{
@@ -176,11 +239,33 @@ static history_gluon_data_t g_string_samples[] = {
 static const int NUM_STRING_SAMPLES =
   sizeof(g_string_samples) / sizeof(history_gluon_data_t);
 
+history_gluon_data_t g_string_time_asc_samples[] = {
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1,
+		.ts.tv_nsec = 123456789,
+		.v_string = "Dog",
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 10,
+		.ts.tv_nsec = 100000000,
+		.v_string = "Fire",
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 100,
+		.ts.tv_nsec = 500000000,
+		.v_string = "Programming",
+	},
+};
+
 static uint8_t blob_sample0[] = {0x21, 0x08, 0x05};
-static uint8_t blob_sample1[] = {0x21, 0x08, 0x05};
-static uint8_t blob_sample2[] = {0x21, 0x08, 0x05};
-static uint8_t blob_sample3[] = {0x21, 0x08, 0x05};
-static uint8_t blob_sample4[] = {0x21, 0x08, 0x05};
+static uint8_t blob_sample1[] = {0x21, 0xf8, 0x25, 0x88, 0x99, 0xaa};
+static uint8_t blob_sample2[] = {0xc0, 0x72, 0x01, 0x99};
+static uint8_t blob_sample3[] = {0xff};
+static uint8_t blob_sample4[] = {0x2f, 0x53, 0x45, 0x25, 0x83, 0xab, 0x58, 0x88,
+                                 0x10, 0x09, 0xc0, 0xde, 0xfe, 0x83, 0x2a, 0xcc, };
 
 static history_gluon_data_t g_blob_samples[] = {
 	{
@@ -221,6 +306,30 @@ static history_gluon_data_t g_blob_samples[] = {
 };
 static const int NUM_BLOB_SAMPLES =
   sizeof(g_blob_samples) / sizeof(history_gluon_data_t);
+
+history_gluon_data_t g_blob_time_asc_samples[] = {
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1,
+		.ts.tv_nsec = 123456789,
+		.v_blob = blob_sample0,
+		.length = sizeof(blob_sample0) / sizeof(uint8_t),
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 10,
+		.ts.tv_nsec = 100000000,
+		.v_blob = blob_sample1,
+		.length = sizeof(blob_sample1) / sizeof(uint8_t),
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 100,
+		.ts.tv_nsec = 500000000,
+		.v_blob = blob_sample2,
+		.length = sizeof(blob_sample2) / sizeof(uint8_t),
+	},
+};
 
 static void add_float_samples() {
 	int i;
@@ -358,6 +467,56 @@ void test_add_uint_and_query_not_found(void)
 	cut_assert_equal_int(HGLERR_NOT_FOUND, ret);
 }
 
+void test_add_uint_and_query_less(void)
+{
+	create_global_context();
+	uint64_t id = g_uint_time_asc_samples[0].id;
+	assert_delete_all_for_id(id, NULL);
+
+	// add data
+	assert_add_uint_gluon_data(&g_uint_time_asc_samples[0]);
+	assert_add_uint_gluon_data(&g_uint_time_asc_samples[1]);
+	assert_add_uint_gluon_data(&g_uint_time_asc_samples[2]);
+
+	struct timespec ts;
+	ts.tv_sec = (g_uint_time_asc_samples[1].ts.tv_sec +
+	              g_uint_time_asc_samples[2].ts.tv_sec) / 2;
+	ts.tv_nsec = 0;
+
+	// query
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, id, &ts,
+	                          HISTORY_GLUON_QUERY_TYPE_LESS_DATA, &g_data);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+	double err = 0.0;
+	cut_assert_equal_double(g_uint_time_asc_samples[1].v_uint, err, g_data->v_uint);
+}
+
+void test_add_uint_and_query_greater(void)
+{
+	create_global_context();
+	uint64_t id = g_uint_time_asc_samples[0].id;
+	assert_delete_all_for_id(id, NULL);
+
+	// add data
+	assert_add_uint_gluon_data(&g_uint_time_asc_samples[0]);
+	assert_add_uint_gluon_data(&g_uint_time_asc_samples[1]);
+	assert_add_uint_gluon_data(&g_uint_time_asc_samples[2]);
+
+	struct timespec ts;
+	ts.tv_sec = (g_uint_time_asc_samples[1].ts.tv_sec +
+	              g_uint_time_asc_samples[2].ts.tv_sec) / 2;
+	ts.tv_nsec = 0;
+
+	// query
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, id, &ts,
+	                          HISTORY_GLUON_QUERY_TYPE_GREATER_DATA, &g_data);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+	double err = 0.0;
+	cut_assert_equal_double(g_uint_time_asc_samples[2].v_uint, err, g_data->v_uint);
+}
+
 void test_add_float_and_query(void)
 {
 	int idx = 2;
@@ -385,14 +544,63 @@ void test_add_float_and_query_not_found(void)
 
 	create_global_context();
 	assert_delete_all_for_id(sample->id, NULL);
-
-	assert_add_float(sample->id, &sample->ts, sample->v_float);
+	assert_add_float_gluon_data(sample);
 
 	// query
 	history_gluon_result_t ret;
 	ret = history_gluon_query(g_ctx, sample->id+1, &sample->ts,
 	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
 	cut_assert_equal_int(HGLERR_NOT_FOUND, ret);
+}
+
+void test_add_float_and_query_less(void)
+{
+	create_global_context();
+	uint64_t id = g_float_time_asc_samples[0].id;
+	assert_delete_all_for_id(id, NULL);
+
+	// add data
+	assert_add_float_gluon_data(&g_float_time_asc_samples[0]);
+	assert_add_float_gluon_data(&g_float_time_asc_samples[1]);
+	assert_add_float_gluon_data(&g_float_time_asc_samples[2]);
+
+	struct timespec ts;
+	ts.tv_sec = (g_float_time_asc_samples[1].ts.tv_sec +
+	              g_float_time_asc_samples[2].ts.tv_sec) / 2;
+	ts.tv_nsec = 0;
+
+	// query
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, id, &ts,
+	                          HISTORY_GLUON_QUERY_TYPE_LESS_DATA, &g_data);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+	double err = 0.0;
+	cut_assert_equal_double(g_float_time_asc_samples[1].v_float, err, g_data->v_float);
+}
+
+void test_add_float_and_query_greater(void)
+{
+	create_global_context();
+	uint64_t id = g_float_time_asc_samples[0].id;
+	assert_delete_all_for_id(id, NULL);
+
+	// add data
+	assert_add_float_gluon_data(&g_float_time_asc_samples[0]);
+	assert_add_float_gluon_data(&g_float_time_asc_samples[1]);
+	assert_add_float_gluon_data(&g_float_time_asc_samples[2]);
+
+	struct timespec ts;
+	ts.tv_sec = (g_float_time_asc_samples[1].ts.tv_sec +
+	              g_float_time_asc_samples[2].ts.tv_sec) / 2;
+	ts.tv_nsec = 0;
+
+	// query
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, id, &ts,
+	                          HISTORY_GLUON_QUERY_TYPE_GREATER_DATA, &g_data);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+	double err = 0.0;
+	cut_assert_equal_double(g_float_time_asc_samples[2].v_float, err, g_data->v_float);
 }
 
 void test_add_string_and_query(void)
@@ -430,6 +638,56 @@ void test_add_string_and_query_not_found(void)
 	cut_assert_equal_int(HGLERR_NOT_FOUND, ret);
 }
 
+void test_add_string_and_query_less(void)
+{
+	create_global_context();
+	uint64_t id = g_uint_time_asc_samples[0].id;
+	assert_delete_all_for_id(id, NULL);
+
+	// add data
+	assert_add_string_gluon_data(&g_uint_time_asc_samples[0]);
+	assert_add_string_gluon_data(&g_uint_time_asc_samples[1]);
+	assert_add_string_gluon_data(&g_uint_time_asc_samples[2]);
+
+	struct timespec ts;
+	ts.tv_sec = (g_string_time_asc_samples[1].ts.tv_sec +
+	              g_string_time_asc_samples[2].ts.tv_sec) / 2;
+	ts.tv_nsec = 0;
+
+	// query
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, id, &ts,
+	                          HISTORY_GLUON_QUERY_TYPE_LESS_DATA, &g_data);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+	double err = 0.0;
+	cut_assert_equal_double(g_string_time_asc_samples[1].v_uint, err, g_data->v_uint);
+}
+
+void test_add_string_and_query_greater(void)
+{
+	create_global_context();
+	uint64_t id = g_uint_time_asc_samples[0].id;
+	assert_delete_all_for_id(id, NULL);
+
+	// add data
+	assert_add_string_gluon_data(&g_uint_time_asc_samples[0]);
+	assert_add_string_gluon_data(&g_uint_time_asc_samples[1]);
+	assert_add_string_gluon_data(&g_uint_time_asc_samples[2]);
+
+	struct timespec ts;
+	ts.tv_sec = (g_string_time_asc_samples[1].ts.tv_sec +
+	              g_string_time_asc_samples[2].ts.tv_sec) / 2;
+	ts.tv_nsec = 0;
+
+	// query
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, id, &ts,
+	                          HISTORY_GLUON_QUERY_TYPE_GREATER_DATA, &g_data);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+	double err = 0.0;
+	cut_assert_equal_double(g_string_time_asc_samples[2].v_uint, err, g_data->v_uint);
+}
+
 void test_add_blob_and_query(void)
 {
 	int idx = 2;
@@ -464,6 +722,56 @@ void test_add_blob_and_query_not_found(void)
 	ret = history_gluon_query(g_ctx, sample->id+1, &sample->ts,
 	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
 	cut_assert_equal_int(HGLERR_NOT_FOUND, ret);
+}
+
+void test_add_blob_and_query_less(void)
+{
+	create_global_context();
+	uint64_t id = g_uint_time_asc_samples[0].id;
+	assert_delete_all_for_id(id, NULL);
+
+	// add data
+	assert_add_blob_gluon_data(&g_uint_time_asc_samples[0]);
+	assert_add_blob_gluon_data(&g_uint_time_asc_samples[1]);
+	assert_add_blob_gluon_data(&g_uint_time_asc_samples[2]);
+
+	struct timespec ts;
+	ts.tv_sec = (g_blob_time_asc_samples[1].ts.tv_sec +
+	              g_blob_time_asc_samples[2].ts.tv_sec) / 2;
+	ts.tv_nsec = 0;
+
+	// query
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, id, &ts,
+	                          HISTORY_GLUON_QUERY_TYPE_LESS_DATA, &g_data);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+	double err = 0.0;
+	cut_assert_equal_double(g_blob_time_asc_samples[1].v_uint, err, g_data->v_uint);
+}
+
+void test_add_blob_and_query_greater(void)
+{
+	create_global_context();
+	uint64_t id = g_uint_time_asc_samples[0].id;
+	assert_delete_all_for_id(id, NULL);
+
+	// add data
+	assert_add_blob_gluon_data(&g_uint_time_asc_samples[0]);
+	assert_add_blob_gluon_data(&g_uint_time_asc_samples[1]);
+	assert_add_blob_gluon_data(&g_uint_time_asc_samples[2]);
+
+	struct timespec ts;
+	ts.tv_sec = (g_blob_time_asc_samples[1].ts.tv_sec +
+	              g_blob_time_asc_samples[2].ts.tv_sec) / 2;
+	ts.tv_nsec = 0;
+
+	// query
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, id, &ts,
+	                          HISTORY_GLUON_QUERY_TYPE_GREATER_DATA, &g_data);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+	double err = 0.0;
+	cut_assert_equal_double(g_blob_time_asc_samples[2].v_uint, err, g_data->v_uint);
 }
 
 /* --------------------------------------------------------------------------------------
