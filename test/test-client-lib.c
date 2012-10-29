@@ -86,30 +86,35 @@ static void assert_add_blob_hgl_data(history_gluon_data_t *gluon_data)
 static history_gluon_data_t g_uint_samples[] = {
 	{
 		.id = TEST_STD_ID_UINT,
+		.type = HISTORY_GLUON_TYPE_UINT,
 		.ts.tv_sec = 1234567890,
 		.ts.tv_nsec = 123456789,
 		.v_uint = 1,
 	},
 	{
 		.id = TEST_STD_ID_UINT,
+		.type = HISTORY_GLUON_TYPE_UINT,
 		.ts.tv_sec = 1506070800,
 		.ts.tv_nsec = 100000000,
 		.v_uint = 10,
 	},
 	{
 		.id = TEST_STD_ID_UINT,
+		.type = HISTORY_GLUON_TYPE_UINT,
 		.ts.tv_sec = 1600000000,
 		.ts.tv_nsec = 500000000,
 		.v_uint = 12340,
 	},
 	{
 		.id = TEST_STD_ID_UINT,
+		.type = HISTORY_GLUON_TYPE_UINT,
 		.ts.tv_sec = 1600000001,
 		.ts.tv_nsec = 200000000,
 		.v_uint = 0x123456789abcdef0,
 	},
 	{
 		.id = TEST_STD_ID_UINT,
+		.type = HISTORY_GLUON_TYPE_UINT,
 		.ts.tv_sec = 2500000000,
 		.ts.tv_nsec = 300000000,
 		.v_uint = 0xfedcba9876543210,
@@ -121,30 +126,35 @@ static const int NUM_UINT_SAMPLES =
 static history_gluon_data_t g_float_samples[] = {
 	{
 		.id = TEST_STD_ID_FLOAT,
+		.type = HISTORY_GLUON_TYPE_FLOAT,
 		.ts.tv_sec = 1234567890,
 		.ts.tv_nsec = 123456789,
 		.v_float = 0.1,
 	},
 	{
 		.id = TEST_STD_ID_FLOAT,
+		.type = HISTORY_GLUON_TYPE_FLOAT,
 		.ts.tv_sec = 1506070800,
 		.ts.tv_nsec = 100000000,
 		.v_float = 99.9,
 	},
 	{
 		.id = TEST_STD_ID_FLOAT,
+		.type = HISTORY_GLUON_TYPE_FLOAT,
 		.ts.tv_sec = 1600000000,
 		.ts.tv_nsec = 500000000,
 		.v_float = 100.0,
 	},
 	{
 		.id = TEST_STD_ID_FLOAT,
+		.type = HISTORY_GLUON_TYPE_FLOAT,
 		.ts.tv_sec = 1600000001,
 		.ts.tv_nsec = 200000000,
 		.v_float = -10.5,
 	},
 	{
 		.id = TEST_STD_ID_FLOAT,
+		.type = HISTORY_GLUON_TYPE_FLOAT,
 		.ts.tv_sec = 2500000000,
 		.ts.tv_nsec = 300000000,
 		.v_float = -3.2e5,
@@ -156,12 +166,14 @@ static const int NUM_FLOAT_SAMPLES =
 static history_gluon_data_t g_string_samples[] = {
 	{
 		.id = TEST_STD_ID_STRING,
+		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 1234567890,
 		.ts.tv_nsec = 123456789,
 		.v_string = "Hello, World!",
 	},
 	{
 		.id = TEST_STD_ID_STRING,
+		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 1506070800,
 		.ts.tv_nsec = 100000000,
 		.v_string =
@@ -172,6 +184,7 @@ static history_gluon_data_t g_string_samples[] = {
 	},
 	{
 		.id = TEST_STD_ID_STRING,
+		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 1600000000,
 		.ts.tv_nsec = 500000000,
 		.v_string =
@@ -187,12 +200,14 @@ static history_gluon_data_t g_string_samples[] = {
 	},
 	{
 		.id = TEST_STD_ID_STRING,
+		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 1600000001,
 		.ts.tv_nsec = 200000000,
 		.v_string = "walrus",
 	},
 	{
 		.id = TEST_STD_ID_STRING,
+		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 2500000000,
 		.ts.tv_nsec = 300000000,
 		.v_string = "Are you hungry?",
@@ -211,6 +226,7 @@ static uint8_t blob_sample4[] = {0x2f, 0x53, 0x45, 0x25, 0x83, 0xab, 0x58, 0x88,
 static history_gluon_data_t g_blob_samples[] = {
 	{
 		.id = TEST_STD_ID_BLOB,
+		.type = HISTORY_GLUON_TYPE_BLOB,
 		.ts.tv_sec = 1234567890,
 		.ts.tv_nsec = 123456789,
 		.v_blob = blob_sample0,
@@ -218,6 +234,7 @@ static history_gluon_data_t g_blob_samples[] = {
 	},
 	{
 		.id = TEST_STD_ID_BLOB,
+		.type = HISTORY_GLUON_TYPE_BLOB,
 		.ts.tv_sec = 1506070800,
 		.ts.tv_nsec = 100000000,
 		.v_blob = blob_sample1,
@@ -225,6 +242,7 @@ static history_gluon_data_t g_blob_samples[] = {
 	},
 	{
 		.id = TEST_STD_ID_BLOB,
+		.type = HISTORY_GLUON_TYPE_BLOB,
 		.ts.tv_sec = 1600000000,
 		.ts.tv_nsec = 500000000,
 		.v_blob = blob_sample2,
@@ -232,6 +250,7 @@ static history_gluon_data_t g_blob_samples[] = {
 	},
 	{
 		.id = TEST_STD_ID_BLOB,
+		.type = HISTORY_GLUON_TYPE_BLOB,
 		.ts.tv_sec = 1600000001,
 		.ts.tv_nsec = 200000000,
 		.v_blob = blob_sample3,
@@ -239,6 +258,7 @@ static history_gluon_data_t g_blob_samples[] = {
 	},
 	{
 		.id = TEST_STD_ID_BLOB,
+		.type = HISTORY_GLUON_TYPE_BLOB,
 		.ts.tv_sec = 2500000000,
 		.ts.tv_nsec = 300000000,
 		.v_blob = blob_sample4,
@@ -275,7 +295,8 @@ static void add_blob_samples() {
 static void assert_equal_hgl_data(history_gluon_data_t *expect, history_gluon_data_t *actual)
 {
 	cut_assert_equal_int_least64(expect->id, actual->id);
-	cut_assert_equal_int_least32(expect->ts.tv_sec, actual->ts.tv_nsec);
+	cut_assert_equal_int_least32(expect->ts.tv_sec, actual->ts.tv_sec);
+	cut_assert_equal_int_least32(expect->ts.tv_nsec, actual->ts.tv_nsec);
 	cut_assert_equal_int(expect->type, actual->type);
 	if (expect->type == HISTORY_GLUON_TYPE_FLOAT) {
 		double err = 0.0;
@@ -752,8 +773,9 @@ void test_range_query_uint_asc(void)
 	cut_assert_equal_int_least64(idx1 - idx0, g_array->num_data);
 	uint64_t i;
 	for  (i = 0; i < g_array->num_data; i++) {
-		history_gluon_data_t *expect_data = &g_uint_samples[i];
-		assert_equal_hgl_data(expect_data, g_array->array[i]);
+		history_gluon_data_t *expect_data = &g_uint_samples[idx0 + i];
+		history_gluon_data_t *actual_data = g_array->array[i];
+		assert_equal_hgl_data(expect_data, actual_data);
 	}
 }
 
