@@ -493,16 +493,17 @@ void test_add_blob_and_query(void)
 	assert_add_and_query(g_blob_samples);
 }
 
-void test_add_uint_and_query_not_found(void)
+/* query not found */
+static void assert_add_and_query_not_found(history_gluon_data_t *samples)
 {
 	create_global_context();
 
 	// delete and add data
 	int idx = 1;
-	history_gluon_data_t *sample = &g_uint_samples[idx];
+	history_gluon_data_t *sample = &samples[idx];
 	assert_delete_all_for_id(sample->id, NULL);
 	assert_delete_all_for_id(sample->id+1, NULL);
-	assert_add_uint(sample->id, &sample->ts, sample->v_uint);
+	assert_add_hgl_data(sample);
 
 	// query
 	history_gluon_result_t ret;
@@ -511,6 +512,27 @@ void test_add_uint_and_query_not_found(void)
 	cut_assert_equal_int(HGLERR_NOT_FOUND, ret);
 }
 
+void test_add_uint_and_query_not_found(void)
+{
+	assert_add_and_query_not_found(g_uint_samples);
+}
+
+void test_add_float_and_query_not_found(void)
+{
+	assert_add_and_query_not_found(g_float_samples);
+}
+
+void test_add_string_and_query_not_found(void)
+{
+	assert_add_and_query_not_found(g_string_samples);
+}
+
+void test_add_blob_and_query_not_found(void)
+{
+	assert_add_and_query_not_found(g_blob_samples);
+}
+
+/* query less */
 void test_add_uint_and_query_less(void)
 {
 	create_global_context();
@@ -553,24 +575,6 @@ void test_add_uint_and_query_greater(void)
 }
 
 /* float */
-void test_add_float_and_query_not_found(void)
-{
-	create_global_context();
-
-	// delete and add data
-	int idx = 1;
-	history_gluon_data_t *sample = &g_float_samples[idx];
-	assert_delete_all_for_id(sample->id, NULL);
-	assert_delete_all_for_id(sample->id+1, NULL);
-	assert_add_float_hgl_data(sample);
-
-	// query
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, sample->id+1, &sample->ts,
-	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
-	cut_assert_equal_int(HGLERR_NOT_FOUND, ret);
-}
-
 void test_add_float_and_query_less(void)
 {
 	create_global_context();
@@ -615,24 +619,6 @@ void test_add_float_and_query_greater(void)
 }
 
 /* string */
-void test_add_string_and_query_not_found(void)
-{
-	create_global_context();
-
-	// delete and add data
-	int idx = 1;
-	history_gluon_data_t *sample = &g_string_samples[idx];
-	assert_delete_all_for_id(sample->id, NULL);
-	assert_delete_all_for_id(sample->id+1, NULL);
-	assert_add_string(sample->id, &sample->ts, sample->v_string);
-
-	// query
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, sample->id+1, &sample->ts,
-	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
-	cut_assert_equal_int(HGLERR_NOT_FOUND, ret);
-}
-
 void test_add_string_and_query_less(void)
 {
 	create_global_context();
@@ -674,24 +660,6 @@ void test_add_string_and_query_greater(void)
 }
 
 /* blob */
-void test_add_blob_and_query_not_found(void)
-{
-	create_global_context();
-
-	// delete and add data
-	int idx = 1;
-	history_gluon_data_t *sample = &g_blob_samples[idx];
-	assert_delete_all_for_id(sample->id, NULL);
-	assert_delete_all_for_id(sample->id+1, NULL);
-	assert_add_blob(sample->id, &sample->ts, sample->v_blob, sample->length);
-
-	// query
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, sample->id+1, &sample->ts,
-	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
-	cut_assert_equal_int(HGLERR_NOT_FOUND, ret);
-}
-
 void test_add_blob_and_query_less(void)
 {
 	create_global_context();
