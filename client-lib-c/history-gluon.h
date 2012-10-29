@@ -20,7 +20,7 @@ typedef enum {
 
 typedef enum {
 	HISTORY_GLUON_SORT_ASCENDING  = 0,
-	HISTORY_GLUON_SORT_DESDENDING = 1,
+	HISTORY_GLUON_SORT_DESCENDING = 1,
 	HISTORY_GLUON_SORT_NOT_SORTED = 2,
 } history_gluon_sort_order_t;
 
@@ -99,6 +99,9 @@ typedef enum {
 	HGLERR_REPLY_ERROR           = -502,
 	HGLERR_INVALID_DATA_TYPE     = -600,
 } history_gluon_result_t;
+
+extern struct timespec HISTORY_GLUON_TIMESPEC_START;
+extern struct timespec HISTORY_GLUON_TIMESPEC_END;
 
 /**
  * Create a History Gluon's context.

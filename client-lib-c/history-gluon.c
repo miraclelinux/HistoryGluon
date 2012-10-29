@@ -181,6 +181,12 @@ typedef history_gluon_result_t (*length_check_func_t)(void);
 #define LENGTH_CHECK_NONE 0
 
 /* ---------------------------------------------------------------------------
+ * Global constants
+ * ------------------------------------------------------------------------- */
+struct timespec HISTORY_GLUON_TIMESPEC_START = {0, 0};
+struct timespec HISTORY_GLUON_TIMESPEC_END = {0xffffffff, 0xffffffff};
+
+/* ---------------------------------------------------------------------------
  * Private methods
  * ------------------------------------------------------------------------- */
 static int get_system_endian(void)
