@@ -341,6 +341,23 @@ void test_add_uint_and_query(void)
 	cut_assert_equal_int_least64(sample->v_uint, g_data->v_uint);
 }
 
+void test_add_uint_and_query_not_found(void)
+{
+	int idx = 2;
+	history_gluon_data_t *sample = &g_uint_samples[idx];
+
+	create_global_context();
+	assert_delete_all_for_id(sample->id, NULL);
+
+	assert_add_uint(sample->id, &sample->ts, sample->v_uint);
+
+	// query
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, sample->id+1, &sample->ts,
+	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
+	cut_assert_equal_int(HGLERR_NOT_FOUND, ret);
+}
+
 void test_add_float_and_query(void)
 {
 	int idx = 2;
@@ -361,6 +378,23 @@ void test_add_float_and_query(void)
 	cut_assert_equal_double(sample->v_float, err, g_data->v_float);
 }
 
+void test_add_float_and_query_not_found(void)
+{
+	int idx = 2;
+	history_gluon_data_t *sample = &g_float_samples[idx];
+
+	create_global_context();
+	assert_delete_all_for_id(sample->id, NULL);
+
+	assert_add_float(sample->id, &sample->ts, sample->v_float);
+
+	// query
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, sample->id+1, &sample->ts,
+	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
+	cut_assert_equal_int(HGLERR_NOT_FOUND, ret);
+}
+
 void test_add_string_and_query(void)
 {
 	int idx = 2;
@@ -377,6 +411,23 @@ void test_add_string_and_query(void)
 	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
 	cut_assert_equal_int(HGL_SUCCESS, ret);
 	cut_assert_equal_string(sample->v_string, g_data->v_string);
+}
+
+void test_add_string_and_query_not_found(void)
+{
+	int idx = 2;
+	history_gluon_data_t *sample = &g_string_samples[idx];
+
+	create_global_context();
+	assert_delete_all_for_id(sample->id, NULL);
+
+	assert_add_string(sample->id, &sample->ts, sample->v_string);
+
+	// query
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, sample->id+1, &sample->ts,
+	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
+	cut_assert_equal_int(HGLERR_NOT_FOUND, ret);
 }
 
 void test_add_blob_and_query(void)
@@ -396,6 +447,23 @@ void test_add_blob_and_query(void)
 	cut_assert_equal_int(HGL_SUCCESS, ret);
 	cut_assert_equal_memory(sample->v_blob, sample->length,
 	                        g_data->v_blob, g_data->length);
+}
+
+void test_add_blob_and_query_not_found(void)
+{
+	int idx = 2;
+	history_gluon_data_t *sample = &g_blob_samples[idx];
+
+	create_global_context();
+	assert_delete_all_for_id(sample->id, NULL);
+
+	assert_add_blob(sample->id, &sample->ts, sample->v_blob, sample->length);
+
+	// query
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, sample->id+1, &sample->ts,
+	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
+	cut_assert_equal_int(HGLERR_NOT_FOUND, ret);
 }
 
 /* --------------------------------------------------------------------------------------
