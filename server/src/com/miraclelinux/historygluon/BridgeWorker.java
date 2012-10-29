@@ -27,7 +27,7 @@ public class BridgeWorker extends Thread {
     private static final int PKT_DATA_UINT64_LENGTH = 8;
     private static final int PKT_DATA_STRING_SIZE_LENGTH = 4;
     private static final int PKT_DATA_BLOB_SIZE_LENGTH = 8;
-    private static final int PKT_NUM_ENTRIES_LENGTH = 4;
+    private static final int PKT_NUM_ENTRIES_LENGTH = 8;
     private static final int PKT_SORT_ORDER_LENGTH = 2;
     private static final int PKT_QUERY_TYPE_LENGTH = 2;
     private static final int PKT_DELETE_WAY_LENGTH = 2;
@@ -35,8 +35,8 @@ public class BridgeWorker extends Thread {
 
     private static final short PKT_CMD_ADD_DATA       = 100;
     private static final short PKT_CMD_QUERY_DATA     = 200;
+    private static final short PKT_CMD_RANGE_QUERY    = 300;
     private static final short PKT_CMD_DELETE         = 600;
-    private static final short PKT_CMD_GET            = 1000;
     private static final short PKT_CMD_GET_MIN_SEC    = 1100;
     private static final short PKT_CMD_GET_STATISTICS = 1200;
 
@@ -55,7 +55,7 @@ public class BridgeWorker extends Thread {
     private static final int RESULT_ERROR_TOO_MANY_RECORDS = 2;
     private static final int RESULT_ERROR_NO_DATA = 3;
 
-    private static final int MAX_ENTRIES_NO_LIMIT = 0;
+    private static final int MAX_ENTRIES_UNLIMITED = 0;
 
     /* -----------------------------------------------------------------------
      * Private members
@@ -146,8 +146,8 @@ public class BridgeWorker extends Thread {
             ret = addHistoryData(pktBuf, idx);
         else if (cmd == PKT_CMD_QUERY_DATA)
             ret = queryData(pktBuf, idx);
-        else if (cmd == PKT_CMD_GET)
-            ret = getHistoryData(pktBuf, idx);
+        else if (cmd == PKT_CMD_RANGE_QUERY)
+            ret = rangeQuery(pktBuf, idx);
         else if (cmd == PKT_CMD_GET_MIN_SEC)
             ret = getMinClock(pktBuf, idx);
         else if (cmd == PKT_CMD_GET_STATISTICS)
@@ -163,8 +163,9 @@ public class BridgeWorker extends Thread {
     }
 
     private boolean putBufferWithCheckLength(byte[] pktBuf, int idx, int putLength) {
-        if (pktBuf.length -idx < putLength) {
-            m_log.error("packet length is too short: " + (pktBuf.length - idx));
+        if (pktBuf.length - idx < putLength) {
+            m_log.error("packet length is too short: " + (pktBuf.length - idx) + 
+                        ", expect: " + putLength + ", idx: " + idx);
             return false;
         }
         m_byteBuffer.put(pktBuf, idx, putLength);
@@ -233,8 +234,8 @@ public class BridgeWorker extends Thread {
         return true;
     }
 
-    private boolean getHistoryData(byte[] pktBuf, int idx) throws IOException {
-        int putLength = PKT_ID_LENGTH + 2 * PKT_SEC_LENGTH
+    private boolean rangeQuery(byte[] pktBuf, int idx) throws IOException {
+        int putLength = PKT_ID_LENGTH + (PKT_SEC_LENGTH + PKT_NS_LENGTH) * 2
                         + PKT_NUM_ENTRIES_LENGTH + PKT_SORT_ORDER_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength))
             return false;
@@ -246,13 +247,19 @@ public class BridgeWorker extends Thread {
         int sec0 = m_byteBuffer.getInt(idx);
         idx += PKT_SEC_LENGTH;
 
+        int ns0 = m_byteBuffer.getInt(idx);
+        idx += PKT_NS_LENGTH;
+
         int sec1 = m_byteBuffer.getInt(idx);
         idx += PKT_SEC_LENGTH;
+
+        int ns1 = m_byteBuffer.getInt(idx);
+        idx += PKT_NS_LENGTH;
 
         int maxEntries = m_byteBuffer.getInt(idx);
         idx += PKT_NUM_ENTRIES_LENGTH;
 
-        char sortOrder = m_byteBuffer.getChar(idx);
+        short sortOrder = m_byteBuffer.getShort(idx);
         idx += PKT_SORT_ORDER_LENGTH;
 
         HistoryDataSet dataSet = null;
@@ -263,7 +270,23 @@ public class BridgeWorker extends Thread {
             return false;
         }
 
-        // calcurate total size
+        // calculate length and  entries
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH
+                     + PKT_NUM_ENTRIES_LENGTH + PKT_SORT_ORDER_LENGTH;
+        long numEntries = dataSet.size();
+        if (maxEntries != MAX_ENTRIES_UNLIMITED && numEntries > maxEntries)
+            numEntries = maxEntries;
+
+        // write reply header to the socket
+        m_byteBuffer.clear();
+        m_byteBuffer.putInt(length);
+        m_byteBuffer.putShort(PKT_CMD_RANGE_QUERY);
+        m_byteBuffer.putInt(RESULT_SUCCESS);
+        m_byteBuffer.putLong(numEntries);
+        m_byteBuffer.putShort(sortOrder);
+        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
+
+        // write quried data
         Iterator<HistoryData> it;
         if (sortOrder == PKT_SORT_ORDER_ASCENDING)
             it = dataSet.iterator();
@@ -274,36 +297,13 @@ public class BridgeWorker extends Thread {
             return false;
         }
 
-        int totalSize = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH
-                        + PKT_NUM_ENTRIES_LENGTH;
-        int numEntries = 0;
-        while (it.hasNext()) {
-            HistoryData history = it.next();
-            totalSize += calcReplyPktSize(history);
-            numEntries++;
-            if (maxEntries != MAX_ENTRIES_NO_LIMIT && numEntries == maxEntries)
-                break;
-        }
-
-        int commonDataSize = PKT_ID_LENGTH
-                             + PKT_SEC_LENGTH + PKT_NS_LENGTH
-                             + PKT_DATA_TYPE_LENGTH;
-        totalSize += numEntries * commonDataSize;
-
-        // write reply header to the socket
-        m_byteBuffer.clear();
-        m_byteBuffer.putInt(totalSize);
-        m_byteBuffer.putShort(PKT_CMD_GET);
-        m_byteBuffer.putInt(RESULT_SUCCESS);
-        m_byteBuffer.putInt(numEntries);
-        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
-
-        // write data set
-        it = dataSet.iterator();
         while (it.hasNext()) {
             HistoryData history = it.next();
             sendOneHistoryData(history);
+            if (maxEntries != MAX_ENTRIES_UNLIMITED && numEntries == maxEntries)
+                break;
         }
+
         m_ostream.flush();
 
         return true;

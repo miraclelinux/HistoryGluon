@@ -62,7 +62,7 @@ COMMAND PKT: Query Data
 -----------------------------------------
 REPLY: Query Data
 -----------------------------------------
-[ 4] Packet length (not including this)
+[ 4] Packet length (not including this and up to 'Data type')
 [ 2] Reply type
   200: reply: Query Data
 [ 4] Result
@@ -109,7 +109,7 @@ COMMAND PKT: Range Query
 -----------------------------------------
 REPLY: Range Query
 -----------------------------------------
-[ 4] Packet length (not including this)
+[ 4] Packet length (not including this and up to 'Sort order')
 [ 2] Reply type
   300: reply: Range Query
 [ 4] Result

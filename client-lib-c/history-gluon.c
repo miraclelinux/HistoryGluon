@@ -92,8 +92,7 @@ do { \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
  PKT_ID_LENGTH + \
- PKT_SEC_LENGTH + \
- PKT_NS_LENGTH + \
+ 2 * (PKT_SEC_LENGTH + PKT_NS_LENGTH) + \
  PKT_NUM_ENTRIES_LENGTH + \
  PKT_SORT_ORDER_LENGTH)
 
@@ -398,7 +397,7 @@ static int fill_range_query_header(private_context_t *ctx, uint8_t *buf, uint64_
 	int idx = 0;
 
 	/* pkt size */
-	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_QUERY_DATA_LENGTH - PKT_SIZE_LENGTH);
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_RANGE_QUERY_LENGTH - PKT_SIZE_LENGTH);
 	idx += PKT_SIZE_LENGTH;
 
 	/* command */
