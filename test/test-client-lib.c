@@ -836,22 +836,76 @@ void test_range_query_blob_get_tail(void)
 /* --------------------------------------------------------------------------------------
  * Get Minimum Time
  * ----------------------------------------------------------------------------------- */
-void test_get_minimum_time(void)
+static void assert_get_minimum_time(uint64_t id, void (*add_samples_fn)(void),
+                                    history_gluon_data_t *samples)
 {
-	assert_make_context_delete_add_samples(TEST_STD_ID_FLOAT, assert_add_float_samples);
-	/*create_global_context();
-	assert_delete_all_for_id(TEST_STD_ID_FLOAT, NULL);
-	assert_add_float_samples();
-	*/
+	assert_make_context_delete_add_samples(id, add_samples_fn);
 
-	// get the minimum
+	/* get the minimum */
 	struct timespec ts;
 	history_gluon_result_t ret;
-	ret = history_gluon_get_minmum_time(g_ctx, TEST_STD_ID_FLOAT, &ts);
+	ret = history_gluon_get_minmum_time(g_ctx, id, &ts);
 	cut_assert_equal_int(HGL_SUCCESS, ret);
 
-	// test the obtained time
-	cut_assert_equal_int(g_float_samples[0].ts.tv_sec, ts.tv_sec);
+	/* test the obtained time */
+	cut_assert_equal_int_least32(samples[0].ts.tv_sec, ts.tv_sec);
+	cut_assert_equal_int_least32(samples[0].ts.tv_nsec, ts.tv_nsec);
+}
+
+void test_get_minimum_time_uint(void)
+{
+	assert_get_minimum_time(TEST_STD_ID_UINT, assert_add_uint_samples,
+                                g_uint_samples);
+}
+
+void test_get_minimum_time_float(void)
+{
+	assert_get_minimum_time(TEST_STD_ID_FLOAT, assert_add_float_samples,
+                                g_float_samples);
+}
+
+void test_get_minimum_time_string(void)
+{
+	assert_get_minimum_time(TEST_STD_ID_STRING, assert_add_string_samples,
+                                g_string_samples);
+}
+
+void test_get_minimum_time_blob(void)
+{
+	assert_get_minimum_time(TEST_STD_ID_BLOB, assert_add_blob_samples,
+                                g_blob_samples);
+}
+
+static void assert_get_minimum_time_not_found(uint64_t id)
+{
+	create_global_context();
+	assert_delete_all_for_id(id, NULL);
+
+	/* get the minimum */
+	struct timespec ts;
+	history_gluon_result_t ret;
+	ret = history_gluon_get_minmum_time(g_ctx, id, &ts);
+	cut_assert_equal_int(ret, HGLERR_NOT_FOUND);
+}
+
+void test_get_minimum_time_not_found_uint(void)
+{
+	assert_get_minimum_time_not_found(TEST_STD_ID_UINT);
+}
+
+void test_get_minimum_time_not_found_float(void)
+{
+	assert_get_minimum_time_not_found(TEST_STD_ID_FLOAT);
+}
+
+void test_get_minimum_time_not_found_string(void)
+{
+	assert_get_minimum_time_not_found(TEST_STD_ID_STRING);
+}
+
+void test_get_minimum_time_not_found_blob(void)
+{
+	assert_get_minimum_time_not_found(TEST_STD_ID_BLOB);
 }
 
 /* --------------------------------------------------------------------------------------
