@@ -751,6 +751,29 @@ void test_add_blob_and_query_greater(void)
 /* --------------------------------------------------------------------------------------
  * Range Query
  * ----------------------------------------------------------------------------------- */
+static void
+asset_range_query_common(uint64_t id, struct timespec *ts0, struct timespec *ts1,
+                         history_gluon_sort_order_t sort_order, uint64_t num_max_entries,
+                         uint64_t num_expected_entries, int idx_offset)
+{
+	history_gluon_result_t ret;
+	ret = history_gluon_range_query(g_ctx, id, ts0, ts1, sort_order, num_max_entries,
+	                                &g_array);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+
+	// assertion
+	cut_assert_equal_int_least64(num_expected_entries, g_array->num_data);
+	uint64_t i;
+	for  (i = 0; i < g_array->num_data; i++) {
+		int exp_idx = idx_offset + i;
+		if (sort_order == HISTORY_GLUON_SORT_DESCENDING)
+			exp_idx = idx_offset + (g_array->num_data - i - 1);
+		history_gluon_data_t *expect_data = &g_uint_samples[exp_idx];
+		history_gluon_data_t *actual_data = g_array->array[i];
+		assert_equal_hgl_data(expect_data, actual_data);
+	}
+}
+
 void test_range_query_uint_asc(void)
 {
 	create_global_context();
@@ -760,23 +783,72 @@ void test_range_query_uint_asc(void)
 	// range query
 	int idx0 = 1;
 	int idx1 = 3;
-	history_gluon_result_t ret;
-	ret = history_gluon_range_query(g_ctx, TEST_STD_ID_UINT,
-	                                &g_uint_samples[idx0].ts,
-	                                &g_uint_samples[idx1].ts,
-	                                HISTORY_GLUON_SORT_ASCENDING, 
-	                                HISTORY_GLUON_NUM_ENTRIES_UNLIMITED,
-	                                &g_array);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
+	asset_range_query_common(TEST_STD_ID_UINT,
+	                         &g_uint_samples[idx0].ts, &g_uint_samples[idx1].ts,
+	                         HISTORY_GLUON_SORT_ASCENDING, 
+	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED,
+	                         idx1 - idx0, idx0);
+}
 
-	// assertion
-	cut_assert_equal_int_least64(idx1 - idx0, g_array->num_data);
-	uint64_t i;
-	for  (i = 0; i < g_array->num_data; i++) {
-		history_gluon_data_t *expect_data = &g_uint_samples[idx0 + i];
-		history_gluon_data_t *actual_data = g_array->array[i];
-		assert_equal_hgl_data(expect_data, actual_data);
-	}
+void test_range_query_uint_dsc(void)
+{
+	create_global_context();
+	assert_delete_all_for_id(TEST_STD_ID_UINT, NULL);
+	assert_add_uint_samples();
+
+	// range query
+	int idx0 = 1;
+	int idx1 = 3;
+	asset_range_query_common(TEST_STD_ID_UINT,
+	                         &g_uint_samples[idx0].ts, &g_uint_samples[idx1].ts,
+	                         HISTORY_GLUON_SORT_DESCENDING, 
+	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED,
+	                         idx1 - idx0, idx0);
+}
+
+void test_range_query_uint_not_found_head(void)
+{
+	create_global_context();
+	assert_delete_all_for_id(TEST_STD_ID_UINT, NULL);
+	assert_add_uint_samples();
+
+	// range query
+	struct timespec *ts0 = &HISTORY_GLUON_TIMESPEC_START;
+	struct timespec *ts1 = &g_uint_samples[0].ts;
+	asset_range_query_common(TEST_STD_ID_UINT, ts0, ts1,
+	                         HISTORY_GLUON_SORT_ASCENDING, 
+	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED, 0, 0);
+}
+
+void test_range_query_uint_not_found_tail(void)
+{
+	create_global_context();
+	assert_delete_all_for_id(TEST_STD_ID_UINT, NULL);
+	assert_add_uint_samples();
+
+	// range query
+	struct timespec ts0;
+	memcpy(&ts0, &g_uint_samples[NUM_UINT_SAMPLES-1].ts, sizeof(struct timespec));
+	ts0.tv_sec++;
+	struct timespec *ts1 = &HISTORY_GLUON_TIMESPEC_END;
+	asset_range_query_common(TEST_STD_ID_UINT, &ts0, ts1,
+	                         HISTORY_GLUON_SORT_ASCENDING, 
+	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED, 0, 0);
+}
+
+void test_range_query_uint_get_tail(void)
+{
+	create_global_context();
+	assert_delete_all_for_id(TEST_STD_ID_UINT, NULL);
+	assert_add_uint_samples();
+
+	// range query
+	struct timespec *ts0 = &(g_uint_samples[NUM_UINT_SAMPLES-1].ts);
+	struct timespec *ts1 = &HISTORY_GLUON_TIMESPEC_END;
+	asset_range_query_common(TEST_STD_ID_UINT, ts0, ts1,
+	                         HISTORY_GLUON_SORT_ASCENDING, 
+	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED,
+	                         1, NUM_UINT_SAMPLES-1);
 }
 
 /* --------------------------------------------------------------------------------------
