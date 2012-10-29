@@ -680,7 +680,7 @@ read_gluon_data_body_string(private_context_t *ctx, history_gluon_data_t *gluon_
 	ret = read_data(ctx, (uint8_t *)gluon_data->v_string,
 	                gluon_data->length);
 	RETURN_IF_ERROR(ret);
-	gluon_data->v_string[alloc_size] = '\0';
+	gluon_data->v_string[gluon_data->length] = '\0';
 
 	return HGL_SUCCESS;
 }
