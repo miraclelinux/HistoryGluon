@@ -6,7 +6,9 @@ static history_gluon_data_t *g_data = NULL;
 
 #define TEST_STD_ID  0x65536
 
-/* Utility functions */
+/* --------------------------------------------------------------------------------------
+ * Utility functions
+ * ----------------------------------------------------------------------------------- */
 static void create_global_context(void)
 {
 	g_ctx = history_gluon_create_context();
@@ -118,7 +120,9 @@ static void add_samples() {
 	}
 }
 
-/* Teset cases */
+/* --------------------------------------------------------------------------------------
+ * Teset cases
+ * ----------------------------------------------------------------------------------- */
 void setup(void)
 {
 }
@@ -134,7 +138,9 @@ void teardown(void)
 		g_ctx = NULL;
 	}
 }
-
+/* --------------------------------------------------------------------------------------
+ * Context
+ * ----------------------------------------------------------------------------------- */
 void test_create_context(void)
 {
 	create_global_context();
@@ -146,6 +152,9 @@ void test_free_context(void)
 	free_global_context();
 }
 
+/* --------------------------------------------------------------------------------------
+ * Add Data
+ * ----------------------------------------------------------------------------------- */
 void test_add_uint(void)
 {
 	create_global_context();
@@ -203,6 +212,9 @@ void test_add_blob(void)
 	cut_assert_equal_int(0, ret);
 }
 
+/* --------------------------------------------------------------------------------------
+ * Query
+ * ----------------------------------------------------------------------------------- */
 void test_add_uint_and_query(void)
 {
 	int idx = 2;
@@ -221,6 +233,35 @@ void test_add_uint_and_query(void)
 	cut_assert_equal_int_least64(sample->v_uint, g_data->v_uint);
 }
 
+/* --------------------------------------------------------------------------------------
+ * Range Query
+ * ----------------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------------------
+ * Get Minimum Time
+ * ----------------------------------------------------------------------------------- */
+void test_get_minimum_time(void)
+{
+	create_global_context();
+	assert_delete_all_for_id(TEST_STD_ID, NULL);
+	add_samples();
+
+	// get the minimum
+	struct timespec ts;
+	int ret = history_gluon_get_minmum_time(g_ctx, TEST_STD_ID, &ts);
+	cut_assert_equal_int(0, ret);
+
+	// test the obtained time
+	cut_assert_equal_int(g_float_samples[0].ts.tv_sec, ts.tv_sec);
+}
+
+/* --------------------------------------------------------------------------------------
+ * Get Statistics
+ * ----------------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------------------
+ * Delete Data
+ * ----------------------------------------------------------------------------------- */
 void test_delete_all(void)
 {
 	create_global_context();
@@ -244,21 +285,6 @@ void test_delete_all(void)
 
 	assert_delete_all_for_id(id, &num_deleted);
 	cut_assert_equal_int(0, num_deleted);
-}
-
-void test_get_minimum_time(void)
-{
-	create_global_context();
-	assert_delete_all_for_id(TEST_STD_ID, NULL);
-	add_samples();
-
-	// get the minimum
-	struct timespec ts;
-	int ret = history_gluon_get_minmum_time(g_ctx, TEST_STD_ID, &ts);
-	cut_assert_equal_int(0, ret);
-
-	// test the obtained time
-	cut_assert_equal_int(g_float_samples[0].ts.tv_sec, ts.tv_sec);
 }
 
 void test_delete_less(void)
