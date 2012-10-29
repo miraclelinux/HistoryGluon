@@ -454,6 +454,23 @@ void test_add_blob(void)
 /* --------------------------------------------------------------------------------------
  * Query
  * ----------------------------------------------------------------------------------- */
+static void
+assert_make_context_delete_add_samples(uint64_t id, void (*add_samples_fn)(void))
+{
+	create_global_context();
+	assert_delete_all_for_id(id, NULL);
+	(*add_samples_fn)();
+}
+
+static void
+assert_query_common(uint64_t id, struct timespec *ts, history_gluon_query_t query_type,
+                    int expected_result)
+{
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, id, ts, query_type, &g_data);
+	cut_assert_equal_int(expected_result, ret);
+}
+
 /* query */
 static void assert_add_and_query(history_gluon_data_t *samples)
 {
@@ -466,10 +483,8 @@ static void assert_add_and_query(history_gluon_data_t *samples)
 	assert_add_hgl_data(sample);
 
 	// query
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, sample->id, &sample->ts,
-	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
+	assert_query_common(sample->id, &sample->ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH,
+	                    HGL_SUCCESS);
 	assert_equal_hgl_data(sample, g_data);
 }
 
@@ -506,10 +521,8 @@ static void assert_add_and_query_not_found(history_gluon_data_t *samples)
 	assert_add_hgl_data(sample);
 
 	// query
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, sample->id+1, &sample->ts,
-	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
-	cut_assert_equal_int(HGLERR_NOT_FOUND, ret);
+	assert_query_common(sample->id+1, &sample->ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH,
+	                    HGLERR_NOT_FOUND);
 }
 
 void test_add_uint_and_query_not_found(void)
@@ -532,188 +545,91 @@ void test_add_blob_and_query_not_found(void)
 	assert_add_and_query_not_found(g_blob_samples);
 }
 
-/* query less */
-void test_add_uint_and_query_less(void)
+/* query less/greater */
+static void
+assert_add_and_query_less_greater(uint64_t id, void (*add_samples_fn)(void),
+                                  history_gluon_data_t *samples,
+                                  history_gluon_query_t query_type)
 {
-	create_global_context();
-
-	// delete and add data
-	assert_delete_all_for_id(TEST_STD_ID_UINT, NULL);
-	assert_add_uint_samples();
+	assert_make_context_delete_add_samples(id, add_samples_fn);
 
 	// query
 	int idx = 1;
 	struct timespec ts;
-	set_mean_ts(&g_uint_samples[idx].ts, &g_uint_samples[idx+1].ts, &ts);
+	set_mean_ts(&samples[idx].ts, &samples[idx+1].ts, &ts);
 
 	// query
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, TEST_STD_ID_UINT, &ts,
-	                          HISTORY_GLUON_QUERY_TYPE_LESS_DATA, &g_data);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-	cut_assert_equal_int_least64(g_uint_samples[idx].v_uint, g_data->v_uint);
+	assert_query_common(id, &ts, query_type, HGL_SUCCESS);
+
+	int exp_idx = idx;
+	if (query_type == HISTORY_GLUON_QUERY_TYPE_LESS_DATA)
+		exp_idx = idx;
+	else if (query_type ==  HISTORY_GLUON_QUERY_TYPE_GREATER_DATA)
+		exp_idx = idx + 1;
+	else
+		cut_fail("Unknown query_type: %d", query_type);
+	assert_equal_hgl_data(&samples[exp_idx], g_data);
+}
+
+void test_add_uint_and_query_less(void)
+{
+	assert_add_and_query_less_greater(TEST_STD_ID_UINT, assert_add_uint_samples,
+	                                  g_uint_samples, 
+	                                  HISTORY_GLUON_QUERY_TYPE_LESS_DATA);
 }
 
 void test_add_uint_and_query_greater(void)
 {
-	create_global_context();
-
-	// delete and add data
-	assert_delete_all_for_id(TEST_STD_ID_UINT, NULL);
-	assert_add_uint_samples();
-
-	// query
-	int idx = 1;
-	struct timespec ts;
-	set_mean_ts(&g_uint_samples[idx].ts, &g_uint_samples[idx+1].ts, &ts);
-
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, TEST_STD_ID_UINT, &ts,
-	                          HISTORY_GLUON_QUERY_TYPE_GREATER_DATA, &g_data);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-	cut_assert_equal_int_least64(g_uint_samples[idx+1].v_uint, g_data->v_uint);
+	assert_add_and_query_less_greater(TEST_STD_ID_UINT, assert_add_uint_samples,
+	                                  g_uint_samples, 
+	                                  HISTORY_GLUON_QUERY_TYPE_GREATER_DATA);
 }
 
-/* float */
 void test_add_float_and_query_less(void)
 {
-	create_global_context();
-
-	// delete and add data
-	assert_delete_all_for_id(TEST_STD_ID_FLOAT, NULL);
-	assert_add_float_samples();
-
-	// query
-	int idx = 1;
-	struct timespec ts;
-	set_mean_ts(&g_float_samples[idx].ts, &g_float_samples[idx+1].ts, &ts);
-
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, TEST_STD_ID_FLOAT, &ts,
-	                          HISTORY_GLUON_QUERY_TYPE_LESS_DATA, &g_data);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-	double err = 0.0;
-	cut_assert_equal_double(g_float_samples[idx].v_float, err, g_data->v_float);
+	assert_add_and_query_less_greater(TEST_STD_ID_FLOAT, assert_add_float_samples,
+	                                  g_float_samples, 
+	                                  HISTORY_GLUON_QUERY_TYPE_LESS_DATA);
 }
 
 void test_add_float_and_query_greater(void)
 {
-	create_global_context();
-
-	// delete and add data
-	assert_delete_all_for_id(TEST_STD_ID_FLOAT, NULL);
-	assert_add_float_samples();
-
-	// query
-	int idx = 1;
-	struct timespec ts;
-	set_mean_ts(&g_float_samples[idx].ts, &g_float_samples[idx+1].ts, &ts);
-
-	// query
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, TEST_STD_ID_FLOAT, &ts,
-	                          HISTORY_GLUON_QUERY_TYPE_GREATER_DATA, &g_data);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-	double err = 0.0;
-	cut_assert_equal_double(g_float_samples[idx+1].v_float, err, g_data->v_float);
+	assert_add_and_query_less_greater(TEST_STD_ID_FLOAT, assert_add_float_samples,
+	                                  g_float_samples, 
+	                                  HISTORY_GLUON_QUERY_TYPE_GREATER_DATA);
 }
 
-/* string */
 void test_add_string_and_query_less(void)
 {
-	create_global_context();
-
-	// delete and add data
-	assert_delete_all_for_id(TEST_STD_ID_STRING, NULL);
-	assert_add_string_samples();
-
-	// query
-	int idx = 1;
-	struct timespec ts;
-	set_mean_ts(&g_string_samples[idx].ts, &g_string_samples[idx+1].ts, &ts);
-
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, TEST_STD_ID_STRING, &ts,
-	                          HISTORY_GLUON_QUERY_TYPE_LESS_DATA, &g_data);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-	cut_assert_equal_string(g_string_samples[idx].v_string, g_data->v_string);
+	assert_add_and_query_less_greater(TEST_STD_ID_STRING, assert_add_string_samples,
+	                                  g_string_samples, 
+	                                  HISTORY_GLUON_QUERY_TYPE_LESS_DATA);
 }
 
 void test_add_string_and_query_greater(void)
 {
-	create_global_context();
-
-	// delete and add data
-	assert_delete_all_for_id(TEST_STD_ID_STRING, NULL);
-	assert_add_string_samples();
-
-	// query
-	int idx = 1;
-	struct timespec ts;
-	set_mean_ts(&g_string_samples[idx].ts, &g_string_samples[idx+1].ts, &ts);
-
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, TEST_STD_ID_STRING, &ts,
-	                          HISTORY_GLUON_QUERY_TYPE_GREATER_DATA, &g_data);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-	cut_assert_equal_string(g_string_samples[idx+1].v_string, g_data->v_string);
+	assert_add_and_query_less_greater(TEST_STD_ID_STRING, assert_add_string_samples,
+	                                  g_string_samples, 
+	                                  HISTORY_GLUON_QUERY_TYPE_GREATER_DATA);
 }
 
-/* blob */
 void test_add_blob_and_query_less(void)
 {
-	create_global_context();
-
-	// delete and add data
-	assert_delete_all_for_id(TEST_STD_ID_BLOB, NULL);
-	assert_add_blob_samples();
-
-	// query
-	int idx = 1;
-	struct timespec ts;
-	set_mean_ts(&g_blob_samples[idx].ts, &g_blob_samples[idx+1].ts, &ts);
-
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, TEST_STD_ID_BLOB, &ts,
-	                          HISTORY_GLUON_QUERY_TYPE_LESS_DATA, &g_data);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-	cut_assert_equal_memory(g_blob_samples[idx].v_blob, g_blob_samples[idx].length,
-	                        g_data->v_blob, g_data->length);
+	assert_add_and_query_less_greater(TEST_STD_ID_BLOB, assert_add_blob_samples,
+	                                  g_blob_samples, 
+	                                  HISTORY_GLUON_QUERY_TYPE_LESS_DATA);
 }
 
 void test_add_blob_and_query_greater(void)
 {
-	create_global_context();
-
-	// delete and add data
-	assert_delete_all_for_id(TEST_STD_ID_BLOB, NULL);
-	assert_add_blob_samples();
-
-	// query
-	int idx = 1;
-	struct timespec ts;
-	set_mean_ts(&g_blob_samples[idx].ts, &g_blob_samples[idx+1].ts, &ts);
-
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, TEST_STD_ID_BLOB, &ts,
-	                          HISTORY_GLUON_QUERY_TYPE_GREATER_DATA, &g_data);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-	cut_assert_equal_memory(g_blob_samples[idx+1].v_blob,
-	                        g_blob_samples[idx+1].length,
-	                        g_data->v_blob, g_data->length);
+	assert_add_and_query_less_greater(TEST_STD_ID_BLOB, assert_add_blob_samples,
+	                                  g_blob_samples, 
+	                                  HISTORY_GLUON_QUERY_TYPE_GREATER_DATA);
 }
 
 /* --------------------------------------------------------------------------------------
  * Range Query
  * ----------------------------------------------------------------------------------- */
-static void
-assert_make_context_delete_add_samples(uint64_t id, void (*add_samples_fn)(void))
-{
-	create_global_context();
-	assert_delete_all_for_id(id, NULL);
-	(*add_samples_fn)();
-}
-
 static void
 asset_range_query_common(uint64_t id, history_gluon_data_t *samples,
                          struct timespec *ts0, struct timespec *ts1,
