@@ -28,6 +28,13 @@ do { \
 		return R; \
 } while(0)
 
+#define GOTO_IF_ERROR(R,L) \
+do { \
+	if (R < 0) \
+		goto L; \
+} while(0)
+
+
 /* Common header */
 #define PKT_SIZE_LENGTH           4
 #define PKT_CMD_TYPE_LENGTH       2
@@ -163,7 +170,7 @@ typedef struct
 }
 private_context_t;
 
-typedef int (*length_check_func_t)(void);
+typedef history_gluon_result_t (*length_check_func_t)(void);
 #define LENGTH_CHECK_NONE 0
 
 /* ---------------------------------------------------------------------------
@@ -208,7 +215,7 @@ static int connect_to_history_service(private_context_t *ctx)
 	if (getaddrinfo(ctx->server_name, port_str, &hints, &result) != 0) {
 		ERR_MSG("Failed to call getaddrinfo(): errno: %d, host: %s, port: %s\n",
 		        errno, ctx->server_name, port_str);
-		return -1;
+		return HGLERR_GETADDRINFO;
 	}
 
 	/* try to connect to the addresses returned in the above */
@@ -225,7 +232,7 @@ static int connect_to_history_service(private_context_t *ctx)
 	if (rp == NULL) {
 		ERR_MSG("Failed to connect: host: %s, port: %s\n",
 		        ctx->server_name, port_str);
-		return -1;
+		return HGLERR_FAILED_CONNECT;
 	}
 
 	ctx->connected = 1;
@@ -233,7 +240,7 @@ static int connect_to_history_service(private_context_t *ctx)
 	INFO("Connected to history server: host: %s, port: %s\n",
 	     ctx->server_name, port_str);
 
-	return 0;
+	return HGL_SUCCESS;
 }
 
 static private_context_t *get_connected_private_context(history_gluon_context_t ctx)
@@ -454,23 +461,27 @@ static int fill_get_statistics(private_context_t *ctx, uint8_t *buf, uint64_t id
 	return idx;
 }
 
-static int write_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
+static history_gluon_result_t
+write_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
 {
 	uint8_t *ptr = buf;
-	while (count > 0) {
+	while (1) {
 		ssize_t written_byte = write(ctx->socket, ptr, count);
 		if (written_byte == -1) {
 			ERR_MSG("Failed to write data: %d\n", errno);
 			reset_context(ctx);
-			return -1;
+			return HGLERR_WRITE_ERROR;
 		}
+		if (written_byte >= count)
+			break;
 		count -= written_byte;
 		ptr += written_byte;
 	}
-	return 0;
+	return HGL_SUCCESS;
 }
 
-static int read_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
+static history_gluon_result_t
+read_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
 {
 	uint8_t *ptr = buf;
 	while (1) {
@@ -496,10 +507,10 @@ static int read_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
 	return HGL_SUCCESS;
 }
 
-static int parse_common_reply_header
-  (private_context_t *ctx, uint8_t *buf,
-   length_check_func_t length_check_func, uint32_t expected_length,
-   int expected_pkt_type)
+static history_gluon_result_t
+parse_common_reply_header(private_context_t *ctx, uint8_t *buf,
+                          length_check_func_t length_check_func,
+                          uint32_t expected_length, int expected_pkt_type, int *index)
 {
 	int idx = 0;
 
@@ -507,10 +518,10 @@ static int parse_common_reply_header
 	uint32_t reply_length = restore_le32(ctx, &buf[idx]);
 	idx += PKT_SIZE_LENGTH;
 	if (length_check_func != NULL) {
-		if((*length_check_func)() == -1) {
+		if((*length_check_func)() != HGL_SUCCESS) {
 			ERR_MSG("reply length is not the expected: %d\n", reply_length);
 			reset_context(ctx);
-			return -1;
+			return HGLERR_UNEXPECTED_REPLY_SIZE;
 		}
 	}
 	else if (expected_length != LENGTH_CHECK_NONE &&
@@ -518,37 +529,42 @@ static int parse_common_reply_header
 		ERR_MSG("reply length is not the expected: %d: %d",
 		        reply_length, expected_length);
 		reset_context(ctx);
-		return -1;
+		return HGLERR_UNEXPECTED_REPLY_SIZE;
 	}
 
 	// Reply type
 	uint16_t reply_type = restore_le16(ctx, &buf[idx]);
 	idx += PKT_CMD_TYPE_LENGTH;
 	if (reply_type != expected_pkt_type) {
-		ERR_MSG("reply type is not PKT_CMD_DELETE: %d: %d\n",
-		        reply_type, PKT_CMD_DELETE);
-		return -1;
+		ERR_MSG("reply type is not the expected: %d: %d\n",
+		        reply_type, expected_pkt_type);
+		return HGLERR_UNEXPECTED_REPLY_TYPE;
 	}
 
 	// result
 	uint32_t result = restore_le32(ctx, &buf[idx]);
 	idx += REPLY_RESULT_LENGTH;
 	if (result != RESULT_SUCCESS) {
-		ERR_MSG("result is not Success: %d\n", result);
-		return -1;
+		ERR_MSG("result is not success: %d\n", result);
+		return HGLERR_REPLY_ERROR;
 	}
 
-	return idx;
+	if (index)
+		*index = idx;
+
+	return HGL_SUCCESS;
 }
 
-static int parse_reply_get_min_sec(private_context_t *ctx, uint8_t *buf,
+static history_gluon_result_t
+parse_reply_get_min_sec(private_context_t *ctx, uint8_t *buf,
                                      struct timespec *minimum_time)
 {
+	history_gluon_result_t ret;
 	uint32_t expected_length = REPLY_GET_MIN_TIME_LENGTH - PKT_SIZE_LENGTH;
-	int idx = parse_common_reply_header(ctx, buf, NULL, expected_length,
-	                                    PKT_CMD_GET_MIN_SEC);
-	if (idx == -1)
-		return -1;
+	int idx;
+	ret = parse_common_reply_header(ctx, buf, NULL, expected_length,
+	                                PKT_CMD_GET_MIN_SEC, &idx);
+	RETURN_IF_ERROR(ret);
 
 	// min_sec
 	uint32_t _min_sec = restore_le32(ctx, &buf[idx]);
@@ -556,46 +572,53 @@ static int parse_reply_get_min_sec(private_context_t *ctx, uint8_t *buf,
 	minimum_time->tv_sec = _min_sec;
 	minimum_time->tv_nsec = 0;
 
-	return 0;
+	return HGL_SUCCESS;;
 }
 
-static uint64_t parse_reply_delete(private_context_t *ctx, uint8_t *buf)
+static history_gluon_result_t
+parse_reply_delete(private_context_t *ctx, uint8_t *buf, uint64_t *num_deleted)
 {
+	history_gluon_result_t ret;
 	uint32_t expected_length = REPLY_DELETE_LENGTH - PKT_SIZE_LENGTH;
-	int idx = parse_common_reply_header(ctx, buf, NULL, expected_length,
-	                                    PKT_CMD_DELETE);
-	if (idx == -1)
-		return -1;
+	int idx;
+	ret = parse_common_reply_header(ctx, buf, NULL, expected_length,
+	                                PKT_CMD_DELETE, &idx);
+	RETURN_IF_ERROR(ret);
 
 	// Number of the deleted
-	uint64_t num_deleted = restore_le64(ctx, &buf[idx]);
+	if (!num_deleted)
+		return HGL_SUCCESS;
+	*num_deleted = restore_le64(ctx, &buf[idx]);
 	idx += REPLY_COUNT_DELETED_LENGTH;
 
-	return num_deleted;
+	return HGL_SUCCESS;
 }
 
-static int parse_reply_add(private_context_t *ctx, uint8_t *buf)
+static history_gluon_result_t
+parse_reply_add(private_context_t *ctx, uint8_t *buf)
 {
+	history_gluon_result_t ret;
 	uint32_t expected_length = REPLY_ADD_LENGTH - PKT_SIZE_LENGTH;
-	int idx = parse_common_reply_header(ctx, buf, NULL, expected_length,
-	                                    PKT_CMD_ADD_DATA);
-	if (idx == -1)
-		return -1;
-	return 0;
+	int idx;
+	ret = parse_common_reply_header(ctx, buf, NULL, expected_length,
+	                                PKT_CMD_ADD_DATA, &idx);
+	RETURN_IF_ERROR(ret);
+	return HGL_SUCCESS;
 }
 
-static int wait_and_check_add_result(private_context_t *ctx)
+static history_gluon_result_t
+wait_and_check_add_result(private_context_t *ctx)
 {
+	history_gluon_result_t ret;
 	uint8_t reply[REPLY_ADD_LENGTH];
-	if (read_data(ctx, reply, REPLY_ADD_LENGTH) == -1)
-		return -1;
+	ret = read_data(ctx, reply, REPLY_ADD_LENGTH);
+	RETURN_IF_ERROR(ret);
 	return parse_reply_add(ctx, reply);
 }
 
-static int parse_data_header(private_context_t *ctx,
-                             uint8_t *data_header,
-
-                             history_gluon_data_t *gluon_data)
+static history_gluon_result_t
+parse_data_header(private_context_t *ctx, uint8_t *data_header,
+                  history_gluon_data_t *gluon_data)
 {
 	int idx = 0;
 	gluon_data->id = restore_le64(ctx, &data_header[idx]);
@@ -622,25 +645,27 @@ static void init_gluon_data(history_gluon_data_t *gluon_data)
 	gluon_data->length = 0;
 }
 
-static int read_gluon_data_body_float(private_context_t *ctx,
+static history_gluon_result_t
+read_gluon_data_body_float(private_context_t *ctx,
                                       history_gluon_data_t *gluon_data)
 {
+	history_gluon_result_t ret;
 	uint8_t buf[PKT_DATA_FLOAT_LENGTH];
-	int ret = read_data(ctx, buf, PKT_DATA_FLOAT_LENGTH);
-	if (ret < 0)
-		return ret;
+	ret = read_data(ctx, buf, PKT_DATA_FLOAT_LENGTH);
+	RETURN_IF_ERROR(ret);
 	gluon_data->v_float = read_ieee754_double(ctx, buf);
 	return HGL_SUCCESS;
 }
 
-static int read_gluon_data_body_string(private_context_t *ctx,
-                                       history_gluon_data_t *gluon_data)
+static history_gluon_result_t
+read_gluon_data_body_string(private_context_t *ctx, history_gluon_data_t *gluon_data)
 {
+	history_gluon_result_t ret;
+
 	/* read body size */
 	uint8_t buf[PKT_DATA_STRING_SIZE_LENGTH];
-	int ret = read_data(ctx, buf, PKT_DATA_STRING_SIZE_LENGTH);
-	if (ret < 0)
-		return ret;
+	ret = read_data(ctx, buf, PKT_DATA_STRING_SIZE_LENGTH);
+	RETURN_IF_ERROR(ret);
 	gluon_data->length = restore_le64(ctx, buf);
 
 	/* allocate body region */
@@ -654,32 +679,32 @@ static int read_gluon_data_body_string(private_context_t *ctx,
 	/* read body */
 	ret = read_data(ctx, (uint8_t *)gluon_data->v_string,
 	                gluon_data->length);
-	if (ret < 0)
-		return ret;
+	RETURN_IF_ERROR(ret);
 	gluon_data->v_string[alloc_size] = '\0';
 
 	return HGL_SUCCESS;
 }
 
-static int read_gluon_data_body_uint(private_context_t *ctx,
-                                     history_gluon_data_t *gluon_data)
+static history_gluon_result_t
+read_gluon_data_body_uint(private_context_t *ctx, history_gluon_data_t *gluon_data)
 {
+	history_gluon_result_t ret;
 	uint8_t buf[PKT_DATA_UINT_LENGTH];
-	int ret = read_data(ctx, buf, PKT_DATA_UINT_LENGTH);
-	if (ret < 0)
-		return ret;
+	ret = read_data(ctx, buf, PKT_DATA_UINT_LENGTH);
+	RETURN_IF_ERROR(ret);
 	gluon_data->v_uint = restore_le64(ctx, buf);
 	return HGL_SUCCESS;
 }
 
-static int read_gluon_data_body_blob(private_context_t *ctx,
-                                     history_gluon_data_t *gluon_data)
+static history_gluon_result_t
+read_gluon_data_body_blob(private_context_t *ctx, history_gluon_data_t *gluon_data)
 {
+	history_gluon_result_t ret;
+
 	/* read body size */
 	uint8_t buf[PKT_DATA_BLOB_SIZE_LENGTH];
-	int ret = read_data(ctx, buf, PKT_DATA_BLOB_SIZE_LENGTH);
-	if (ret < 0)
-		return ret;
+	ret = read_data(ctx, buf, PKT_DATA_BLOB_SIZE_LENGTH);
+	RETURN_IF_ERROR(ret);
 	gluon_data->length = restore_le64(ctx, buf);
 
 	/* allocate body region */
@@ -692,15 +717,16 @@ static int read_gluon_data_body_blob(private_context_t *ctx,
 
 	/* read body */
 	ret = read_data(ctx, gluon_data->v_blob, gluon_data->length);
-	if (ret < 0)
-		return ret;
+	RETURN_IF_ERROR(ret);
 
 	return HGL_SUCCESS;
 }
 
-static int read_gluon_data(private_context_t *ctx,
-                               history_gluon_data_t **gluon_data)
+static history_gluon_result_t
+read_gluon_data(private_context_t *ctx, history_gluon_data_t **gluon_data)
 {
+	history_gluon_result_t ret;
+
 	/* allocate history_gluon_data_t variable */
 	history_gluon_data_t *data = malloc(sizeof(history_gluon_data_t));
 	if (!data)
@@ -712,14 +738,12 @@ static int read_gluon_data(private_context_t *ctx,
 	                       PKT_SEC_LENGTH + PKT_NS_LENGTH +
 	                       PKT_DATA_TYPE_LENGTH;
 	uint8_t data_header[data_header_size];
-	int ret = read_data(ctx, data_header, data_header_size);
-	if (ret < 0)
-		goto error;
+	ret = read_data(ctx, data_header, data_header_size);
+	GOTO_IF_ERROR(ret, error);
 
 	/* parse header */
 	ret = parse_data_header(ctx, data_header, data);
-	if (ret < 0)
-		goto error;
+	GOTO_IF_ERROR(ret, error);
 
 	/* read data body */
 	if (data->type == HISTORY_GLUON_TYPE_FLOAT)
@@ -735,8 +759,7 @@ static int read_gluon_data(private_context_t *ctx,
 		ret = HGLERR_INVALID_DATA_TYPE;
 		goto error;
 	}
-	if (ret < 0)
-		goto error;
+	GOTO_IF_ERROR(ret, error);
 
 	*gluon_data = data;
 	return HGL_SUCCESS;
@@ -768,64 +791,68 @@ void history_gluon_free_context(history_gluon_context_t _ctx)
 	free(ctx);
 }
 
-int history_gluon_add_float(history_gluon_context_t _ctx,
-                            uint64_t id, struct timespec *ts, double data)
+history_gluon_result_t
+history_gluon_add_float(history_gluon_context_t _ctx,
+                        uint64_t id, struct timespec *ts, double data)
 {
+	history_gluon_result_t ret;
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
-		return -1;
+		return HGLERR_UNKNOWN_REASON;
 
 	int pkt_size = PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_FLOAT_LENGTH;
 	uint8_t buf[pkt_size];
 	uint8_t *ptr = buf;
 
 	/* header */
-	ptr += fill_add_data_header(ctx, id, ts, ptr,
-	                            HISTORY_GLUON_TYPE_FLOAT, pkt_size);
+	ptr += fill_add_data_header(ctx, id, ts, ptr, HISTORY_GLUON_TYPE_FLOAT, pkt_size);
 
 	/* data */
 	write_ieee754_double(ctx, ptr, data);
 
 	/* write data */
-	if (write_data(ctx, buf, pkt_size) == -1)
-		return -1;
+	ret = write_data(ctx, buf, pkt_size);
+	RETURN_IF_ERROR(ret);
 
 	/* check result */
 	return wait_and_check_add_result(ctx);
 }
 
-int history_gluon_add_uint(history_gluon_context_t _ctx,
-                           uint64_t id, struct timespec *ts, uint64_t data)
+history_gluon_result_t
+history_gluon_add_uint(history_gluon_context_t _ctx,
+                       uint64_t id, struct timespec *ts, uint64_t data)
 {
+	history_gluon_result_t ret;
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
-		return -1;
+		return HGLERR_UNKNOWN_REASON;
 
 	int pkt_size = PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_UINT_LENGTH;
 	uint8_t buf[pkt_size];
 	uint8_t *ptr = buf;
 
 	/* header */
-	ptr += fill_add_data_header(ctx, id, ts, ptr,
-	                            HISTORY_GLUON_TYPE_UINT, pkt_size);
+	ptr += fill_add_data_header(ctx, id, ts, ptr, HISTORY_GLUON_TYPE_UINT, pkt_size);
 
 	/* data */
 	*((uint64_t *)ptr) = conv_le64(ctx, data);
 
 	/* write data */
-	if (write_data(ctx, buf, pkt_size) == -1)
-		return -1;
+	ret = write_data(ctx, buf, pkt_size);
+	RETURN_IF_ERROR(ret);
 
 	/* check result */
 	return wait_and_check_add_result(ctx);
 }
 
-int history_gluon_add_string(history_gluon_context_t _ctx,
-                             uint64_t id, struct timespec *ts, char *data)
+history_gluon_result_t
+history_gluon_add_string(history_gluon_context_t _ctx,
+                         uint64_t id, struct timespec *ts, char *data)
 {
+	history_gluon_result_t ret;
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
-		return -1;
+		return HGLERR_UNKNOWN_REASON;
 
 	uint32_t len_string = strlen(data);
 	if (len_string > MAX_STRING_LENGTH) {
@@ -837,15 +864,14 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 	uint8_t *ptr = buf;
 
 	/* header */
-	ptr += fill_add_data_header(ctx, id, ts, ptr,
-	                            HISTORY_GLUON_TYPE_STRING, pkt_size);
+	ptr += fill_add_data_header(ctx, id, ts, ptr, HISTORY_GLUON_TYPE_STRING, pkt_size);
 
 	/* length */
 	*((uint32_t *)ptr) = conv_le32(ctx, len_string);
 	ptr += PKT_DATA_STRING_SIZE_LENGTH;
 
 	/* write header */
-	int ret = write_data(ctx, buf, pkt_size);
+	ret = write_data(ctx, buf, pkt_size);
 	if (ret < 0)
 		return ret;
 
@@ -858,13 +884,14 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 	return wait_and_check_add_result(ctx);
 }
 
-int history_gluon_add_blob(history_gluon_context_t _ctx,
-                           uint64_t id, struct timespec *ts, uint8_t *data,
-                           uint64_t length)
+history_gluon_result_t
+history_gluon_add_blob(history_gluon_context_t _ctx, uint64_t id, struct timespec *ts,
+                       uint8_t *data, uint64_t length)
 {
+	history_gluon_result_t ret;
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
-		return -1;
+		return HGLERR_UNKNOWN_REASON;
 
 	if (length > MAX_BLOB_LENGTH) {
 		ERR_MSG("blob length is too long: %" PRIu64 "\n", length);
@@ -875,15 +902,14 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 	uint8_t *ptr = buf;
 
 	/* header */
-	ptr += fill_add_data_header(ctx, id, ts, ptr,
-	                            HISTORY_GLUON_TYPE_BLOB, pkt_size);
+	ptr += fill_add_data_header(ctx, id, ts, ptr, HISTORY_GLUON_TYPE_BLOB, pkt_size);
 
 	/* length */
 	*((uint64_t *)ptr) = conv_le64(ctx, length);
 	ptr += PKT_DATA_BLOB_SIZE_LENGTH;
 
 	/* write header */
-	int ret = write_data(ctx, buf, pkt_size);
+	ret = write_data(ctx, buf, pkt_size);
 	RETURN_IF_ERROR(ret);
 
 	/* write string body */
@@ -894,15 +920,14 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 	return wait_and_check_add_result(ctx);
 }
 
-int history_gluon_query(history_gluon_context_t _ctx,
-                        uint64_t id, struct timespec *ts,
-                        history_gluon_query_t query_type,
-                        history_gluon_data_t **gluon_data)
+history_gluon_result_t
+history_gluon_query(history_gluon_context_t _ctx, uint64_t id, struct timespec *ts,
+                    history_gluon_query_t query_type, history_gluon_data_t **gluon_data)
 {
-	int ret;
+	history_gluon_result_t ret;
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
-		return -1;
+		return HGLERR_UNKNOWN_REASON;
 
 	/* make a request packet and write it */
 	uint8_t request[PKT_QUERY_DATA_LENGTH];
@@ -915,13 +940,13 @@ int history_gluon_query(history_gluon_context_t _ctx,
 	ret = read_data(ctx, reply, REPLY_QUERY_DATA_HEADER_LENGTH);
 	RETURN_IF_ERROR(ret);
 
+	int idx;
 	uint32_t expect_len = REPLY_QUERY_DATA_HEADER_LENGTH - PKT_SIZE_LENGTH;
 	ret = parse_common_reply_header(ctx, reply, NULL, expect_len,
-	                                PKT_CMD_QUERY_DATA);
+	                                PKT_CMD_QUERY_DATA, &idx);
 	RETURN_IF_ERROR(ret);
 
 	/* found flag */
-	int idx = ret;
 	uint16_t found_flag = restore_le16(ctx, &reply[idx]);
 	idx += REPLY_QUERY_DATA_FOUND_FLAG_LENGTH;
 	if (found_flag == HISTORY_GLUON_QUERY_NOT_FOUND)
@@ -943,14 +968,14 @@ void history_gluon_free_data(history_gluon_context_t _ctx,
 	free(gluon_data);
 }
 
-int history_gluon_range_query(history_gluon_context_t _ctx, uint64_t id,
-                              struct timespec *ts0,
-                              struct timespec *ts1,
-                              history_gluon_sort_order_t sort_request,
-                              history_gluon_data_array_t **array)
+history_gluon_result_t
+history_gluon_range_query(history_gluon_context_t _ctx, uint64_t id,
+                          struct timespec *ts0, struct timespec *ts1,
+                          history_gluon_sort_order_t sort_request,
+                          history_gluon_data_array_t **array)
 {
 	ERR_MSG("Not implemented yet\n");
-	return -1;
+	return HGLERR_NOT_IMPLEMENTED;
 }
 
 void history_gluon_free_data_array(history_gluon_context_t _ctx,
@@ -963,51 +988,57 @@ void history_gluon_free_data_array(history_gluon_context_t _ctx,
 	}
 }
 
-int history_gluon_get_minmum_time(history_gluon_context_t _ctx,
-                                  uint64_t id, struct timespec *minimum_ts)
+history_gluon_result_t
+history_gluon_get_minmum_time(history_gluon_context_t _ctx,
+                              uint64_t id, struct timespec *minimum_ts)
 {
+	history_gluon_result_t ret;
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
-		return -1;
+		return HGLERR_UNKNOWN_REASON;
 
 	// request
 	uint8_t request[PKT_GET_MIN_TIME_LENGTH];
 	fill_get_min_sec_packet(ctx, request, id);
-	if (write_data(ctx, request, PKT_GET_MIN_TIME_LENGTH) == -1)
-		return -1;
+	ret = write_data(ctx, request, PKT_GET_MIN_TIME_LENGTH);
+	RETURN_IF_ERROR(ret);
 
 	// reply
 	uint8_t reply[REPLY_GET_MIN_TIME_LENGTH];
-	if (read_data(ctx, reply, REPLY_GET_MIN_TIME_LENGTH) == -1)
-		return -1;
+	ret = read_data(ctx, reply, REPLY_GET_MIN_TIME_LENGTH);
+	RETURN_IF_ERROR(ret);
+
 	if (parse_reply_get_min_sec(ctx, reply, minimum_ts))
 		return -1;
 	return 0;
 }
 
-int history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
-                                 struct timespec *ts0, struct timespec *ts1,
-                                 history_gluon_statistics_t *statistics)
+history_gluon_result_t
+history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
+                             struct timespec *ts0, struct timespec *ts1,
+                             history_gluon_statistics_t *statistics)
 {
+	history_gluon_result_t ret;
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
-		return -1;
+		return HGLERR_UNKNOWN_REASON;
 
 	// request
 	uint8_t request[PKT_GET_STATISTICS_LENGTH];
 	int cmd_length = fill_get_statistics(ctx, request, id, ts0, ts1);
-	if (write_data(ctx, request, cmd_length) == -1)
-		return -1;
+	ret = write_data(ctx, request, cmd_length);
+	RETURN_IF_ERROR(ret);
 
 	// read reply packet
 	uint8_t reply[REPLY_STATISTICS_LENGTH];
-	if (read_data(ctx, reply, REPLY_STATISTICS_LENGTH) == -1)
-		return -1;
+	ret = read_data(ctx, reply, REPLY_STATISTICS_LENGTH);
+	RETURN_IF_ERROR(ret);
+
 	uint32_t expected_length = REPLY_STATISTICS_LENGTH - PKT_SIZE_LENGTH;
-	int idx = parse_common_reply_header(ctx, reply, NULL, expected_length,
-	                                    PKT_CMD_GET_STATISTICS);
-	if (idx == -1)
-		return -1;
+	int idx;
+	ret = parse_common_reply_header(ctx, reply, NULL, expected_length,
+	                                PKT_CMD_GET_STATISTICS, &idx);
+	RETURN_IF_ERROR(ret);
 
 	// item ID
 	statistics->id = restore_le64(ctx, &reply[idx]);
@@ -1041,33 +1072,31 @@ int history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
 	statistics->average = statistics->sum / statistics->count;
 	statistics->delta = statistics->max - statistics->min;
 
-	return 0;
+	return HGL_SUCCESS;
 }
 
-int history_gluon_delete(history_gluon_context_t _ctx, uint64_t id,
-                         struct timespec *ts,
-                         history_gluon_delete_way_t delete_way,
-                         uint64_t *num_deleted_entries)
+history_gluon_result_t
+history_gluon_delete(history_gluon_context_t _ctx, uint64_t id, struct timespec *ts,
+                     history_gluon_delete_way_t delete_way, uint64_t *num_deleted_entries)
 {
+	history_gluon_result_t ret;
 	private_context_t *ctx = get_connected_private_context(_ctx);
 	if (ctx == NULL)
-		return -1;
+		return HGLERR_UNKNOWN_REASON;
 
 	// request
 	uint8_t request[PKT_DELETE_LENGTH];
 	fill_delete_packet(ctx, request, id, ts, delete_way);
-	if (write_data(ctx, request, PKT_DELETE_LENGTH) == -1)
-		return -1;
+	ret = write_data(ctx, request, PKT_DELETE_LENGTH);
+	RETURN_IF_ERROR(ret);
 
 	// reply
 	uint8_t reply[REPLY_DELETE_LENGTH];
-	if (read_data(ctx, reply, REPLY_DELETE_LENGTH) == -1)
-		return -1;
-	int num_deleted = parse_reply_delete(ctx, reply);
-	if (num_deleted == -1)
-		return -1;
-	if (num_deleted_entries)
-		*num_deleted_entries = num_deleted;
-	return 0;
+	ret = read_data(ctx, reply, REPLY_DELETE_LENGTH);
+	RETURN_IF_ERROR(ret);
+
+	ret = parse_reply_delete(ctx, reply, num_deleted_entries);
+	RETURN_IF_ERROR(ret);
+	return HGL_SUCCESS;
 }
 

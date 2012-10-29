@@ -27,35 +27,35 @@ static void free_global_context()
 static void assert_delete_all_for_id(uint64_t id, uint64_t *num_deleted)
 {
 	struct timespec ts = {0, 0};
-	int ret;
+	history_gluon_result_t ret;
 	ret = history_gluon_delete(g_ctx, id, &ts,
 	                           HISTORY_GLUON_DELTE_TYPE_EQUAL_OR_GREATER,
 	                           num_deleted);
-	cut_assert_equal_int(0, ret);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
 }
 
 static void assert_add_uint(uint64_t id, struct timespec *ts, uint64_t value)
 {
-	int ret = history_gluon_add_uint(g_ctx, id, ts, value);
-	cut_assert_equal_int(0, ret);
+	history_gluon_result_t ret = history_gluon_add_uint(g_ctx, id, ts, value);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
 }
 
 static void assert_add_float(uint64_t id, struct timespec *ts, double v)
 {
-	int ret = history_gluon_add_float(g_ctx, id, ts, v);
-	cut_assert_equal_int(0, ret);
+	history_gluon_result_t ret = history_gluon_add_float(g_ctx, id, ts, v);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
 }
 
 static void assert_add_string(uint64_t id, struct timespec *ts, char *v)
 {
-	int ret = history_gluon_add_string(g_ctx, id, ts, v);
-	cut_assert_equal_int(0, ret);
+	history_gluon_result_t ret = history_gluon_add_string(g_ctx, id, ts, v);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
 }
 
 static void assert_add_blob(uint64_t id, struct timespec *ts, uint8_t *v, uint64_t len)
 {
-	int ret = history_gluon_add_blob(g_ctx, id, ts, v, len);
-	cut_assert_equal_int(0, ret);
+	history_gluon_result_t ret = history_gluon_add_blob(g_ctx, id, ts, v, len);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
 }
 
 static history_gluon_data_t g_uint_samples[] = {
@@ -334,10 +334,10 @@ void test_add_uint_and_query(void)
 	assert_add_uint(sample->id, &sample->ts, sample->v_uint);
 
 	// query
-	int ret;
+	history_gluon_result_t ret;
 	ret = history_gluon_query(g_ctx, sample->id, &sample->ts,
 	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
-	cut_assert_equal_int(0, ret);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
 	cut_assert_equal_int_least64(sample->v_uint, g_data->v_uint);
 }
 
@@ -352,10 +352,10 @@ void test_add_float_and_query(void)
 	assert_add_float(sample->id, &sample->ts, sample->v_float);
 
 	// query
-	int ret;
+	history_gluon_result_t ret;
 	ret = history_gluon_query(g_ctx, sample->id, &sample->ts,
 	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
-	cut_assert_equal_int(0, ret);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
 
 	double err = 0.0;
 	cut_assert_equal_double(sample->v_float, err, g_data->v_float);
@@ -372,10 +372,10 @@ void test_add_string_and_query(void)
 	assert_add_string(sample->id, &sample->ts, sample->v_string);
 
 	// query
-	int ret;
+	history_gluon_result_t ret;
 	ret = history_gluon_query(g_ctx, sample->id, &sample->ts,
 	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
-	cut_assert_equal_int(0, ret);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
 	cut_assert_equal_string(sample->v_string, g_data->v_string);
 }
 
@@ -390,10 +390,10 @@ void test_add_blob_and_query(void)
 	assert_add_blob(sample->id, &sample->ts, sample->v_blob, sample->length);
 
 	// query
-	int ret;
+	history_gluon_result_t ret;
 	ret = history_gluon_query(g_ctx, sample->id, &sample->ts,
 	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
-	cut_assert_equal_int(0, ret);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
 	cut_assert_equal_memory(sample->v_blob, sample->length,
 	                        g_data->v_blob, g_data->length);
 }
@@ -413,8 +413,9 @@ void test_get_minimum_time(void)
 
 	// get the minimum
 	struct timespec ts;
-	int ret = history_gluon_get_minmum_time(g_ctx, TEST_STD_ID, &ts);
-	cut_assert_equal_int(0, ret);
+	history_gluon_result_t ret;
+	ret = history_gluon_get_minmum_time(g_ctx, TEST_STD_ID, &ts);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
 
 	// test the obtained time
 	cut_assert_equal_int(g_float_samples[0].ts.tv_sec, ts.tv_sec);
@@ -463,10 +464,10 @@ void test_delete_less(void)
 	struct timespec ts;
 	memcpy(&ts, &g_float_samples[cut_idx].ts, sizeof(struct timespec));
 	uint64_t num_deleted;
-	int ret;
+	history_gluon_result_t ret;
 	ret = history_gluon_delete(g_ctx, TEST_STD_ID, &ts,
 	                           HISTORY_GLUON_DELTE_TYPE_LESS,
 	                           &num_deleted);
-	cut_assert_equal_int(0, ret);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
 	cut_assert_equal_int(cut_idx, num_deleted);
 }

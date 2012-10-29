@@ -79,30 +79,40 @@ typedef struct
 }
 history_gluon_data_array_t;
 
-enum {
-	HGL_SUCCESS              = 0,
-	HGLERR_MEM_ALLOC         = -1,
-	HGLERR_READ_STREAM_END   = -2,
-	HGLERR_READ_ERROR        = -3,
-	HGLERR_TOO_LONG_STRING   = -20,
-	HGLERR_TOO_LARGE_BLOB    = -21,
-	HGLERR_INVALID_DATA_TYPE = -100,
-	HGLERR_NOT_FOUND         = -200,
-};
+typedef enum {
+	HGL_SUCCESS                  = 0,
+	HGLERR_UNKNOWN_REASON        = -1,
+	HGLERR_NOT_IMPLEMENTED       = -2,
+	HGLERR_MEM_ALLOC             = -3,
+	HGLERR_NOT_FOUND             = -4,
+	HGLERR_READ_STREAM_END       = -100,
+	HGLERR_READ_ERROR            = -101,
+	HGLERR_WRITE_ERROR           = -200,
+	HGLERR_TOO_LONG_STRING       = -300,
+	HGLERR_TOO_LARGE_BLOB        = -301,
+	HGLERR_GETADDRINFO           = -400,
+	HGLERR_FAILED_CONNECT        = -401,
+	HGLERR_UNEXPECTED_REPLY_SIZE = -500,
+	HGLERR_UNEXPECTED_REPLY_TYPE = -501,
+	HGLERR_REPLY_ERROR           = -502,
+	HGLERR_INVALID_DATA_TYPE     = -600,
+} history_gluon_result_t;
 
 /**
  * Create a History Gluon's context.
  *
  * @return A context used for History Gluon's APIs on success.
  */
-history_gluon_context_t history_gluon_create_context(void);
+history_gluon_context_t
+history_gluon_create_context(void);
 
 /**
  * Destroy History Gluon's context.
  *
  * @param context A History Gluon's context to be freed.
  */
-void history_gluon_free_context(history_gluon_context_t context);
+void
+history_gluon_free_context(history_gluon_context_t context);
 
 /**
  * Add interger type data.
@@ -111,10 +121,11 @@ void history_gluon_free_context(history_gluon_context_t context);
  * @param id A data ID.
  * @param ts A ts of the data
  * @param data A value of the data.
- * @return 0 if success. -1 if error occured.
+ * @return \HGL_SUCCESS on success. If an error occured, the code is returned.
  */
-int history_gluon_add_uint(history_gluon_context_t context,
-                           uint64_t id, struct timespec *ts, uint64_t data);
+history_gluon_result_t
+history_gluon_add_uint(history_gluon_context_t context,
+                       uint64_t id, struct timespec *ts, uint64_t data);
 
 /**
  * Add floating-point type data.
@@ -123,11 +134,11 @@ int history_gluon_add_uint(history_gluon_context_t context,
  * @param id A data ID.
  * @param ts A ts of the data.
  * @param data A value of the data.
- * @return 0 if success. -1 if error occured.
+ * @return \HGL_SUCCESS on success. If an error occured, the code is returned.
  */
-int history_gluon_add_float(history_gluon_context_t context,
-                            uint64_t id, struct timespec *ts,
-                            double data);
+history_gluon_result_t
+history_gluon_add_float(history_gluon_context_t context,
+                        uint64_t id, struct timespec *ts, double data);
 
 /**
  * Add string type data.
@@ -136,10 +147,11 @@ int history_gluon_add_float(history_gluon_context_t context,
  * @param id A data ID.
  * @param ts A ts of the data.
  * @param data A null-terminated string.
- * @return 0 if success. -1 if error occured.
+ * @return \HGL_SUCCESS on success. If an error occured, the code is returned.
  */
-int history_gluon_add_string(history_gluon_context_t context,
-                             uint64_t id, struct timespec *ts, char *data);
+history_gluon_result_t
+history_gluon_add_string(history_gluon_context_t context,
+                         uint64_t id, struct timespec *ts, char *data);
 
 /**
  * Add blob type data.
@@ -149,11 +161,11 @@ int history_gluon_add_string(history_gluon_context_t context,
  * @param ts A ts of the data.
  * @param data A pointer to the data.
  * @param length The size of the data.
- * @return 0 if success. -1 if error occured.
+ * @return \HGL_SUCCESS on success. If an error occured, the code is returned.
  */
-int history_gluon_add_blob(history_gluon_context_t context,
-                           uint64_t id, struct timespec *timespec,
-                           uint8_t *data, uint64_t length);
+history_gluon_result_t
+history_gluon_add_blob(history_gluon_context_t context, uint64_t id,
+                       struct timespec *timespec, uint8_t *data, uint64_t length);
 
 /**
  * Query data with the specified ID and the ts.
@@ -173,12 +185,11 @@ int history_gluon_add_blob(history_gluon_context_t context,
  *                   If non NULL \gluon_data was returned,
  *                   the caller must call history_gluon_free_data() when
  *                   no longer needed.
- * @return 0 if success. -1 if error occured.
+ * @return \HGL_SUCCESS on success. If an error occured, the code is returned.
  */
-int history_gluon_query(history_gluon_context_t context,
-                        uint64_t id, struct timespec *ts,
-                        history_gluon_query_t query_type,
-                        history_gluon_data_t **gluon_data);
+history_gluon_result_t
+history_gluon_query(history_gluon_context_t context, uint64_t id, struct timespec *ts,
+                    history_gluon_query_t query_type, history_gluon_data_t **gluon_data);
 
 /**
  * Free history_gluon_data_t variable .
@@ -204,12 +215,13 @@ void history_gluon_free_data(history_gluon_context_t context,
  *              variable is stored..
  *              The caller must call history_gluon_free_data_array()
  *              when no longer needed.
- * @return 0 if success. -1 if error occured.
+ * @return \HGL_SUCCESS on success. If an error occured, the code is returned.
  */
-int history_gluon_range_query(history_gluon_context_t context, uint64_t id,
-                              struct timespec *ts0, struct timespec *ts1,
-                              history_gluon_sort_order_t sort_request,
-                              history_gluon_data_array_t **array);
+history_gluon_result_t
+history_gluon_range_query(history_gluon_context_t context, uint64_t id,
+                          struct timespec *ts0, struct timespec *ts1,
+                          history_gluon_sort_order_t sort_request,
+                          history_gluon_data_array_t **array);
 /**
  * Free a history-data array.
  *
@@ -227,10 +239,11 @@ void history_gluon_free_data_array(history_gluon_context_t context,
  * @param id A data ID.
  * @param minimum_time A pointer in which the minium time of the data with
  *                     the specfied ID is returned.
- * @return 0 if success. -1 if error occured.
+ * @return \HGL_SUCCESS on success. If an error occured, the code is returned.
  */
-int history_gluon_get_minmum_time(history_gluon_context_t context,
-                                  uint64_t id, struct timespec *minimum_ts);
+history_gluon_result_t
+history_gluon_get_minmum_time(history_gluon_context_t context,
+                              uint64_t id, struct timespec *minimum_ts);
 
 /**
  * Get statistical information of the data with the specified ID
@@ -243,11 +256,12 @@ int history_gluon_get_minmum_time(history_gluon_context_t context,
  * @param ts1 An end time of the interval.
  *                   The item with the time is NOT included.
  * @param statistics A pointer in which the result is returned.
- * @return 0 if success. -1 if error occured.
+ * @return \HGL_SUCCESS on success. If an error occured, the code is returned.
  */
-int history_gluon_get_statistics(history_gluon_context_t context, uint64_t id,
-                                 struct timespec *ts0, struct timespec *ts1,
-                                 history_gluon_statistics_t *statistics);
+history_gluon_result_t
+history_gluon_get_statistics(history_gluon_context_t context, uint64_t id,
+                             struct timespec *ts0, struct timespec *ts1,
+                             history_gluon_statistics_t *statistics);
 
 /**
  * Delete data
@@ -259,13 +273,10 @@ int history_gluon_get_statistics(history_gluon_context_t context, uint64_t id,
  * @param num_deleted_entries A pointer in which the number of deleted data
  *                            is stored. It can be NULL when the number is
  *                            not needed.
- * @return 0 if success. -1 if error occured.
- *         When the error, \num_deleted_entries is not changed.
+ * @return \HGL_SUCCESS on success. If an error occured, the code is returned.
  */
-int history_gluon_delete(history_gluon_context_t context, uint64_t id,
-                         struct timespec *ts,
-                         history_gluon_delete_way_t delete_way,
-                         uint64_t *num_deleted_entries);
-
+history_gluon_result_t
+history_gluon_delete(history_gluon_context_t context, uint64_t id, struct timespec *ts,
+                     history_gluon_delete_way_t delete_way, uint64_t *num_deleted_entries);
 
 #endif // _history_gluon_h_
