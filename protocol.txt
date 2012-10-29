@@ -1,7 +1,7 @@
 History Gluon Server-client protocol specification
 
 Date: 2012/10/29
-Version: 0.6.7
+Version: 0.6.8
 
 *** Basics rules ***
 Endian: Little
@@ -41,9 +41,10 @@ REPLY: Add Data
 [ 2] Reply type
   100: reply: Add Data
 [ 4] Result
-  0: Success
-  1: Error due to unknown reason
-  2: Error: theere is the entry that has the same id and time.
+   0: Success
+   1: Unknown error
+   2: Server Error
+   3: Entry exists
 
 =========================================
 COMMAND PKT: Query Data
@@ -66,8 +67,10 @@ REPLY: Query Data
 [ 2] Reply type
   200: reply: Query Data
 [ 4] Result
-  0: Success
-  1: Error due to unknown reason
+   0: Success
+   1: Unknown error
+   2: Server Error
+   4: Not found
 [ 2] Found
 << Body part: If Found is 0, this part is omitted>>
 [ 8] ID
@@ -113,9 +116,11 @@ REPLY: Range Query
 [ 2] Reply type
   300: reply: Range Query
 [ 4] Result
-  0: Success
-  1: Error due to unknown reason
-  2: Too many records (overflow)
+   0: Success
+   1: Unknown error
+   2: Server Error
+   4: Not found
+   5: Too many enties
 [ 8] The number of entries
 [ 2] Sort order
   0: ascending
@@ -141,8 +146,9 @@ REPLY: Get Minimum Time
   400: Get Mininum Time
 [ 4] Result
    0: Success
-   1: No data with ID
-   2: Error due to unknown reason
+   1: Unknown error
+   2: Server Error
+   4: Not found
 [ 4] Minimum time: second
 [ 4] Minimum time: nano-second
 
@@ -169,9 +175,12 @@ REPLY PKT: Get Statistics
 [ 2] Reply type
   500: reply: Get Statistics
 [ 4] Result
-  0: Success
-  1: Error due to unknown reason
-  2: Error due to invalid type
+   0: Success
+   1: Unknown error
+   2: Server Error
+   4: Not found
+   5: Too many enties
+   6: Invalid type
 [ 8] ID
 [ 8] Count: Interger (64bit)
 [ 8] Minimum: Float (IEEE754)
@@ -201,7 +210,18 @@ REPLY PKT: Delete Data
 [ 2] Reply type
   600: reply: Delete Data
 [ 4] Result
-  0: Success
-  1: Error due to unknown reason
+   0: Success
+   1: Unknown error
+   2: Server Error
 [ 8] The count of the deleted data: Integer (64bit)
 
+==================================================
+ERROR CODE
+==================================================
+   0: Success
+   1: Unknown error
+   2: Server Error
+   3: Entry exists
+   4: Not found
+   5: Too many enties
+   6: Invalid type
