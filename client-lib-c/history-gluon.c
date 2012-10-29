@@ -22,6 +22,12 @@
 
 #define READ_CHUNK_SIZE   0x10000
 
+#define RETURN_IF_ERROR(R) \
+do { \
+	if (R < 0) \
+		return R; \
+} while(0)
+
 /* Common header */
 #define PKT_SIZE_LENGTH           4
 #define PKT_CMD_TYPE_LENGTH       2
@@ -823,16 +829,11 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 
 	uint32_t len_string = strlen(data);
 	if (len_string > MAX_STRING_LENGTH) {
-		ERR_MSG("string length is too long: %d", len_string);
-		return -1;
+		ERR_MSG("string length is too long: %u\n", len_string);
+		return HGLERR_TOO_LONG_STRING;
 	}
-	uint32_t pkt_size =
-	  PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_STRING_SIZE_LENGTH;
-	uint8_t *buf = malloc(pkt_size);
-	if (!buf) {
-		ERR_MSG("Failed to malloc: %d", pkt_size);
-		return -1;
-	}
+	uint32_t pkt_size = PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_STRING_SIZE_LENGTH;
+	uint8_t buf[pkt_size];
 	uint8_t *ptr = buf;
 
 	/* header */
@@ -843,18 +844,15 @@ int history_gluon_add_string(history_gluon_context_t _ctx,
 	*((uint32_t *)ptr) = conv_le32(ctx, len_string);
 	ptr += PKT_DATA_STRING_SIZE_LENGTH;
 
-	/* string body */
-	memcpy(ptr, data, len_string);
-
 	/* write header */
 	int ret = write_data(ctx, buf, pkt_size);
-	free(buf);
-	if (ret == -1)
-		return -1;
+	if (ret < 0)
+		return ret;
 
 	/* write string body */
-	if(write_data(ctx, (uint8_t*)data, len_string) == -1)
-		return -1;
+	ret = write_data(ctx, (uint8_t*)data, len_string);
+	if (ret < 0)
+		return ret;
 
 	/* check result */
 	return wait_and_check_add_result(ctx);
@@ -869,17 +867,11 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 		return -1;
 
 	if (length > MAX_BLOB_LENGTH) {
-		ERR_MSG("blob length is too long: %d", length);
-		return -1;
+		ERR_MSG("blob length is too long: %" PRIu64 "\n", length);
+		return HGLERR_TOO_LARGE_BLOB;
 	}
-	uint32_t pkt_size =
-	  PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_BLOB_SIZE_LENGTH;
-	
-	uint8_t *buf = malloc(pkt_size);
-	if (!buf) {
-		ERR_MSG("Failed to malloc: %d", pkt_size);
-		return -1;
-	}
+	uint32_t pkt_size = PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_BLOB_SIZE_LENGTH;
+	uint8_t buf[pkt_size];
 	uint8_t *ptr = buf;
 
 	/* header */
@@ -890,18 +882,13 @@ int history_gluon_add_blob(history_gluon_context_t _ctx,
 	*((uint64_t *)ptr) = conv_le64(ctx, length);
 	ptr += PKT_DATA_BLOB_SIZE_LENGTH;
 
-	/* string body */
-	memcpy(ptr, data, length);
-
 	/* write header */
 	int ret = write_data(ctx, buf, pkt_size);
-	free(buf);
-	if (ret == -1)
-		return -1;
+	RETURN_IF_ERROR(ret);
 
 	/* write string body */
-	if(write_data(ctx, data, length) == -1)
-		return -1;
+	ret = write_data(ctx, data, length);
+	RETURN_IF_ERROR(ret);
 
 	/* check result */
 	return wait_and_check_add_result(ctx);
@@ -921,30 +908,28 @@ int history_gluon_query(history_gluon_context_t _ctx,
 	uint8_t request[PKT_QUERY_DATA_LENGTH];
 	fill_query_data_header(ctx, id, ts, request, query_type);
 	ret = write_data(ctx, request, PKT_QUERY_DATA_LENGTH);
-	if (ret < 0)
-		return ret;
+	RETURN_IF_ERROR(ret);
 
 	/* reply */
 	uint8_t reply[REPLY_QUERY_DATA_HEADER_LENGTH];
 	ret = read_data(ctx, reply, REPLY_QUERY_DATA_HEADER_LENGTH);
-	if (ret < 0)
-		return ret;
+	RETURN_IF_ERROR(ret);
+
 	uint32_t expect_len = REPLY_QUERY_DATA_HEADER_LENGTH - PKT_SIZE_LENGTH;
 	ret = parse_common_reply_header(ctx, reply, NULL, expect_len,
 	                                PKT_CMD_QUERY_DATA);
-	if (ret < 0)
-		return ret;
+	RETURN_IF_ERROR(ret);
 
 	/* found flag */
 	int idx = ret;
-	uint16_t found = restore_le16(ctx, &reply[idx]);
+	uint16_t found_flag = restore_le16(ctx, &reply[idx]);
 	idx += REPLY_QUERY_DATA_FOUND_FLAG_LENGTH;
-	if (found == 0)
+	if (found_flag == HISTORY_GLUON_QUERY_NOT_FOUND)
 		return HGLERR_NOT_FOUND;
 
 	ret = read_gluon_data(ctx, gluon_data);
-	if (ret < 0)
-		return ret;
+	RETURN_IF_ERROR(ret);
+
 	return HGL_SUCCESS;
 }
 

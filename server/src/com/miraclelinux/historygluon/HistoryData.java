@@ -69,8 +69,8 @@ public class HistoryData implements Comparable<HistoryData> {
 
         dataUint64 = history.dataUint64;
         dataFloat = history.dataFloat;
-        if (history.dataString != null)
-           dataString = new String(history.dataString);
+        dataString = history.dataString;
+        dataBlob = history.dataBlob;
 
         // note: member 'data' is not copied
     }
@@ -96,7 +96,7 @@ public class HistoryData implements Comparable<HistoryData> {
         else if (type == TYPE_UINT64)
             dataStr = "data (Uint64): " + dataUint64;
         else if (type == TYPE_BLOB)
-            dataStr = "data (Blobl): ";
+            dataStr = "data (Blobl): " + dataBlob;
         else
             dataStr = "data: Unknown";
         String str = String.format("<<HistoryData>> type: %d, id: %016x, sec: %08x, ns: %08x, %s", type, id, sec, ns, dataStr);

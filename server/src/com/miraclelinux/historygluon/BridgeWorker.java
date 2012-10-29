@@ -47,6 +47,9 @@ public class BridgeWorker extends Thread {
     private static final int REPLY_RESULT_LENGTH = 4;
     private static final int REPLY_QUERY_FOUND_FLAG_LENGTH = 2;
 
+    private static final int REPLY_QUERY_NOT_FOUND = 0;
+    private static final int REPLY_QUERY_DATA_FOUND = 1;
+
     private static final int RESULT_SUCCESS = 0;
     private static final int RESULT_ERROR_UNKNOWN_REASON = 1;
     private static final int RESULT_ERROR_TOO_MANY_RECORDS = 2;
@@ -332,7 +335,11 @@ public class BridgeWorker extends Thread {
             // FIXME: return the error
             return false;
         }
-        short found = (short)((history == null) ? 0 : 1);
+        short found;
+        if (history != null)
+            found = REPLY_QUERY_DATA_FOUND;
+        else
+            found = REPLY_QUERY_NOT_FOUND;
 
         // write reply to the socket
         int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH +
@@ -505,7 +512,7 @@ public class BridgeWorker extends Thread {
     }
 
     private boolean procBlobData(byte[] pktBuf, int idx, HistoryData history)
-    throws IOException {
+      throws IOException {
         m_byteBuffer.clear();
         m_byteBuffer.put(pktBuf, idx, PKT_DATA_BLOB_SIZE_LENGTH);
         idx += PKT_DATA_BLOB_SIZE_LENGTH;

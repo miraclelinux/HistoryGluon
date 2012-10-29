@@ -1,10 +1,13 @@
 #include <cutter.h>
 #include "history-gluon.h"
 
+#define TEST_STD_ID  0x65536
+
+/* --------------------------------------------------------------------------------------
+ * Global variables
+ * ----------------------------------------------------------------------------------- */
 static history_gluon_context_t g_ctx = NULL;
 static history_gluon_data_t *g_data = NULL;
-
-#define TEST_STD_ID  0x65536
 
 /* --------------------------------------------------------------------------------------
  * Utility functions
@@ -43,6 +46,18 @@ static void assert_add_float(uint64_t id, struct timespec *ts, double v)
 	cut_assert_equal_int(0, ret);
 }
 
+static void assert_add_string(uint64_t id, struct timespec *ts, char *v)
+{
+	int ret = history_gluon_add_string(g_ctx, id, ts, v);
+	cut_assert_equal_int(0, ret);
+}
+
+static void assert_add_blob(uint64_t id, struct timespec *ts, uint8_t *v, uint64_t len)
+{
+	int ret = history_gluon_add_blob(g_ctx, id, ts, v, len);
+	cut_assert_equal_int(0, ret);
+}
+
 static history_gluon_data_t g_uint_samples[] = {
 	{
 		.id = TEST_STD_ID,
@@ -75,7 +90,8 @@ static history_gluon_data_t g_uint_samples[] = {
 		.v_uint = 0x123456789abcdef0,
 	},
 };
-static const int NUM_UINT_SAMPLES = sizeof(g_uint_samples) / sizeof(history_gluon_data_t);
+static const int NUM_UINT_SAMPLES =
+  sizeof(g_uint_samples) / sizeof(history_gluon_data_t);
 
 static history_gluon_data_t g_float_samples[] = {
 	{
@@ -109,10 +125,104 @@ static history_gluon_data_t g_float_samples[] = {
 		.v_float = -3.2e5,
 	},
 };
+static const int NUM_FLOAT_SAMPLES =
+  sizeof(g_float_samples) / sizeof(history_gluon_data_t);
 
-static const int NUM_FLOAT_SAMPLES = sizeof(g_float_samples) / sizeof(history_gluon_data_t);
+static history_gluon_data_t g_string_samples[] = {
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1234567890,
+		.ts.tv_nsec = 123456789,
+		.v_string = "Hello, World!",
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 2500000000,
+		.ts.tv_nsec = 300000000,
+		.v_string = "Are you hungry?",
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1506070800,
+		.ts.tv_nsec = 100000000,
+		.v_string =
+		  "Linux is a Unix-like computer operating system assembled under the "
+		  "model of free and open source software development and distribution. "
+		  "The defining component of Linux is the Linux kernel, an operating "
+		  "system kernel first released 5 October 1991 by Linus Torvalds.",
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1600000000,
+		.ts.tv_nsec = 500000000,
+		.v_string =
+		  "C++ (pronounced \"see plus plus\") is a statically typed, free-form, "
+		  "multi-paradigm, compiled, general-purpose programming language. It is "
+		  "regarded as an intermediate-level language, as it comprises a "
+		  "combination of both high-level and low-level language features. "
+		  "Developed by Bjarne Stroustrup starting in 1979 at Bell Labs, it adds "
+		  "object oriented features, such as classes, and other enhancements to "
+		  "the C programming language. Originally named C with Classes, the "
+		  "language was renamed C++ in 1983, as a pun involving the increment "
+		  "operator.\n",
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1600000001,
+		.ts.tv_nsec = 200000000,
+		.v_string = "walrus",
+	},
+};
+static const int NUM_STRING_SAMPLES =
+  sizeof(g_string_samples) / sizeof(history_gluon_data_t);
 
-static void add_samples() {
+static uint8_t blob_sample0[] = {0x21, 0x08, 0x05};
+static uint8_t blob_sample1[] = {0x21, 0x08, 0x05};
+static uint8_t blob_sample2[] = {0x21, 0x08, 0x05};
+static uint8_t blob_sample3[] = {0x21, 0x08, 0x05};
+static uint8_t blob_sample4[] = {0x21, 0x08, 0x05};
+
+static history_gluon_data_t g_blob_samples[] = {
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1234567890,
+		.ts.tv_nsec = 123456789,
+		.v_blob = blob_sample0,
+		.length = sizeof(blob_sample0) / sizeof(uint8_t),
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 2500000000,
+		.ts.tv_nsec = 300000000,
+		.v_blob = blob_sample1,
+		.length = sizeof(blob_sample1) / sizeof(uint8_t),
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1506070800,
+		.ts.tv_nsec = 100000000,
+		.v_blob = blob_sample2,
+		.length = sizeof(blob_sample2) / sizeof(uint8_t),
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1600000000,
+		.ts.tv_nsec = 500000000,
+		.v_blob = blob_sample3,
+		.length = sizeof(blob_sample3) / sizeof(uint8_t),
+	},
+	{
+		.id = TEST_STD_ID,
+		.ts.tv_sec = 1600000001,
+		.ts.tv_nsec = 200000000,
+		.v_blob = blob_sample4,
+		.length = sizeof(blob_sample4) / sizeof(uint8_t),
+	},
+};
+static const int NUM_BLOB_SAMPLES =
+  sizeof(g_blob_samples) / sizeof(history_gluon_data_t);
+
+static void add_float_samples() {
 	int i;
 	for (i = 0; i < NUM_FLOAT_SAMPLES; i++) {
 		assert_add_float(g_float_samples[i].id, &g_float_samples[i].ts,
@@ -194,8 +304,7 @@ void test_add_string(void)
 	ts.tv_sec = 300;
 	ts.tv_nsec = 500;
 	char value[] = "test_string";
-	int ret = history_gluon_add_string(g_ctx, id, &ts, value);
-	cut_assert_equal_int(0, ret);
+	assert_add_string(id, &ts, value);
 }
 
 void test_add_blob(void)
@@ -208,8 +317,7 @@ void test_add_blob(void)
 	ts.tv_sec = 4300;
 	ts.tv_nsec = 8500;
 	uint8_t value[] = {0x21, 0x22, 0xff, 0x80, 0x95};
-	int ret = history_gluon_add_blob(g_ctx, id, &ts, value, sizeof(value));
-	cut_assert_equal_int(0, ret);
+	assert_add_blob(id, &ts, value, sizeof(value));
 }
 
 /* --------------------------------------------------------------------------------------
@@ -233,6 +341,63 @@ void test_add_uint_and_query(void)
 	cut_assert_equal_int_least64(sample->v_uint, g_data->v_uint);
 }
 
+void test_add_float_and_query(void)
+{
+	int idx = 2;
+	history_gluon_data_t *sample = &g_float_samples[idx];
+
+	create_global_context();
+	assert_delete_all_for_id(sample->id, NULL);
+
+	assert_add_float(sample->id, &sample->ts, sample->v_float);
+
+	// query
+	int ret;
+	ret = history_gluon_query(g_ctx, sample->id, &sample->ts,
+	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
+	cut_assert_equal_int(0, ret);
+
+	double err = 0.0;
+	cut_assert_equal_double(sample->v_float, err, g_data->v_float);
+}
+
+void test_add_string_and_query(void)
+{
+	int idx = 2;
+	history_gluon_data_t *sample = &g_string_samples[idx];
+
+	create_global_context();
+	assert_delete_all_for_id(sample->id, NULL);
+
+	assert_add_string(sample->id, &sample->ts, sample->v_string);
+
+	// query
+	int ret;
+	ret = history_gluon_query(g_ctx, sample->id, &sample->ts,
+	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
+	cut_assert_equal_int(0, ret);
+	cut_assert_equal_string(sample->v_string, g_data->v_string);
+}
+
+void test_add_blob_and_query(void)
+{
+	int idx = 2;
+	history_gluon_data_t *sample = &g_blob_samples[idx];
+
+	create_global_context();
+	assert_delete_all_for_id(sample->id, NULL);
+
+	assert_add_blob(sample->id, &sample->ts, sample->v_blob, sample->length);
+
+	// query
+	int ret;
+	ret = history_gluon_query(g_ctx, sample->id, &sample->ts,
+	                          HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, &g_data);
+	cut_assert_equal_int(0, ret);
+	cut_assert_equal_memory(sample->v_blob, sample->length,
+	                        g_data->v_blob, g_data->length);
+}
+
 /* --------------------------------------------------------------------------------------
  * Range Query
  * ----------------------------------------------------------------------------------- */
@@ -244,7 +409,7 @@ void test_get_minimum_time(void)
 {
 	create_global_context();
 	assert_delete_all_for_id(TEST_STD_ID, NULL);
-	add_samples();
+	add_float_samples();
 
 	// get the minimum
 	struct timespec ts;
@@ -291,7 +456,7 @@ void test_delete_less(void)
 {
 	create_global_context();
 	assert_delete_all_for_id(TEST_STD_ID, NULL);
-	add_samples();
+	add_float_samples();
 
 	// delete below threshold
 	int cut_idx = 3;

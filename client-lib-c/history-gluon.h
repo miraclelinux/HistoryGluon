@@ -32,6 +32,11 @@ typedef enum {
 	HISTORY_GLUON_DELTE_TYPE_GREATER          = 4,
 } history_gluon_delete_way_t;
 
+enum {
+	HISTORY_GLUON_QUERY_NOT_FOUND  = 0,
+	HISTORY_GLUON_QUERY_DATA_FOUND = 1,
+};
+
 typedef struct
 {
 	uint64_t id;
@@ -58,8 +63,10 @@ typedef struct
 		uint8_t * v_blob;
 	};
 
-	/* When type is HISTORY_GLUON_TYPE_STRING, length doen't include
-	 * Null terminator */
+	/**
+	 * This variable has a lenght of v_string or v_blob.
+	 * When type is HISTORY_GLUON_TYPE_STRING, length doen't include
+	 * NULL terminator. */
 	uint64_t length;
 }
 history_gluon_data_t;
@@ -77,6 +84,8 @@ enum {
 	HGLERR_MEM_ALLOC         = -1,
 	HGLERR_READ_STREAM_END   = -2,
 	HGLERR_READ_ERROR        = -3,
+	HGLERR_TOO_LONG_STRING   = -20,
+	HGLERR_TOO_LARGE_BLOB    = -21,
 	HGLERR_INVALID_DATA_TYPE = -100,
 	HGLERR_NOT_FOUND         = -200,
 };
