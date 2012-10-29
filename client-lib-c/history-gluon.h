@@ -37,6 +37,8 @@ enum {
 	HISTORY_GLUON_QUERY_DATA_FOUND = 1,
 };
 
+#define HISTORY_GLUON_NUM_ENTRIES_UNLIMITED 0;
+
 typedef struct
 {
 	uint64_t id;
@@ -75,7 +77,7 @@ typedef struct
 {
 	uint64_t num_data;
 	history_gluon_sort_order_t sort_order;
-	history_gluon_data_t *array;
+	history_gluon_data_t **array;
 }
 history_gluon_data_array_t;
 
@@ -211,6 +213,9 @@ void history_gluon_free_data(history_gluon_context_t context,
  * @param ts1 An end time of the interval.
  *                   Data with the \time1 is NOT included.
  * @param sort_request A request of the sort order.
+ * @param num_max_entries The number of maximum entries to be returned.
+ *                        If HISTORY_GLUON_NUM_ENTRIES_UNLIMITED is specified,
+ *                        all entries will be returned.
  * @param array An address where the created history_gluon_data_array_t
  *              variable is stored..
  *              The caller must call history_gluon_free_data_array()
@@ -221,6 +226,7 @@ history_gluon_result_t
 history_gluon_range_query(history_gluon_context_t context, uint64_t id,
                           struct timespec *ts0, struct timespec *ts1,
                           history_gluon_sort_order_t sort_request,
+                          uint64_t num_max_entries,
                           history_gluon_data_array_t **array);
 /**
  * Free a history-data array.

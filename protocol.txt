@@ -1,7 +1,7 @@
 History Gluon Server-client protocol specification
 
-Date: 2012/10/27
-Version: 0.6.6
+Date: 2012/10/29
+Version: 0.6.7
 
 *** Basics rules ***
 Endian: Little
@@ -99,7 +99,7 @@ COMMAND PKT: Range Query
 [ 4] End Time: nano-second
   Data with the Start Time is returned.
   Data with the End Time is Not returned.
-[ 4] The number of the maximum entries
+[ 8] The number of the maximum entries
   0: No limit
 [ 2] Sort order request
   0: ascending
@@ -116,11 +116,11 @@ REPLY: Range Query
   0: Success
   1: Error due to unknown reason
   2: Too many records (overflow)
+[ 8] The number of entries
 [ 2] Sort order
   0: ascending
   1: descending
   2: not sorted
-[ 8] The number of entries
 << Body part: Repeated the the number of entries times>>
 %%% The same as the body of 'REPLY: Query Data' %%%
 << End of Body part >>

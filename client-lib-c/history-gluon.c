@@ -66,7 +66,7 @@ do { \
  REPLY_RESULT_LENGTH)
 
 /* Query Data */
-#define PKT_SEARCH_WHEN_NOT_FOUND_LENGTH 2
+#define PKT_QUERY_TYPE_LENGTH 2
 
 #define PKT_QUERY_DATA_LENGTH \
 (PKT_SIZE_LENGTH + \
@@ -74,7 +74,7 @@ do { \
  PKT_ID_LENGTH + \
  PKT_SEC_LENGTH + \
  PKT_NS_LENGTH + \
- PKT_SEARCH_WHEN_NOT_FOUND_LENGTH)
+ PKT_QUERY_TYPE_LENGTH)
 
 #define REPLY_QUERY_DATA_FOUND_FLAG_LENGTH 2
 
@@ -85,16 +85,24 @@ do { \
  REPLY_QUERY_DATA_FOUND_FLAG_LENGTH)
 
 /* Range Query */
-#define PKT_NUM_ENTRIES_LENGTH 4
+#define PKT_NUM_ENTRIES_LENGTH 8
 #define PKT_SORT_ORDER_LENGTH  2
 
 #define PKT_RANGE_QUERY_LENGTH \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
  PKT_ID_LENGTH + \
- PKT_SEC_LENGTH * 2 + \
+ PKT_SEC_LENGTH + \
+ PKT_NS_LENGTH + \
  PKT_NUM_ENTRIES_LENGTH + \
- PKT_DATA_ORDER_LENGTH)
+ PKT_SORT_ORDER_LENGTH)
+
+#define REPLY_RANGE_QUERY_HEADER_LENGTH \
+(PKT_SIZE_LENGTH + \
+ PKT_CMD_TYPE_LENGTH + \
+ REPLY_RESULT_LENGTH + \
+ PKT_NUM_ENTRIES_LENGTH + \
+ PKT_SORT_ORDER_LENGTH)
 
 /* Get Minimum Time */
 #define PKT_GET_MIN_TIME_LENGTH \
@@ -147,7 +155,7 @@ do { \
 enum {
 	PKT_CMD_ADD_DATA           = 100,
 	PKT_CMD_QUERY_DATA         = 200,
-	PKT_CMD_GET                = 1000,
+	PKT_CMD_RANGE_QUERY        = 300,
 	PKT_CMD_GET_MIN_SEC        = 1100,
 	PKT_CMD_GET_STATISTICS     = 1200,
 	PKT_CMD_DELETE             = 600,
@@ -377,6 +385,52 @@ static int fill_query_data_header(private_context_t *ctx, uint64_t id,
 
 	/* query type  */
 	*((uint16_t *)&buf[idx]) = conv_le16(ctx, query_type);
+	idx += PKT_QUERY_TYPE_LENGTH;
+
+	return idx;
+}
+
+static int fill_range_query_header(private_context_t *ctx, uint8_t *buf, uint64_t id,
+                                   struct timespec *ts0, struct timespec *ts1,
+                                   history_gluon_sort_order_t sort_request,
+                                   uint64_t num_max_entries)
+{
+	int idx = 0;
+
+	/* pkt size */
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_QUERY_DATA_LENGTH - PKT_SIZE_LENGTH);
+	idx += PKT_SIZE_LENGTH;
+
+	/* command */
+	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_CMD_RANGE_QUERY);
+	idx += PKT_CMD_TYPE_LENGTH;
+
+	/* ID */
+	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
+	idx += PKT_ID_LENGTH;
+
+	/* ts0: sec */
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts0->tv_sec);
+	idx += PKT_SEC_LENGTH;
+
+	/* ts0: ns */
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts0->tv_nsec);
+	idx += PKT_NS_LENGTH;
+
+	/* ts1: sec */
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts1->tv_sec);
+	idx += PKT_SEC_LENGTH;
+
+	/* ts1: ns */
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts1->tv_nsec);
+	idx += PKT_NS_LENGTH;
+
+	/* maximum entries  */
+	*((uint64_t *)&buf[idx]) = conv_le64(ctx, num_max_entries);
+	idx += PKT_NUM_ENTRIES_LENGTH;
+
+	/* sort order request  */
+	*((uint16_t *)&buf[idx]) = conv_le16(ctx, sort_request);
 	idx += PKT_SORT_ORDER_LENGTH;
 
 	return idx;
@@ -972,10 +1026,74 @@ history_gluon_result_t
 history_gluon_range_query(history_gluon_context_t _ctx, uint64_t id,
                           struct timespec *ts0, struct timespec *ts1,
                           history_gluon_sort_order_t sort_request,
+                          uint64_t num_max_entries,
                           history_gluon_data_array_t **array)
 {
-	ERR_MSG("Not implemented yet\n");
-	return HGLERR_NOT_IMPLEMENTED;
+	history_gluon_result_t ret;
+	private_context_t *ctx = get_connected_private_context(_ctx);
+	if (ctx == NULL)
+		return HGLERR_UNKNOWN_REASON;
+
+	/* make a request packet and write it */
+	uint8_t request[PKT_RANGE_QUERY_LENGTH];
+	fill_range_query_header(ctx, request, id, ts0, ts1, sort_request, num_max_entries);
+	ret = write_data(ctx, request, PKT_RANGE_QUERY_LENGTH);
+	RETURN_IF_ERROR(ret);
+
+	/* reply */
+	uint8_t reply[REPLY_RANGE_QUERY_HEADER_LENGTH];
+	ret = read_data(ctx, reply, REPLY_RANGE_QUERY_HEADER_LENGTH);
+	RETURN_IF_ERROR(ret);
+
+	int idx;
+	uint32_t expect_len = REPLY_RANGE_QUERY_HEADER_LENGTH - PKT_SIZE_LENGTH;
+	ret = parse_common_reply_header(ctx, reply, NULL, expect_len,
+	                                PKT_CMD_RANGE_QUERY, &idx);
+	RETURN_IF_ERROR(ret);
+
+	/* number of entries */
+	uint64_t num_data = restore_le64(ctx, &reply[idx]);
+	idx += PKT_NUM_ENTRIES_LENGTH;
+
+	/* sort order */
+	history_gluon_sort_order_t actual_sort_order;
+	actual_sort_order = restore_le16(ctx, &reply[idx]);
+	idx += PKT_SORT_ORDER_LENGTH;
+
+	/* allocate data array */
+	int alloc_size = sizeof(history_gluon_data_array_t);
+	history_gluon_data_array_t *arr = malloc(alloc_size);
+	if (!arr) {
+		ERR_MSG("Failed to allocate: %" PRIu64 "\n", alloc_size);
+		return HGLERR_MEM_ALLOC;
+	}
+	arr->num_data = 0;
+	arr->sort_order = actual_sort_order;
+
+	alloc_size = sizeof(history_gluon_data_t *) * num_data;
+	arr->array = malloc(alloc_size);
+	if (!arr->array) {
+		ret = HGLERR_MEM_ALLOC;
+		ERR_MSG("Failed to allocate: %" PRIu64 "\n", alloc_size);
+		goto error;
+	}
+
+	/* data */
+	uint64_t i;
+	for (i = 0; i < num_data; i++) {
+		history_gluon_data_t *gluon_data;
+		ret = read_gluon_data(ctx, &gluon_data);
+		GOTO_IF_ERROR(ret, error);
+		arr->array[i] = gluon_data;
+		arr->num_data++;
+	}
+
+	*array = arr;
+	return HGL_SUCCESS;
+
+error:
+	history_gluon_free_data_array(ctx, arr);
+	return ret;
 }
 
 void history_gluon_free_data_array(history_gluon_context_t _ctx,
@@ -983,9 +1101,12 @@ void history_gluon_free_data_array(history_gluon_context_t _ctx,
 {
 	uint64_t i = 0;
 	for (i = 0; i < array->num_data; i++) {
-		history_gluon_data_t *data = &(array->array[i]);
+		history_gluon_data_t *data = array->array[i];
 		history_gluon_free_data(_ctx, data);
 	}
+	if (array->array)
+		free(array->array);
+	free(array);
 }
 
 history_gluon_result_t
