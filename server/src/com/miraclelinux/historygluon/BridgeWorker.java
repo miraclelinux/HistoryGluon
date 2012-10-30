@@ -173,7 +173,7 @@ public class BridgeWorker extends Thread {
         int putLength = PKT_DATA_TYPE_LENGTH + PKT_ID_LENGTH
                         + PKT_SEC_LENGTH + PKT_NS_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
-            replyQueryData(ErrorCode.PACKET_SHORT, null);
+            replyAddData(ErrorCode.PACKET_SHORT);
             return false;
         }
 
@@ -261,7 +261,7 @@ public class BridgeWorker extends Thread {
         int putLength = PKT_ID_LENGTH + (PKT_SEC_LENGTH + PKT_NS_LENGTH) * 2
                         + PKT_NUM_ENTRIES_LENGTH + PKT_SORT_ORDER_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
-            replyQueryData(ErrorCode.PACKET_SHORT, null);
+            replyRangeQuery(ErrorCode.PACKET_SHORT, 0, (short)0);
             return false;
         }
 
@@ -338,7 +338,7 @@ public class BridgeWorker extends Thread {
 
         int putLength = PKT_ID_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
-            replyQueryData(ErrorCode.PACKET_SHORT, null);
+            replyGetMinimumTime(ErrorCode.PACKET_SHORT, 0, 0);
             return false;
         }
 
@@ -368,7 +368,7 @@ public class BridgeWorker extends Thread {
 
         int putLength = PKT_ID_LENGTH + 2 *(PKT_SEC_LENGTH + PKT_NS_LENGTH);
         if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
-            replyQueryData(ErrorCode.PACKET_SHORT, null);
+            replyGetStatistics(ErrorCode.PACKET_SHORT,0, 0, 0, 0, 0);
             return false;
         }
 
@@ -415,8 +415,10 @@ public class BridgeWorker extends Thread {
 
         int putLength =
           PKT_ID_LENGTH + PKT_SEC_LENGTH + PKT_NS_LENGTH + PKT_DELETE_WAY_LENGTH;;
-        if (!putBufferWithCheckLength(pktBuf, idx, putLength))
+        if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
+            replyDelete(ErrorCode.SUCCESS, 0);
             return false;
+        }
 
         // get ID, sec, ns, and way
         long id = m_byteBuffer.getLong(idx);
@@ -435,14 +437,7 @@ public class BridgeWorker extends Thread {
         long numDeleted = m_driver.delete(id, sec, ns, way);
 
         // write reply to the socket
-        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH + PKT_NUM_DELETED_LENGTH;
-        m_byteBuffer.clear();
-        m_byteBuffer.putInt(length);
-        m_byteBuffer.putShort(PKT_CMD_DELETE);
-        m_byteBuffer.putInt(ErrorCode.SUCCESS);
-        m_byteBuffer.putLong(numDeleted);
-        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
-        m_ostream.flush();
+        replyDelete(ErrorCode.SUCCESS, numDeleted);
 
         return true;
     }
@@ -619,6 +614,17 @@ public class BridgeWorker extends Thread {
         m_byteBuffer.putDouble(max);
         m_byteBuffer.putDouble(sum);
 
+        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
+        m_ostream.flush();
+    }
+
+    private void replyDelete(int errorCode, long numDeleted) throws IOException {
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH + PKT_NUM_DELETED_LENGTH;
+        m_byteBuffer.clear();
+        m_byteBuffer.putInt(length);
+        m_byteBuffer.putShort(PKT_CMD_DELETE);
+        m_byteBuffer.putInt(ErrorCode.SUCCESS);
+        m_byteBuffer.putLong(numDeleted);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         m_ostream.flush();
     }
