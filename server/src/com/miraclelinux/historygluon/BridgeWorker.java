@@ -560,7 +560,7 @@ public class BridgeWorker extends Thread {
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
         m_byteBuffer.putShort(PKT_CMD_ADD_DATA);
-        m_byteBuffer.putInt(ErrorCode.SUCCESS);
+        m_byteBuffer.putInt(errorCode);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         m_ostream.flush();
     }

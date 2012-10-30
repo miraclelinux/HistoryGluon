@@ -20,7 +20,6 @@ public class ConcurrentHistoryDataSet extends HistoryDataSet {
         super(comparator);
     }
 
-
     @Override
     public boolean add(HistoryData history) {
         boolean ret = false;
