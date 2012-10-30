@@ -364,6 +364,51 @@ assert_make_context_delete_add_samples(uint64_t id, void (*add_samples_fn)(void)
 	(*add_samples_fn)();
 }
 
+static double get_history_gluon_data_value(history_gluon_data_t *gluon_data)
+{
+	if (gluon_data->type == HISTORY_GLUON_TYPE_FLOAT)
+		return gluon_data->v_float;
+	else if (gluon_data->type == HISTORY_GLUON_TYPE_UINT)
+		return gluon_data->v_uint;
+	return 0;
+}
+
+static void
+calc_statistics(history_gluon_data_t *samples, uint64_t idx0, uint64_t num,
+                history_gluon_statistics_t *statistics)
+{
+	uint64_t i = idx0;
+	statistics->count = 1;
+	double value = get_history_gluon_data_value(&samples[i]);
+	statistics->min = value;
+	statistics->max = value;
+	statistics->sum = value;
+
+	for (i = idx0 + 1; i < idx0 + num; i++) {
+		double value = get_history_gluon_data_value(&samples[i]);
+		if (value < statistics->min)
+			statistics->min = value;
+		else if (value > statistics->max)
+			statistics->max = value;
+		statistics->sum += value;
+		statistics->count++;
+	}
+	statistics->average = statistics->sum / statistics->count;
+	statistics->delta = statistics->max - statistics->min;
+}
+
+static void
+assert_statistics(history_gluon_statistics_t *expected,
+                  history_gluon_statistics_t *actual)
+{
+	cut_assert_equal_int_least64(expected->count, actual->count);
+	double err = 0.0;
+	cut_assert_equal_double(expected->min, err, actual->min);
+	cut_assert_equal_double(expected->max, err, actual->max);
+	cut_assert_equal_double(expected->sum, err, actual->sum);
+	cut_assert_equal_double(expected->average, err, actual->average);
+	cut_assert_equal_double(expected->delta, err, actual->delta);
+}
 
 /* --------------------------------------------------------------------------------------
  * Teset cases
@@ -912,32 +957,79 @@ void test_get_minimum_time_not_found_blob(void)
  * Get Statistics
  * ----------------------------------------------------------------------------------- */
 static void assert_get_statistics(uint64_t id, void (*add_samples_fn)(void),
-                                  history_gluon_data_t *samples)
+                                  history_gluon_data_t *samples,
+                                  uint64_t idx0, uint64_t num_samples,
+                                  struct timespec *ts0, struct timespec *ts1,
+                                  history_gluon_result_t expected_result)
 {
 	assert_make_context_delete_add_samples(id, add_samples_fn);
 
 	/* get the minimum */
 	history_gluon_statistics_t statistics;
-	struct timespec *ts0 = &HISTORY_GLUON_TIMESPEC_START;
-	struct timespec *ts1 = &HISTORY_GLUON_TIMESPEC_END;
 	history_gluon_result_t ret;
 	ret = history_gluon_get_statistics(g_ctx, id, ts0, ts1, &statistics);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
+	cut_assert_equal_int(expected_result, ret);
+	if (expected_result != HGL_SUCCESS)
+		return;
 
-	/* test the obtained time */
-	/*
-	cut_assert_equal_int_least32(samples[0].ts.tv_sec, ts.tv_sec);
-	cut_assert_equal_int_least32(samples[0].ts.tv_nsec, ts.tv_nsec);
-	*/
+	/* test the obtained value */
+	history_gluon_statistics_t expected_statistics;
+	calc_statistics(samples, idx0, num_samples, &expected_statistics);
+	assert_statistics(&expected_statistics, &statistics);
 }
 
 void test_get_statistics_uint(void)
 {
 	assert_get_statistics(TEST_STD_ID_UINT, assert_add_uint_samples,
-                              g_uint_samples);
+	                      g_uint_samples, 0, NUM_UINT_SAMPLES,
+	                      &HISTORY_GLUON_TIMESPEC_START, &HISTORY_GLUON_TIMESPEC_END,
+	                      HGL_SUCCESS);
+}
+
+void test_get_statistics_float(void)
+{
+	assert_get_statistics(TEST_STD_ID_FLOAT, assert_add_float_samples,
+                              g_float_samples, 0, NUM_FLOAT_SAMPLES,
+	                      &HISTORY_GLUON_TIMESPEC_START, &HISTORY_GLUON_TIMESPEC_END,
+	                      HGL_SUCCESS);
+}
+
+void test_get_statistics_uint_range(void)
+{
+	int idx0 = 1;
+	int num = 3;
+	assert_get_statistics(TEST_STD_ID_UINT, assert_add_uint_samples,
+	                      g_uint_samples, idx0, num,
+	                      &g_uint_samples[idx0].ts, &g_uint_samples[idx0+num].ts,
+	                      HGL_SUCCESS);
+}
+
+void test_get_statistics_float_range(void)
+{
+	int idx0 = 1;
+	int num = 3;
+	assert_get_statistics(TEST_STD_ID_FLOAT, assert_add_float_samples,
+	                      g_float_samples, idx0, num,
+	                      &g_uint_samples[idx0].ts, &g_uint_samples[idx0+num].ts,
+	                      HGL_SUCCESS);
 }
 
 
+void test_get_statistics_string(void)
+{
+	assert_get_statistics(TEST_STD_ID_STRING, assert_add_string_samples,
+	                      g_string_samples, 0, NUM_STRING_SAMPLES,
+	                      &HISTORY_GLUON_TIMESPEC_START, &HISTORY_GLUON_TIMESPEC_END,
+	                      HGLSVERR_INVALID_DATA_TYPE);
+}
+
+void test_get_statistics_blob(void)
+{
+	assert_get_statistics(TEST_STD_ID_BLOB, assert_add_blob_samples,
+	                      g_blob_samples, 0, NUM_BLOB_SAMPLES,
+	                      &HISTORY_GLUON_TIMESPEC_START, &HISTORY_GLUON_TIMESPEC_END,
+	                      HGLSVERR_INVALID_DATA_TYPE);
+}
 
 /* --------------------------------------------------------------------------------------
  * Delete Data
