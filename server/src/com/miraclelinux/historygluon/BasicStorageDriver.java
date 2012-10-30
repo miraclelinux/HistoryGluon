@@ -117,7 +117,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
         String stopKey;
         if (way == DeleteType.EQUAL) {
             startKey = makeKey(id, sec, ns);
-            stopKey = startKey;
+            stopKey = makeKey(id, sec, ns+1);
         } else if (way == DeleteType.EQUAL_OR_LESS) {
             startKey = makeKey(id, 0, 0);
             stopKey = makeKey(id, sec, ns+1);
@@ -146,9 +146,11 @@ public abstract class BasicStorageDriver implements StorageDriver {
         if (arg == null)
             return 0;
 
+        System.out.println("way: " + way + ", KEY::: " + startKey + " - " + stopKey);
         Iterator<HistoryData> it = dataSet.iterator();
         while (it.hasNext()) {
             HistoryData history = it.next();
+            System.out.println("***** " + history.toString());
             if (deleteRow(history, arg))
                 numDeleted++;
         }
