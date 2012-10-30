@@ -24,13 +24,13 @@
 
 #define RETURN_IF_ERROR(R) \
 do { \
-	if (R < 0) \
+	if (R != HGL_SUCCESS) \
 		return R; \
 } while(0)
 
 #define GOTO_IF_ERROR(R,L) \
 do { \
-	if (R < 0) \
+	if (R != HGL_SUCCESS) \
 		goto L; \
 } while(0)
 
@@ -604,10 +604,8 @@ parse_common_reply_header(private_context_t *ctx, uint8_t *buf,
 	// result
 	uint32_t result = restore_le32(ctx, &buf[idx]);
 	idx += REPLY_RESULT_LENGTH;
-	if (result != RESULT_SUCCESS) {
-		ERR_MSG("result is not success: %d\n", result);
-		return HGLERR_REPLY_ERROR;
-	}
+	if (result != HGLSV_SUCCESS)
+		return result;
 
 	if (index)
 		*index = idx;
@@ -1014,7 +1012,7 @@ history_gluon_query(history_gluon_context_t _ctx, uint64_t id, struct timespec *
 	uint16_t found_flag = restore_le16(ctx, &reply[idx]);
 	idx += REPLY_QUERY_DATA_FOUND_FLAG_LENGTH;
 	if (found_flag == HISTORY_GLUON_QUERY_NOT_FOUND)
-		return HGLERR_NOT_FOUND;
+		return HGLSVERR_NOT_FOUND;
 
 	ret = read_gluon_data(ctx, gluon_data);
 	RETURN_IF_ERROR(ret);

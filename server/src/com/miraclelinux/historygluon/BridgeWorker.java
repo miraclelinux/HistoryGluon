@@ -50,7 +50,6 @@ public class BridgeWorker extends Thread {
     private static final int REPLY_QUERY_NOT_FOUND = 0;
     private static final int REPLY_QUERY_DATA_FOUND = 1;
 
-    private static final int RESULT_SUCCESS = 0;
     private static final int RESULT_ERROR_UNKNOWN_REASON = 1;
     private static final int RESULT_ERROR_TOO_MANY_RECORDS = 2;
     private static final int RESULT_ERROR_NO_DATA = 3;
@@ -196,7 +195,7 @@ public class BridgeWorker extends Thread {
         idx += PKT_NS_LENGTH;
 
         // parse each data
-        boolean ret = false;
+        int ret = ErrorCode.UNKNOWN_ERROR;
         if (history.type == HistoryData.TYPE_FLOAT)
             ret = procFloatData(pktBuf, idx, history);
         else if (history.type == HistoryData.TYPE_STRING)
@@ -210,7 +209,7 @@ public class BridgeWorker extends Thread {
             m_log.error("Got unknown data type: " + history.type);
             return false;
         }
-        if (!ret) {
+        if (ret != ErrorCode.SUCCESS) {
             // TODO: return error
             return false;
         }
@@ -227,7 +226,7 @@ public class BridgeWorker extends Thread {
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
         m_byteBuffer.putShort(PKT_CMD_ADD_DATA);
-        m_byteBuffer.putInt(RESULT_SUCCESS);
+        m_byteBuffer.putInt(ErrorCode.SUCCESS);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         m_ostream.flush();
 
@@ -281,7 +280,7 @@ public class BridgeWorker extends Thread {
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
         m_byteBuffer.putShort(PKT_CMD_RANGE_QUERY);
-        m_byteBuffer.putInt(RESULT_SUCCESS);
+        m_byteBuffer.putInt(ErrorCode.SUCCESS);
         m_byteBuffer.putLong(numEntries);
         m_byteBuffer.putShort(sortOrder);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
@@ -347,7 +346,7 @@ public class BridgeWorker extends Thread {
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
         m_byteBuffer.putShort(PKT_CMD_QUERY_DATA);
-        m_byteBuffer.putInt(RESULT_SUCCESS);
+        m_byteBuffer.putInt(ErrorCode.SUCCESS);
         m_byteBuffer.putShort(found);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         if (history != null)
@@ -371,28 +370,16 @@ public class BridgeWorker extends Thread {
         try {
             history = m_driver.getMinimumTime(id);
         } catch (HistoryDataSet.TooManyException e) {
-            // FIXME: return the error
-            return false;
+            replyGetMinimumTime(ErrorCode.TOO_MANY_ENTRIES, 0, 0);
+            return true;
         }
 
-        int minClock = 0;
         if (history == null) {
-            // FIXME: return the error
-            return false;
+            replyGetMinimumTime(ErrorCode.NOT_FOUND, 0, 0);
+            return true;
         }
 
-        // write reply to the socket
-        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH
-                     + PKT_SEC_LENGTH + PKT_NS_LENGTH;;
-        m_byteBuffer.clear();
-        m_byteBuffer.putInt(length);
-        m_byteBuffer.putShort(PKT_CMD_GET_MIN_TIME);
-        m_byteBuffer.putInt(RESULT_SUCCESS);
-        m_byteBuffer.putInt(history.sec);
-        m_byteBuffer.putInt(history.ns);
-        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
-        m_ostream.flush();
-
+        replyGetMinimumTime(ErrorCode.SUCCESS, history.sec, history.ns);
         return true;
     }
 
@@ -430,7 +417,7 @@ public class BridgeWorker extends Thread {
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
         m_byteBuffer.putShort(PKT_CMD_GET_STATISTICS);
-        m_byteBuffer.putInt(RESULT_SUCCESS);
+        m_byteBuffer.putInt(ErrorCode.SUCCESS);
         m_byteBuffer.putLong(id);
         m_byteBuffer.putInt(statistics.sec0);
         m_byteBuffer.putInt(statistics.sec1);
@@ -473,7 +460,7 @@ public class BridgeWorker extends Thread {
         m_byteBuffer.clear();
         m_byteBuffer.putInt(length);
         m_byteBuffer.putShort(PKT_CMD_DELETE);
-        m_byteBuffer.putInt(RESULT_SUCCESS);
+        m_byteBuffer.putInt(ErrorCode.SUCCESS);
         m_byteBuffer.putLong(numDeleted);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         m_ostream.flush();
@@ -481,15 +468,15 @@ public class BridgeWorker extends Thread {
         return true;
     }
 
-    private boolean procFloatData(byte[] pktBuf, int idx, HistoryData history) {
+    private int procFloatData(byte[] pktBuf, int idx, HistoryData history) {
         m_byteBuffer.clear();
         m_byteBuffer.put(pktBuf, idx, PKT_DATA_FLOAT_LENGTH);
         idx += PKT_DATA_FLOAT_LENGTH;
         history.dataFloat = m_byteBuffer.getDouble(0);
-        return true;
+        return ErrorCode.SUCCESS;
     }
 
-    private boolean procStringData(byte[] pktBuf, int idx, HistoryData history)
+    private int procStringData(byte[] pktBuf, int idx, HistoryData history)
       throws IOException {
         m_byteBuffer.clear();
         m_byteBuffer.put(pktBuf, idx, PKT_DATA_STRING_SIZE_LENGTH);
@@ -500,22 +487,22 @@ public class BridgeWorker extends Thread {
         byte[] bodyBuf = new byte[stringLength];
         if (m_istream.read(bodyBuf, 0, stringLength) == -1) {
             m_log.error("Unexpectedly input stream reaches the end.");
-            return false;
+            return ErrorCode.IERR_READ_STREAM_END;
         }
         history.dataString = new String(bodyBuf);
         idx += stringLength;
-        return true;
+        return ErrorCode.SUCCESS;
     }
 
-    private boolean procUint64Data(byte[] pktBuf, int idx, HistoryData history) {
+    private int procUint64Data(byte[] pktBuf, int idx, HistoryData history) {
         m_byteBuffer.clear();
         m_byteBuffer.put(pktBuf, idx, PKT_DATA_UINT64_LENGTH);
         idx += PKT_DATA_UINT64_LENGTH;
         history.dataUint64 = m_byteBuffer.getLong(0);
-        return true;
+        return ErrorCode.SUCCESS;
     }
 
-    private boolean procBlobData(byte[] pktBuf, int idx, HistoryData history)
+    private int procBlobData(byte[] pktBuf, int idx, HistoryData history)
       throws IOException {
         m_byteBuffer.clear();
         m_byteBuffer.put(pktBuf, idx, PKT_DATA_BLOB_SIZE_LENGTH);
@@ -526,18 +513,18 @@ public class BridgeWorker extends Thread {
         if (blobLength > 0x7fffffff) {
             // TODO: large Blob support
             m_log.error("Current implementation hasn't supported the large size blobl > 0x7fffffff.");
-            return false;
+            return ErrorCode.NOT_IMPLEMENTED;
         }
 
         int _blobLength = (int)blobLength;
         byte[] bodyBuf = new byte[_blobLength];
         if (m_istream.read(bodyBuf, 0, _blobLength) == -1) {
             m_log.error("Unexpectedly input stream reaches the end.");
-            return false;
+            return ErrorCode.IERR_READ_STREAM_END;
         }
         history.dataBlob = bodyBuf;
         idx += _blobLength;
-        return true;
+        return ErrorCode.SUCCESS;
     }
 
     private int calcReplyPktSize(HistoryData history) {
@@ -584,5 +571,21 @@ public class BridgeWorker extends Thread {
                             history.dataString.length());
         } else if (history.type == HistoryData.TYPE_BLOB)
             m_ostream.write(history.dataBlob, 0, history.dataBlob.length);
+    }
+
+    //
+    // reply methods
+    //
+    private void replyGetMinimumTime(int errorCode, int sec, int ns) throws IOException {
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH
+                     + PKT_SEC_LENGTH + PKT_NS_LENGTH;;
+        m_byteBuffer.clear();
+        m_byteBuffer.putInt(length);
+        m_byteBuffer.putShort(PKT_CMD_GET_MIN_TIME);
+        m_byteBuffer.putInt(errorCode);
+        m_byteBuffer.putInt(sec);
+        m_byteBuffer.putInt(ns);
+        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
+        m_ostream.flush();
     }
 }

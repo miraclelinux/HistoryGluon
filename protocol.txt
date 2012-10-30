@@ -226,7 +226,7 @@ Result Code
  100: Authentification failed
  200: Packet short
  201: Invalid data type
- 201: Invalid sort type
+ 202: Invalid sort type
  300: Entry exists
  301: Not found
  302: Too many enties

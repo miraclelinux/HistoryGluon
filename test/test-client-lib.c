@@ -523,7 +523,7 @@ static void assert_add_and_query_not_found(history_gluon_data_t *samples)
 
 	// query
 	assert_query_common(sample->id+1, &sample->ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH,
-	                    HGLERR_NOT_FOUND);
+	                    HGLSVERR_NOT_FOUND);
 }
 
 void test_add_uint_and_query_not_found(void)
@@ -885,7 +885,7 @@ static void assert_get_minimum_time_not_found(uint64_t id)
 	struct timespec ts;
 	history_gluon_result_t ret;
 	ret = history_gluon_get_minmum_time(g_ctx, id, &ts);
-	cut_assert_equal_int(ret, HGLERR_NOT_FOUND);
+	cut_assert_equal_int(HGLSVERR_NOT_FOUND, ret);
 }
 
 void test_get_minimum_time_not_found_uint(void)

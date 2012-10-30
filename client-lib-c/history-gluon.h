@@ -86,7 +86,6 @@ typedef enum {
 	HGLERR_UNKNOWN_REASON        = -1,
 	HGLERR_NOT_IMPLEMENTED       = -2,
 	HGLERR_MEM_ALLOC             = -3,
-	HGLERR_NOT_FOUND             = -4,
 	HGLERR_READ_STREAM_END       = -100,
 	HGLERR_READ_ERROR            = -101,
 	HGLERR_WRITE_ERROR           = -200,
@@ -98,6 +97,21 @@ typedef enum {
 	HGLERR_UNEXPECTED_REPLY_TYPE = -501,
 	HGLERR_REPLY_ERROR           = -502,
 	HGLERR_INVALID_DATA_TYPE     = -600,
+
+	/* Positive value is send from the server. */
+	HGLSV_SUCCESS                    = 0,
+	HGLSVERR_UKNOWN_ERROR            = 1,
+	HGLSVERR_SERVER_ERROR            = 2,
+	HGLSVERR_UNSUPPORTED_VERSION     = 3,
+	HGLSVERR_NOT_IMPLEMENTED         = 4,
+	HGLSVERR_AUTHENTIFICATION_FAILED = 100,
+	HGLSVERR_PACKET_SHORT            = 200,
+	HGLSVERR_INVALID_DATA_TYPE       = 201,
+	HGLSVERR_INVALID_SORT_TYPE       = 202,
+	HGLSVERR_ENTRY_EXISTS            = 300,
+	HGLSVERR_NOT_FOUND               = 301,
+	HGLSVERR_TOO_MANY_ENTRIES        = 302,
+
 } history_gluon_result_t;
 
 extern struct timespec HISTORY_GLUON_TIMESPEC_START;
