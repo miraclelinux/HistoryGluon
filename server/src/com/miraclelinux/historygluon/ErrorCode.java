@@ -9,7 +9,7 @@ public class ErrorCode {
     public static final int AUTHENTIFICATION_FAILED      = 100;
     public static final int PACKET_SHORT                 = 200;
     public static final int INVALID_DATA_TYPE            = 201;
-    public static final int INVALID_SORT_TYPE            = 202;
+    public static final int INVALID_SORT_ORDER           = 202;
     public static final int ENTRY_EXISTS                 = 300;
     public static final int NOT_FOUND                    = 301;
     public static final int TOO_MANY_ENTRIES             = 302;

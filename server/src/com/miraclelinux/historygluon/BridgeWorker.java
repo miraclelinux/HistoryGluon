@@ -287,12 +287,31 @@ public class BridgeWorker extends Thread {
         short sortOrder = m_byteBuffer.getShort(idx);
         idx += PKT_SORT_ORDER_LENGTH;
 
+        // Sort order
+        if (sortOrder != PKT_SORT_ORDER_ASCENDING &&
+            sortOrder != PKT_SORT_ORDER_DESCENDING) {
+            m_log.error("Unknown sort order: " + sortOrder);
+            replyRangeQuery(ErrorCode.INVALID_SORT_ORDER, 0, sortOrder);
+            return true;
+        }
+
+        // Get data
         HistoryDataSet dataSet = null;
         try {
             dataSet = m_driver.getData(id, sec0, sec1);
         } catch (HistoryDataSet.TooManyException e) {
             replyRangeQuery(ErrorCode.TOO_MANY_ENTRIES, 0, sortOrder);
             return true;
+        }
+
+        // Get sorted iterator
+        Iterator<HistoryData> it = null;
+        if (sortOrder == PKT_SORT_ORDER_ASCENDING)
+            it = dataSet.iterator();
+        else if (sortOrder == PKT_SORT_ORDER_DESCENDING)
+            it = dataSet.descendingIterator();
+        else {
+            // This condition never happens, because it has been checked above.
         }
 
         // calculate length and  entries
@@ -304,16 +323,6 @@ public class BridgeWorker extends Thread {
         replyRangeQuery(ErrorCode.SUCCESS, numEntries, sortOrder);
 
         // write quried data
-        Iterator<HistoryData> it;
-        if (sortOrder == PKT_SORT_ORDER_ASCENDING)
-            it = dataSet.iterator();
-        else if (sortOrder == PKT_SORT_ORDER_DESCENDING)
-            it = dataSet.descendingIterator();
-        else {
-            m_log.error("Unknown sort order: " + sortOrder);
-            return false;
-        }
-
         while (it.hasNext()) {
             HistoryData history = it.next();
             sendOneHistoryData(history);
