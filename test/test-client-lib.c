@@ -911,6 +911,33 @@ void test_get_minimum_time_not_found_blob(void)
 /* --------------------------------------------------------------------------------------
  * Get Statistics
  * ----------------------------------------------------------------------------------- */
+static void assert_get_statistics(uint64_t id, void (*add_samples_fn)(void),
+                                  history_gluon_data_t *samples)
+{
+	assert_make_context_delete_add_samples(id, add_samples_fn);
+
+	/* get the minimum */
+	history_gluon_statistics_t statistics;
+	struct timespec *ts0 = &HISTORY_GLUON_TIMESPEC_START;
+	struct timespec *ts1 = &HISTORY_GLUON_TIMESPEC_END;
+	history_gluon_result_t ret;
+	ret = history_gluon_get_statistics(g_ctx, id, ts0, ts1, &statistics);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+
+	/* test the obtained time */
+	/*
+	cut_assert_equal_int_least32(samples[0].ts.tv_sec, ts.tv_sec);
+	cut_assert_equal_int_least32(samples[0].ts.tv_nsec, ts.tv_nsec);
+	*/
+}
+
+void test_get_statistics_uint(void)
+{
+	assert_get_statistics(TEST_STD_ID_UINT, assert_add_uint_samples,
+                              g_uint_samples);
+}
+
+
 
 /* --------------------------------------------------------------------------------------
  * Delete Data

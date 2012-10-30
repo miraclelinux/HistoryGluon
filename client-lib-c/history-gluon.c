@@ -118,16 +118,15 @@ do { \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
  PKT_ID_LENGTH + \
- PKT_SEC_LENGTH*2)
+ 2 * (PKT_SEC_LENGTH + PKT_NS_LENGTH))
 
 #define REPLY_STATISTICS_LENGTH \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
  REPLY_RESULT_LENGTH + \
  PKT_ID_LENGTH + \
- PKT_SEC_LENGTH*2 + \
  PKT_DATA_UINT_LENGTH + \
- PKT_DATA_FLOAT_LENGTH*3)
+ 3 * PKT_DATA_FLOAT_LENGTH)
 
 /* Delete Data */
 #define  PKT_DELETE_WAY_LENGTH 2
@@ -154,7 +153,7 @@ enum {
 	PKT_CMD_QUERY_DATA         = 200,
 	PKT_CMD_RANGE_QUERY        = 300,
 	PKT_CMD_GET_MINIMUM_TIME   = 400,
-	PKT_CMD_GET_STATISTICS     = 1200,
+	PKT_CMD_GET_STATISTICS     = 500,
 	PKT_CMD_DELETE             = 600,
 };
 
@@ -496,7 +495,8 @@ static int fill_get_statistics(private_context_t *ctx, uint8_t *buf, uint64_t id
 	int idx = 0;
 
 	/* pkt size */
-	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_GET_STATISTICS_LENGTH - PKT_SIZE_LENGTH);
+	*((uint32_t *)&buf[idx]) =
+	  conv_le32(ctx, PKT_GET_STATISTICS_LENGTH - PKT_SIZE_LENGTH);
 	idx += PKT_SIZE_LENGTH;
 
 	/* command */
@@ -507,13 +507,19 @@ static int fill_get_statistics(private_context_t *ctx, uint8_t *buf, uint64_t id
 	*((uint64_t *)&buf[idx]) = conv_le64(ctx, id);
 	idx += PKT_ID_LENGTH;
 
-	/* sec0 */
+	/* ts0 */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts0->tv_sec);
 	idx += PKT_SEC_LENGTH;
 
-	/* sec1 */
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts0->tv_nsec);
+	idx += PKT_NS_LENGTH;
+
+	/* ts1 */
 	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts1->tv_sec);
 	idx += PKT_SEC_LENGTH;
+
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, ts1->tv_nsec);
+	idx += PKT_NS_LENGTH;
 
 	return idx;
 }
@@ -1165,16 +1171,6 @@ history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
 	// item ID
 	statistics->id = restore_le64(ctx, &reply[idx]);
 	idx += PKT_ID_LENGTH;
-
-	// sec0
-	statistics->ts0.tv_sec = restore_le32(ctx, &reply[idx]);
-	statistics->ts0.tv_nsec = 0;
-	idx += PKT_SEC_LENGTH;
-
-	// sec1
-	statistics->ts1.tv_sec = restore_le32(ctx, &reply[idx]);
-	statistics->ts1.tv_nsec = 0;
-	idx += PKT_SEC_LENGTH;
 
 	// count
 	statistics->count = restore_le64(ctx, &reply[idx]);

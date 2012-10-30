@@ -37,8 +37,8 @@ public class BridgeWorker extends Thread {
     private static final short PKT_CMD_QUERY_DATA     = 200;
     private static final short PKT_CMD_RANGE_QUERY    = 300;
     private static final short PKT_CMD_GET_MIN_TIME   = 400;
+    private static final short PKT_CMD_GET_STATISTICS = 500;
     private static final short PKT_CMD_DELETE         = 600;
-    private static final short PKT_CMD_GET_STATISTICS = 1200;
 
     private static final short PKT_SORT_ORDER_ASCENDING  = 0;
     private static final short PKT_SORT_ORDER_DESCENDING = 1;
@@ -376,7 +376,7 @@ public class BridgeWorker extends Thread {
 
     private boolean getStatistics(byte[] pktBuf, int idx) throws IOException {
 
-        int putLength = PKT_ID_LENGTH + PKT_SEC_LENGTH * 2;
+        int putLength = PKT_ID_LENGTH + 2 *(PKT_SEC_LENGTH + PKT_NS_LENGTH);
         if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
             replyQueryData(ErrorCode.PACKET_SHORT, null);
             return false;
@@ -388,39 +388,31 @@ public class BridgeWorker extends Thread {
 
         int sec0 = m_byteBuffer.getInt(idx);
         idx += PKT_SEC_LENGTH;
+
+        int ns0 = m_byteBuffer.getInt(idx);
+        idx += PKT_NS_LENGTH;
+
         int sec1 = m_byteBuffer.getInt(idx);
         idx += PKT_SEC_LENGTH;
+
+        int ns1 = m_byteBuffer.getInt(idx);
+        idx += PKT_NS_LENGTH;
 
         Statistics statistics = null;
         try {
             statistics = m_driver.getStatistics(id, sec0, sec1);
         } catch (HistoryDataSet.TooManyException e) {
-            // TODO: return error
-            return false;
+            replyGetStatistics(ErrorCode.TOO_MANY_ENTRIES, id, 0, 0, 0, 0);
+            return true;
         }
         if (statistics == null) {
-            // TODO: return error
-            return false;
+            replyGetStatistics(ErrorCode.NOT_FOUND, id, 0, 0, 0, 0);
+            return true;
         }
 
         // write reply
-        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH +
-                     PKT_ID_LENGTH + PKT_SEC_LENGTH * 2 +
-                     PKT_DATA_FLOAT_LENGTH * 3 + PKT_DATA_UINT64_LENGTH;
-        m_byteBuffer.clear();
-        m_byteBuffer.putInt(length);
-        m_byteBuffer.putShort(PKT_CMD_GET_STATISTICS);
-        m_byteBuffer.putInt(ErrorCode.SUCCESS);
-        m_byteBuffer.putLong(id);
-        m_byteBuffer.putInt(statistics.sec0);
-        m_byteBuffer.putInt(statistics.sec1);
-        m_byteBuffer.putLong(statistics.count);
-        m_byteBuffer.putDouble(statistics.min);
-        m_byteBuffer.putDouble(statistics.max);
-        m_byteBuffer.putDouble(statistics.sum);
-
-        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
-        m_ostream.flush();
+        replyGetStatistics(ErrorCode.SUCCESS, id, statistics.count,
+                           statistics.min, statistics.max, statistics.sum);
 
         return true;
     }
@@ -590,6 +582,25 @@ public class BridgeWorker extends Thread {
         m_byteBuffer.putInt(errorCode);
         m_byteBuffer.putInt(sec);
         m_byteBuffer.putInt(ns);
+        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
+        m_ostream.flush();
+    }
+
+    private void replyGetStatistics(int errorCode, long id, long count
+                                  , double min, double max, double sum)
+      throws IOException {
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH + PKT_ID_LENGTH +
+                     PKT_DATA_FLOAT_LENGTH * 3 + PKT_DATA_UINT64_LENGTH;
+        m_byteBuffer.clear();
+        m_byteBuffer.putInt(length);
+        m_byteBuffer.putShort(PKT_CMD_GET_STATISTICS);
+        m_byteBuffer.putInt(errorCode);
+        m_byteBuffer.putLong(id);
+        m_byteBuffer.putLong(count);
+        m_byteBuffer.putDouble(min);
+        m_byteBuffer.putDouble(max);
+        m_byteBuffer.putDouble(sum);
+
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         m_ostream.flush();
     }
