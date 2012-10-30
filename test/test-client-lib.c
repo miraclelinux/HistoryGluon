@@ -449,60 +449,105 @@ void test_free_context(void)
 /* --------------------------------------------------------------------------------------
  * Add Data
  * ----------------------------------------------------------------------------------- */
-void test_add_uint(void)
+static void init_add(uint64_t id)
 {
 	create_global_context();
-
-	uint64_t id = 114;
 	assert_delete_all_for_id(id, NULL);
+}
 
+static void assert_add_common(uint64_t id, history_gluon_result_t (*add_fn)(uint64_t id))
+{
+	init_add(id);
+	history_gluon_result_t ret = (*add_fn)(id);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+}
+
+static void
+assert_add_common_twice(uint64_t id, history_gluon_result_t (*add_fn)(uint64_t id))
+{
+	assert_add_common(id,add_fn);
+	history_gluon_result_t ret = (*add_fn)(id);
+	cut_assert_not_equal_int(HGL_SUCCESS, ret);
+}
+
+/* uint */
+static history_gluon_result_t add_uint_one_sample(uint64_t id)
+{
 	struct timespec ts;
 	ts.tv_sec = 1;
 	ts.tv_nsec = 2;
 	uint64_t value = 3;
-	assert_add_uint(id, &ts, value);
+	return history_gluon_add_uint(g_ctx, id, &ts, value);
 }
 
-void test_add_float(void)
+void test_add_uint(void)
 {
-	create_global_context();
+	assert_add_common(TEST_STD_ID_UINT, add_uint_one_sample);
+}
 
-	uint64_t id = 126;
-	assert_delete_all_for_id(id, NULL);
+void test_add_uint_twice(void)
+{
+	assert_add_common_twice(TEST_STD_ID_UINT, add_uint_one_sample);
+}
 
+/* float */
+static history_gluon_result_t add_float_one_sample(uint64_t id)
+{
 	struct timespec ts;
 	ts.tv_sec = 20;
 	ts.tv_nsec = 40;
 	double value = -10.5;
-	assert_add_float(id, &ts, value);
+	return history_gluon_add_float(g_ctx, id, &ts, value);
 }
 
-void test_add_string(void)
+void test_add_float(void)
 {
-	create_global_context();
+	assert_add_common(TEST_STD_ID_FLOAT, add_float_one_sample);
+}
 
-	uint64_t id = 138;
-	assert_delete_all_for_id(id, NULL);
+void test_add_uint_float(void)
+{
+	assert_add_common_twice(TEST_STD_ID_FLOAT, add_float_one_sample);
+}
 
+/* string */
+static history_gluon_result_t add_string_one_sample(uint64_t id)
+{
 	struct timespec ts;
 	ts.tv_sec = 300;
 	ts.tv_nsec = 500;
 	char value[] = "test_string";
-	assert_add_string(id, &ts, value);
+	return history_gluon_add_string(g_ctx, id, &ts, value);
 }
 
-void test_add_blob(void)
+void test_add_string(void)
 {
-	create_global_context();
+	assert_add_common(TEST_STD_ID_STRING, add_string_one_sample);
+}
 
-	uint64_t id = 151;
-	assert_delete_all_for_id(id, NULL);
+void test_add_uint_string_twice(void)
+{
+	assert_add_common_twice(TEST_STD_ID_STRING, add_string_one_sample);
+}
 
+/* blob */
+static history_gluon_result_t add_blob_one_sample(uint64_t id)
+{
 	struct timespec ts;
 	ts.tv_sec = 4300;
 	ts.tv_nsec = 8500;
 	uint8_t value[] = {0x21, 0x22, 0xff, 0x80, 0x95};
-	assert_add_blob(id, &ts, value, sizeof(value));
+	return history_gluon_add_blob(g_ctx, id, &ts, value, sizeof(value));
+}
+
+void test_add_blob(void)
+{
+	assert_add_common(TEST_STD_ID_BLOB, add_blob_one_sample);
+}
+
+void test_add_uint_blob_twice(void)
+{
+	assert_add_common_twice(TEST_STD_ID_BLOB, add_blob_one_sample);
 }
 
 /* --------------------------------------------------------------------------------------
