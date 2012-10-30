@@ -25,7 +25,7 @@ typedef enum {
 } history_gluon_sort_order_t;
 
 typedef enum {
-	HISTORY_GLUON_DELTE_TYPE_ONLY_MATCH       = 0,
+	HISTORY_GLUON_DELTE_TYPE_EQUAL            = 0,
 	HISTORY_GLUON_DELTE_TYPE_EQUAL_OR_LESS    = 1,
 	HISTORY_GLUON_DELTE_TYPE_LESS             = 2,
 	HISTORY_GLUON_DELTE_TYPE_EQUAL_OR_GREATER = 3,

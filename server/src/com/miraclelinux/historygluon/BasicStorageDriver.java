@@ -115,7 +115,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
         int numDeleted = 0;
         String startKey;
         String stopKey;
-        if (way == DeleteType.ONLY_MATCH) {
+        if (way == DeleteType.EQUAL) {
             startKey = makeKey(id, sec, ns);
             stopKey = startKey;
         } else if (way == DeleteType.EQUAL_OR_LESS) {
