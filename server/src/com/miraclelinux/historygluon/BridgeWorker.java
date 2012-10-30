@@ -121,7 +121,7 @@ public class BridgeWorker extends Thread {
         // read pkt body
         byte[] pktBuf = new byte[pktSize];
         if (m_istream.read(pktBuf, 0, pktSize) == -1) {
-            m_log.error("Unexpectedly input stream reaches the end.");
+            m_log.info("Unexpectedly input stream reaches the end.");
             return false;
         }
 
@@ -138,7 +138,7 @@ public class BridgeWorker extends Thread {
         // do processing
         boolean ret = false;
         if (cmd == PKT_CMD_ADD_DATA)
-            ret = addHistoryData(pktBuf, idx);
+            ret = addData(pktBuf, idx);
         else if (cmd == PKT_CMD_QUERY_DATA)
             ret = queryData(pktBuf, idx);
         else if (cmd == PKT_CMD_RANGE_QUERY)
@@ -167,7 +167,7 @@ public class BridgeWorker extends Thread {
         return true;
     }
 
-    private boolean addHistoryData(byte[] pktBuf, int idx) throws IOException {
+    private boolean addData(byte[] pktBuf, int idx) throws IOException {
         HistoryData history = new HistoryData();
 
         int putLength = PKT_DATA_TYPE_LENGTH + PKT_ID_LENGTH
@@ -177,7 +177,7 @@ public class BridgeWorker extends Thread {
             return false;
         }
 
-        // data type, ID, sec, and ns
+        // parse input parmeters
         history.type = m_byteBuffer.getShort(idx);
         idx += PKT_DATA_TYPE_LENGTH;
 
@@ -201,31 +201,22 @@ public class BridgeWorker extends Thread {
         else if (history.type == HistoryData.TYPE_BLOB)
             ret = procBlobData(pktBuf, idx, history);
         else {
-            // TODO: return error
             m_log.error("Got unknown data type: " + history.type);
+            replyAddData(ErrorCode.INVALID_DATA_TYPE);
             return false;
         }
         if (ret != ErrorCode.SUCCESS) {
-            // TODO: return error
+            replyAddData(ret);
             return false;
         }
 
-        m_log.debug(history.toString());
-        if (!m_driver.addData(history)) {
-            m_log.error("Failed to add data.");
-            // TODO: return error
-            return false;
+        ret = m_driver.addData(history);
+        if (ret != ErrorCode.SUCCESS) {
+            replyAddData(ret);
+            return true;
         }
 
-        // write reply to the socket
-        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH;
-        m_byteBuffer.clear();
-        m_byteBuffer.putInt(length);
-        m_byteBuffer.putShort(PKT_CMD_ADD_DATA);
-        m_byteBuffer.putInt(ErrorCode.SUCCESS);
-        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
-        m_ostream.flush();
-
+        replyAddData(ErrorCode.SUCCESS);
         return true;
     }
 
@@ -262,7 +253,6 @@ public class BridgeWorker extends Thread {
             return true;
         }
 
-        // write reply to the socket
         replyQueryData(ErrorCode.SUCCESS, history);
         return true;
     }
@@ -275,7 +265,7 @@ public class BridgeWorker extends Thread {
             return false;
         }
 
-        // ID, sec0, and sec1
+        // parse input parmeters
         long id = m_byteBuffer.getLong(idx);
         idx += PKT_ID_LENGTH;
 
@@ -402,7 +392,7 @@ public class BridgeWorker extends Thread {
         try {
             statistics = m_driver.getStatistics(id, sec0, ns0, sec1, ns1);
         } catch (HistoryData.DataNotNumericException e) {
-            m_log.warn("Not value type: id: " + id);
+            m_log.error("Not value type: id: " + id);
             replyGetStatistics(ErrorCode.INVALID_DATA_TYPE, id, 0, 0, 0, 0);
             return true;
         } catch (HistoryDataSet.TooManyException e) {
@@ -565,6 +555,16 @@ public class BridgeWorker extends Thread {
     //
     // reply methods
     //
+    private void replyAddData(int errorCode) throws IOException {
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH;
+        m_byteBuffer.clear();
+        m_byteBuffer.putInt(length);
+        m_byteBuffer.putShort(PKT_CMD_ADD_DATA);
+        m_byteBuffer.putInt(ErrorCode.SUCCESS);
+        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
+        m_ostream.flush();
+    }
+
     private void replyQueryData(int errorCode, HistoryData history) throws IOException {
         int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH;
         m_byteBuffer.clear();

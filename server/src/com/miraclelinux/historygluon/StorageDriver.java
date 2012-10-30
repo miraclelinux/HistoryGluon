@@ -6,7 +6,7 @@ interface StorageDriver {
     public void close();
     public String getName();
 
-    public boolean addData(HistoryData history);
+    public int addData(HistoryData history);
 
     public HistoryDataSet getData(long itemId, int clock0, int clock1)
       throws HistoryDataSet.TooManyException;
@@ -23,13 +23,13 @@ interface StorageDriver {
     * in the specified condition.
     *
     * @param itemId  Item ID
-    * @param clock0  The start clock in UNIX time. (The value with this clock
-    *                is used.)
-    * @param clock1  The end clock in UNIX time. (The value with this clock
-    *                 is NOT used.)
-    * @return An instance of Statistics on success. Or null.
-    *         When there is not data with the specified condition, null is
-    *         also returned.
+    * @param sec0  The start time in UNIX time. (The value with this clock is used.)
+    * @param ns0  The start time of nanosecond.
+    * @param se1  The end time in UNIX time. (The value with this clock is NOT used.)
+    * @param ns1  The end time of nanosecond.
+    * @return An instance of Statistics on success. null on errors.
+    *         When the data with the specified condition doesn't exist,
+    *         null is also returned.
     */
     public Statistics getStatistics(long itemId, int sec0, int ns0, int sec1, int ns1)
       throws HistoryDataSet.TooManyException, HistoryData.DataNotNumericException;

@@ -68,7 +68,7 @@ public class HBaseDriver extends BasicStorageDriver {
     }
 
     @Override
-    public boolean addData(HistoryData history) {
+    public int addData(HistoryData history) {
         try {
             HTable table = new HTable(m_config, Bytes.toBytes(TABLE_NAME));
             String key = String.format("%016x%08x%08x",
@@ -97,9 +97,9 @@ public class HBaseDriver extends BasicStorageDriver {
         } catch (IOException e) {
             e.printStackTrace();
             m_log.error(e);
-            return false;
+            return ErrorCode.HBASE_EXCEPTION;
         }
-        return true;
+        return ErrorCode.SUCCESS;
     }
 
     @Override

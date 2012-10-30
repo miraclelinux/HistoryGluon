@@ -41,16 +41,16 @@ public class MemDriver extends BasicStorageDriver {
     }
 
     @Override
-    public boolean addData(HistoryData history) {
+    public int addData(HistoryData history) {
         boolean ret = m_dataSetPreferTime.add(history);
         if (!ret)
-            return false;
+            return ErrorCode.ENTRY_EXISTS;
         ret = m_dataSetPreferId.add(history);
         if (!ret) {
             m_dataSetPreferTime.delete(history);
-            return false;
+            return ErrorCode.ENTRY_EXISTS;
         }
-        return true;
+        return ErrorCode.SUCCESS;
     }
 
     @Override
