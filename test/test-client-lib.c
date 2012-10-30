@@ -13,90 +13,6 @@ static history_gluon_context_t g_ctx = NULL;
 static history_gluon_data_t *g_data = NULL;
 static history_gluon_data_array_t *g_array = NULL;
 
-/* --------------------------------------------------------------------------------------
- * Utility functions
- * ----------------------------------------------------------------------------------- */
-static void create_global_context(void)
-{
-	g_ctx = history_gluon_create_context();
-	cut_assert(g_ctx);
-}
-
-static void free_global_context()
-{
-	history_gluon_free_context(g_ctx);
-	g_ctx = NULL;
-}
-
-static void assert_delete_all_for_id(uint64_t id, uint64_t *num_deleted)
-{
-	struct timespec ts = {0, 0};
-	history_gluon_result_t ret;
-	ret = history_gluon_delete(g_ctx, id, &ts,
-	                           HISTORY_GLUON_DELTE_TYPE_EQUAL_OR_GREATER,
-	                           num_deleted);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-}
-
-static void assert_add_uint(uint64_t id, struct timespec *ts, uint64_t value)
-{
-	history_gluon_result_t ret = history_gluon_add_uint(g_ctx, id, ts, value);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-}
-
-static void assert_add_uint_hgl_data(history_gluon_data_t *gluon_data)
-{
-	assert_add_uint(gluon_data->id, &gluon_data->ts, gluon_data->v_uint);
-}
-
-static void assert_add_float(uint64_t id, struct timespec *ts, double v)
-{
-	history_gluon_result_t ret = history_gluon_add_float(g_ctx, id, ts, v);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-}
-
-static void assert_add_float_hgl_data(history_gluon_data_t *gluon_data)
-{
-	assert_add_float(gluon_data->id, &gluon_data->ts, gluon_data->v_float);
-}
-
-static void assert_add_string(uint64_t id, struct timespec *ts, char *v)
-{
-	history_gluon_result_t ret = history_gluon_add_string(g_ctx, id, ts, v);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-}
-
-static void assert_add_string_hgl_data(history_gluon_data_t *gluon_data)
-{
-	assert_add_string(gluon_data->id, &gluon_data->ts, gluon_data->v_string);
-}
-
-static void assert_add_blob(uint64_t id, struct timespec *ts, uint8_t *v, uint64_t len)
-{
-	history_gluon_result_t ret = history_gluon_add_blob(g_ctx, id, ts, v, len);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-}
-
-static void assert_add_blob_hgl_data(history_gluon_data_t *gluon_data)
-{
-	assert_add_blob(gluon_data->id, &gluon_data->ts, gluon_data->v_blob,
-	                gluon_data->length);
-}
-
-static void assert_add_hgl_data(history_gluon_data_t *gluon_data)
-{
-	if (gluon_data->type == HISTORY_GLUON_TYPE_FLOAT)
-		assert_add_float_hgl_data(gluon_data);
-	else if (gluon_data->type == HISTORY_GLUON_TYPE_STRING)
-		assert_add_string_hgl_data(gluon_data);
-	else if (gluon_data->type == HISTORY_GLUON_TYPE_UINT)
-		assert_add_uint_hgl_data(gluon_data);
-	else if (gluon_data->type == HISTORY_GLUON_TYPE_BLOB)
-		assert_add_blob_hgl_data(gluon_data);
-	else
-		cut_fail("Unknown type: %d", gluon_data->type);
-}
-
 static history_gluon_data_t g_uint_samples[] = {
 	{
 		.id = TEST_STD_ID_UINT,
@@ -290,6 +206,91 @@ static history_gluon_data_t g_blob_samples[] = {
 };
 static const int NUM_BLOB_SAMPLES =
   sizeof(g_blob_samples) / sizeof(history_gluon_data_t);
+
+
+/* --------------------------------------------------------------------------------------
+ * Utility functions
+ * ----------------------------------------------------------------------------------- */
+static void create_global_context(void)
+{
+	g_ctx = history_gluon_create_context();
+	cut_assert(g_ctx);
+}
+
+static void free_global_context()
+{
+	history_gluon_free_context(g_ctx);
+	g_ctx = NULL;
+}
+
+static void assert_delete_all_for_id(uint64_t id, uint64_t *num_deleted)
+{
+	struct timespec ts = {0, 0};
+	history_gluon_result_t ret;
+	ret = history_gluon_delete(g_ctx, id, &ts,
+	                           HISTORY_GLUON_DELTE_TYPE_EQUAL_OR_GREATER,
+	                           num_deleted);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+}
+
+static void assert_add_uint(uint64_t id, struct timespec *ts, uint64_t value)
+{
+	history_gluon_result_t ret = history_gluon_add_uint(g_ctx, id, ts, value);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+}
+
+static void assert_add_uint_hgl_data(history_gluon_data_t *gluon_data)
+{
+	assert_add_uint(gluon_data->id, &gluon_data->ts, gluon_data->v_uint);
+}
+
+static void assert_add_float(uint64_t id, struct timespec *ts, double v)
+{
+	history_gluon_result_t ret = history_gluon_add_float(g_ctx, id, ts, v);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+}
+
+static void assert_add_float_hgl_data(history_gluon_data_t *gluon_data)
+{
+	assert_add_float(gluon_data->id, &gluon_data->ts, gluon_data->v_float);
+}
+
+static void assert_add_string(uint64_t id, struct timespec *ts, char *v)
+{
+	history_gluon_result_t ret = history_gluon_add_string(g_ctx, id, ts, v);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+}
+
+static void assert_add_string_hgl_data(history_gluon_data_t *gluon_data)
+{
+	assert_add_string(gluon_data->id, &gluon_data->ts, gluon_data->v_string);
+}
+
+static void assert_add_blob(uint64_t id, struct timespec *ts, uint8_t *v, uint64_t len)
+{
+	history_gluon_result_t ret = history_gluon_add_blob(g_ctx, id, ts, v, len);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+}
+
+static void assert_add_blob_hgl_data(history_gluon_data_t *gluon_data)
+{
+	assert_add_blob(gluon_data->id, &gluon_data->ts, gluon_data->v_blob,
+	                gluon_data->length);
+}
+
+static void assert_add_hgl_data(history_gluon_data_t *gluon_data)
+{
+	if (gluon_data->type == HISTORY_GLUON_TYPE_FLOAT)
+		assert_add_float_hgl_data(gluon_data);
+	else if (gluon_data->type == HISTORY_GLUON_TYPE_STRING)
+		assert_add_string_hgl_data(gluon_data);
+	else if (gluon_data->type == HISTORY_GLUON_TYPE_UINT)
+		assert_add_uint_hgl_data(gluon_data);
+	else if (gluon_data->type == HISTORY_GLUON_TYPE_BLOB)
+		assert_add_blob_hgl_data(gluon_data);
+	else
+		cut_fail("Unknown type: %d", gluon_data->type);
+}
 
 static void assert_add_uint_samples(void) {
 	int i;
@@ -1104,21 +1105,227 @@ void test_delete_all(void)
 	cut_assert_equal_int(0, num_deleted);
 }
 
-void test_delete_less(void)
+static void asert_delete_common(uint64_t id, void (*add_samples_fn)(void),
+                                struct timespec *ts, history_gluon_delete_way_t delete_way,
+                                uint64_t expected_num_deleted)
 {
-	create_global_context();
-	assert_delete_all_for_id(TEST_STD_ID_FLOAT, NULL);
-	assert_add_float_samples();
-
-	// delete below threshold
-	int cut_idx = 3;
-	struct timespec ts;
-	memcpy(&ts, &g_float_samples[cut_idx].ts, sizeof(struct timespec));
+	assert_make_context_delete_add_samples(id, add_samples_fn);
 	uint64_t num_deleted;
 	history_gluon_result_t ret;
-	ret = history_gluon_delete(g_ctx, TEST_STD_ID_FLOAT, &ts,
-	                           HISTORY_GLUON_DELTE_TYPE_LESS,
-	                           &num_deleted);
+	ret = history_gluon_delete(g_ctx, id, ts, delete_way, &num_deleted);
 	cut_assert_equal_int(HGL_SUCCESS, ret);
-	cut_assert_equal_int(cut_idx, num_deleted);
+	cut_assert_equal_int_least64(expected_num_deleted, num_deleted);
 }
+
+/* EQUAL */
+static void
+assert_delete_eq(uint64_t num_samples, history_gluon_data_t *samples, uint64_t id,
+                 void (*add_samples_fn)(void))
+{
+	uint64_t cut_idx = 3;
+	uint64_t expected_num_deleted = 1;
+	asert_delete_common(id, add_samples_fn, &samples[cut_idx].ts,
+	                    HISTORY_GLUON_DELTE_TYPE_EQUAL, expected_num_deleted);
+}
+
+void test_delete_eq_uint(void)
+{
+	assert_delete_eq(NUM_UINT_SAMPLES, g_uint_samples,
+	                 TEST_STD_ID_UINT, assert_add_uint_samples);
+}
+
+void test_delete_eq_float(void)
+{
+	assert_delete_eq(NUM_FLOAT_SAMPLES, g_float_samples,
+	                 TEST_STD_ID_FLOAT, assert_add_float_samples);
+}
+
+void test_delete_eq_string(void)
+{
+	assert_delete_eq(NUM_STRING_SAMPLES, g_string_samples,
+	                 TEST_STD_ID_STRING, assert_add_string_samples);
+}
+
+void test_delete_eq_blob(void)
+{
+	assert_delete_eq(NUM_BLOB_SAMPLES, g_blob_samples,
+	                 TEST_STD_ID_BLOB, assert_add_blob_samples);
+}
+
+/* EQUAL_OR_LESS */
+static void
+assert_delete_eq_or_less(uint64_t num_samples, history_gluon_data_t *samples, uint64_t id,
+                         void (*add_samples_fn)(void))
+{
+	uint64_t cut_idx = 3;
+	uint64_t expected_num_deleted = cut_idx + 1;
+	asert_delete_common(id, add_samples_fn, &samples[cut_idx].ts,
+	                    HISTORY_GLUON_DELTE_TYPE_EQUAL_OR_LESS, expected_num_deleted);
+}
+
+void test_delete_eq_or_less_uint(void)
+{
+	assert_delete_eq_or_less(NUM_UINT_SAMPLES, g_uint_samples,
+	                 TEST_STD_ID_UINT, assert_add_uint_samples);
+}
+
+void test_delete_eq_or_less_float(void)
+{
+	assert_delete_eq_or_less(NUM_FLOAT_SAMPLES, g_float_samples,
+	                 TEST_STD_ID_FLOAT, assert_add_float_samples);
+}
+
+void test_delete_eq_or_less_string(void)
+{
+	assert_delete_eq_or_less(NUM_STRING_SAMPLES, g_string_samples,
+	                 TEST_STD_ID_STRING, assert_add_string_samples);
+}
+
+void test_delete_eq_or_less_blob(void)
+{
+	assert_delete_eq_or_less(NUM_BLOB_SAMPLES, g_blob_samples,
+	                 TEST_STD_ID_BLOB, assert_add_blob_samples);
+}
+
+/* LESS */
+static void
+assert_delete_less(uint64_t num_samples, history_gluon_data_t *samples, uint64_t id,
+                   void (*add_samples_fn)(void))
+{
+	uint64_t cut_idx = 3;
+	uint64_t expected_num_deleted = cut_idx;
+	asert_delete_common(id, add_samples_fn, &samples[cut_idx].ts,
+	                    HISTORY_GLUON_DELTE_TYPE_LESS, expected_num_deleted);
+}
+
+void test_delete_less_uint(void)
+{
+	assert_delete_less(NUM_UINT_SAMPLES, g_uint_samples,
+	                   TEST_STD_ID_UINT, assert_add_uint_samples);
+}
+
+void test_delete_less_float(void)
+{
+	assert_delete_less(NUM_FLOAT_SAMPLES, g_float_samples,
+	                   TEST_STD_ID_FLOAT, assert_add_float_samples);
+}
+
+void test_delete_less_string(void)
+{
+	assert_delete_less(NUM_STRING_SAMPLES, g_string_samples,
+	                   TEST_STD_ID_STRING, assert_add_string_samples);
+}
+
+void test_delete_less_blob(void)
+{
+	assert_delete_less(NUM_BLOB_SAMPLES, g_blob_samples,
+	                   TEST_STD_ID_BLOB, assert_add_blob_samples);
+}
+
+/* EQUAL_OR_GREATER */
+static void
+assert_delete_eq_or_gt(uint64_t num_samples, history_gluon_data_t *samples, uint64_t id,
+                       void (*add_samples_fn)(void))
+{
+	uint64_t cut_idx = 3;
+	uint64_t expected_num_deleted = num_samples - cut_idx;
+	asert_delete_common(id, add_samples_fn, &samples[cut_idx].ts,
+	                    HISTORY_GLUON_DELTE_TYPE_EQUAL_OR_GREATER,
+	                    expected_num_deleted);
+}
+
+void test_delete_eq_or_gt_uint(void)
+{
+	assert_delete_eq_or_gt(NUM_UINT_SAMPLES, g_uint_samples,
+	                       TEST_STD_ID_UINT, assert_add_uint_samples);
+}
+
+void test_delete_eq_or_gt_float(void)
+{
+	assert_delete_eq_or_gt(NUM_FLOAT_SAMPLES, g_float_samples,
+	                       TEST_STD_ID_FLOAT, assert_add_float_samples);
+}
+
+void test_delete_eq_or_gt_string(void)
+{
+	assert_delete_eq_or_gt(NUM_STRING_SAMPLES, g_string_samples,
+	                       TEST_STD_ID_STRING, assert_add_string_samples);
+}
+
+void test_delete_eq_or_gt_blob(void) {
+	assert_delete_eq_or_gt(NUM_BLOB_SAMPLES, g_blob_samples,
+	                       TEST_STD_ID_BLOB, assert_add_blob_samples);
+}
+
+/* GREATER */
+static void
+assert_delete_gt(uint64_t num_samples, history_gluon_data_t *samples, uint64_t id,
+                 void (*add_samples_fn)(void))
+{
+	uint64_t cut_idx = 3;
+	uint64_t expected_num_deleted = num_samples - cut_idx - 1;
+	asert_delete_common(id, add_samples_fn, &samples[cut_idx].ts,
+	                    HISTORY_GLUON_DELTE_TYPE_GREATER, expected_num_deleted);
+}
+
+void test_delete_gt_uint(void)
+{
+	assert_delete_gt(NUM_UINT_SAMPLES, g_uint_samples,
+	                 TEST_STD_ID_UINT, assert_add_uint_samples);
+}
+
+void test_delete_gt_float(void)
+{
+	assert_delete_gt(NUM_FLOAT_SAMPLES, g_float_samples,
+	                 TEST_STD_ID_FLOAT, assert_add_float_samples);
+}
+
+void test_delete_gt_string(void)
+{
+	assert_delete_gt(NUM_STRING_SAMPLES, g_string_samples,
+	                 TEST_STD_ID_STRING, assert_add_string_samples);
+}
+
+void test_delete_gt_blob(void)
+{
+	assert_delete_gt(NUM_BLOB_SAMPLES, g_blob_samples,
+	                 TEST_STD_ID_BLOB, assert_add_blob_samples);
+}
+
+/* not found */
+static void
+assert_delete_not_found(uint64_t num_samples, history_gluon_data_t *samples, uint64_t id,
+                        void (*add_samples_fn)(void))
+{
+	uint64_t cut_idx = 3;
+	uint64_t expected_num_deleted = 0;
+	struct timespec ts;
+	set_mean_ts(&samples[cut_idx].ts, &samples[cut_idx+1].ts, &ts);
+	asert_delete_common(id, add_samples_fn, &ts,
+	                    HISTORY_GLUON_DELTE_TYPE_EQUAL, expected_num_deleted);
+}
+
+void test_delete_not_found_uint(void)
+{
+	assert_delete_not_found(NUM_UINT_SAMPLES, g_uint_samples,
+	                        TEST_STD_ID_UINT, assert_add_uint_samples);
+}
+
+void test_delete_not_found_float(void)
+{
+	assert_delete_not_found(NUM_FLOAT_SAMPLES, g_float_samples,
+	                        TEST_STD_ID_FLOAT, assert_add_float_samples);
+}
+
+void test_delete_not_found_string(void)
+{
+	assert_delete_not_found(NUM_STRING_SAMPLES, g_string_samples,
+	                        TEST_STD_ID_STRING, assert_add_string_samples);
+}
+
+void test_delete_not_found_blob(void)
+{
+	assert_delete_not_found(NUM_BLOB_SAMPLES, g_blob_samples,
+	                        TEST_STD_ID_BLOB, assert_add_blob_samples);
+}
+
