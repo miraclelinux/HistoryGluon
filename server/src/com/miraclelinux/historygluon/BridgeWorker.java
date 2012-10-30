@@ -400,12 +400,16 @@ public class BridgeWorker extends Thread {
 
         Statistics statistics = null;
         try {
-            statistics = m_driver.getStatistics(id, sec0, sec1);
+            statistics = m_driver.getStatistics(id, sec0, ns0, sec1, ns1);
+        } catch (HistoryData.DataNotNumericException e) {
+            m_log.warn("Not value type: id: " + id);
+            replyGetStatistics(ErrorCode.INVALID_DATA_TYPE, id, 0, 0, 0, 0);
+            return true;
         } catch (HistoryDataSet.TooManyException e) {
             replyGetStatistics(ErrorCode.TOO_MANY_ENTRIES, id, 0, 0, 0, 0);
             return true;
         }
-        if (statistics == null) {
+        if (statistics == null || statistics.count == 0) {
             replyGetStatistics(ErrorCode.NOT_FOUND, id, 0, 0, 0, 0);
             return true;
         }

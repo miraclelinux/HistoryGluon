@@ -91,15 +91,11 @@ public abstract class BasicStorageDriver implements StorageDriver {
     }
 
     @Override
-    public Statistics getStatistics(long id, int sec0, int sec1)
-      throws HistoryDataSet.TooManyException {
+    public Statistics getStatistics(long id, int sec0, int ns0, int sec1, int ns1)
+      throws HistoryDataSet.TooManyException, HistoryData.DataNotNumericException {
         // extract data set
-        String startKey = makeKey(id, sec0, 0);
-        String stopKey;
-        if (sec1 != 0)
-            stopKey = makeKey(id, sec1, 0);
-        else
-            stopKey = makeKey(id+1, 0, 0);
+        String startKey = makeKey(id, sec0, ns0);
+        String stopKey = makeKey(id, sec1, ns1);
         HistoryDataSet dataSet = getDataSet(id, startKey, stopKey, COUNT_UNLIMITED);
 
         // calcurate values
@@ -107,15 +103,10 @@ public abstract class BasicStorageDriver implements StorageDriver {
         Iterator<HistoryData> it = dataSet.iterator();
         while (it.hasNext()) {
             HistoryData history = it.next();
-            try {
-                if (statistics.count == 0)
-                    statistics.setData(history);
-                else
-                    statistics.addData(history);
-            } catch (HistoryData.DataNotNumericException e) {
-                m_log.warn("Not value type: " + history.toString() +
-                           ", key: " + history.key);
-            }
+            if (statistics.count == 0)
+                statistics.setData(history);
+            else
+                statistics.addData(history);
         }
         return statistics;
     }

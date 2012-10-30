@@ -31,8 +31,8 @@ interface StorageDriver {
     *         When there is not data with the specified condition, null is
     *         also returned.
     */
-    public Statistics getStatistics(long itemId, int clock0, int clock1)
-      throws HistoryDataSet.TooManyException;
+    public Statistics getStatistics(long itemId, int sec0, int ns0, int sec1, int ns1)
+      throws HistoryDataSet.TooManyException, HistoryData.DataNotNumericException;
 
    /**
     * Delete data.
