@@ -996,8 +996,8 @@ history_gluon_query(history_gluon_context_t _ctx, uint64_t id, struct timespec *
 
 	/* make a request packet and write it */
 	uint8_t request[PKT_QUERY_DATA_LENGTH];
-	fill_query_data_header(ctx, id, ts, request, query_type);
-	ret = write_data(ctx, request, PKT_QUERY_DATA_LENGTH);
+	int cmd_length = fill_query_data_header(ctx, id, ts, request, query_type);
+	ret = write_data(ctx, request,cmd_length);
 	RETURN_IF_ERROR(ret);
 
 	/* reply */
@@ -1042,8 +1042,9 @@ history_gluon_range_query(history_gluon_context_t _ctx, uint64_t id,
 
 	/* make a request packet and write it */
 	uint8_t request[PKT_RANGE_QUERY_LENGTH];
-	fill_range_query_header(ctx, request, id, ts0, ts1, sort_request, num_max_entries);
-	ret = write_data(ctx, request, PKT_RANGE_QUERY_LENGTH);
+	int cmd_length = fill_range_query_header(ctx, request, id, ts0, ts1,
+	                                         sort_request, num_max_entries);
+	ret = write_data(ctx, request, cmd_length);
 	RETURN_IF_ERROR(ret);
 
 	/* reply */
@@ -1126,8 +1127,8 @@ history_gluon_get_minmum_time(history_gluon_context_t _ctx,
 
 	// request
 	uint8_t request[PKT_GET_MIN_TIME_LENGTH];
-	fill_get_minimum_time_packet(ctx, request, id);
-	ret = write_data(ctx, request, PKT_GET_MIN_TIME_LENGTH);
+	int cmd_length = fill_get_minimum_time_packet(ctx, request, id);
+	ret = write_data(ctx, request, cmd_length);
 	RETURN_IF_ERROR(ret);
 
 	// reply
@@ -1204,8 +1205,8 @@ history_gluon_delete(history_gluon_context_t _ctx, uint64_t id, struct timespec 
 
 	// request
 	uint8_t request[PKT_DELETE_LENGTH];
-	fill_delete_packet(ctx, request, id, ts, delete_way);
-	ret = write_data(ctx, request, PKT_DELETE_LENGTH);
+	int cmd_length = fill_delete_packet(ctx, request, id, ts, delete_way);
+	ret = write_data(ctx, request, cmd_length);
 	RETURN_IF_ERROR(ret);
 
 	// reply
