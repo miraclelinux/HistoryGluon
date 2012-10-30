@@ -291,25 +291,17 @@ public class BridgeWorker extends Thread {
         try {
             dataSet = m_driver.getData(id, sec0, sec1);
         } catch (HistoryDataSet.TooManyException e) {
-            // FIXME: return the error
-            return false;
+            replyRangeQuery(ErrorCode.TOO_MANY_ENTRIES, 0, sortOrder);
+            return true;
         }
 
         // calculate length and  entries
-        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH
-                     + PKT_NUM_ENTRIES_LENGTH + PKT_SORT_ORDER_LENGTH;
         long numEntries = dataSet.size();
         if (maxEntries != MAX_ENTRIES_UNLIMITED && numEntries > maxEntries)
             numEntries = maxEntries;
 
         // write reply header to the socket
-        m_byteBuffer.clear();
-        m_byteBuffer.putInt(length);
-        m_byteBuffer.putShort(PKT_CMD_RANGE_QUERY);
-        m_byteBuffer.putInt(ErrorCode.SUCCESS);
-        m_byteBuffer.putLong(numEntries);
-        m_byteBuffer.putShort(sortOrder);
-        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
+        replyRangeQuery(ErrorCode.SUCCESS, numEntries, sortOrder);
 
         // write quried data
         Iterator<HistoryData> it;
@@ -328,7 +320,6 @@ public class BridgeWorker extends Thread {
             if (maxEntries != MAX_ENTRIES_UNLIMITED && numEntries == maxEntries)
                 break;
         }
-
         m_ostream.flush();
 
         return true;
@@ -574,6 +565,20 @@ public class BridgeWorker extends Thread {
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         if (history != null)
             sendOneHistoryData(history);
+        m_ostream.flush();
+    }
+
+    private void replyRangeQuery(int errorCode, long numEntries, short sortOrder)
+      throws IOException {
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH
+                     + PKT_NUM_ENTRIES_LENGTH + PKT_SORT_ORDER_LENGTH;
+        m_byteBuffer.clear();
+        m_byteBuffer.putInt(length);
+        m_byteBuffer.putShort(PKT_CMD_RANGE_QUERY);
+        m_byteBuffer.putInt(errorCode);
+        m_byteBuffer.putLong(numEntries);
+        m_byteBuffer.putShort(sortOrder);
+        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         m_ostream.flush();
     }
 
