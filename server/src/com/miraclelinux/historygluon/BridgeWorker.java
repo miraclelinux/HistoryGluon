@@ -45,10 +45,6 @@ public class BridgeWorker extends Thread {
     private static final short PKT_SORT_ORDER_NOT_SORTED = 2;
 
     private static final int REPLY_RESULT_LENGTH = 4;
-    private static final int REPLY_QUERY_FOUND_FLAG_LENGTH = 2;
-
-    private static final int REPLY_QUERY_NOT_FOUND = 0;
-    private static final int REPLY_QUERY_DATA_FOUND = 1;
 
     private static final int RESULT_ERROR_UNKNOWN_REASON = 1;
     private static final int RESULT_ERROR_TOO_MANY_RECORDS = 2;
@@ -177,7 +173,7 @@ public class BridgeWorker extends Thread {
         int putLength = PKT_DATA_TYPE_LENGTH + PKT_ID_LENGTH
                         + PKT_SEC_LENGTH + PKT_NS_LENGTH;
         if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
-            // TODO: return error
+            replyQueryData(ErrorCode.PACKET_SHORT, null);
             return false;
         }
 
@@ -233,11 +229,51 @@ public class BridgeWorker extends Thread {
         return true;
     }
 
+    private boolean queryData(byte[] pktBuf, int idx) throws IOException {
+        int putLength = PKT_ID_LENGTH + PKT_SEC_LENGTH
+                        + PKT_NS_LENGTH + PKT_QUERY_TYPE_LENGTH;
+        if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
+            replyQueryData(ErrorCode.PACKET_SHORT, null);
+            return false;
+        }
+
+        // ID, sec0, and sec1
+        long id = m_byteBuffer.getLong(idx);
+        idx += PKT_ID_LENGTH;
+
+        int sec = m_byteBuffer.getInt(idx);
+        idx += PKT_SEC_LENGTH;
+
+        int ns = m_byteBuffer.getInt(idx);
+        idx += PKT_NS_LENGTH;
+
+        short queryType = m_byteBuffer.getShort(idx);
+        idx += PKT_QUERY_TYPE_LENGTH;
+
+        HistoryData history = null;
+        try {
+            history = m_driver.queryData(id, sec, ns, queryType);
+        } catch (HistoryDataSet.TooManyException e) {
+            replyQueryData(ErrorCode.TOO_MANY_ENTRIES, history);
+            return true;
+        }
+        if (history == null) {
+            replyQueryData(ErrorCode.NOT_FOUND, history);
+            return true;
+        }
+
+        // write reply to the socket
+        replyQueryData(ErrorCode.SUCCESS, history);
+        return true;
+    }
+
     private boolean rangeQuery(byte[] pktBuf, int idx) throws IOException {
         int putLength = PKT_ID_LENGTH + (PKT_SEC_LENGTH + PKT_NS_LENGTH) * 2
                         + PKT_NUM_ENTRIES_LENGTH + PKT_SORT_ORDER_LENGTH;
-        if (!putBufferWithCheckLength(pktBuf, idx, putLength))
+        if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
+            replyQueryData(ErrorCode.PACKET_SHORT, null);
             return false;
+        }
 
         // ID, sec0, and sec1
         long id = m_byteBuffer.getLong(idx);
@@ -308,58 +344,13 @@ public class BridgeWorker extends Thread {
         return true;
     }
 
-    private boolean queryData(byte[] pktBuf, int idx) throws IOException {
-        int putLength = PKT_ID_LENGTH + PKT_SEC_LENGTH
-                        + PKT_NS_LENGTH + PKT_QUERY_TYPE_LENGTH;
-        if (!putBufferWithCheckLength(pktBuf, idx, putLength))
-            return false;
-
-        // ID, sec0, and sec1
-        long id = m_byteBuffer.getLong(idx);
-        idx += PKT_ID_LENGTH;
-
-        int sec = m_byteBuffer.getInt(idx);
-        idx += PKT_SEC_LENGTH;
-
-        int ns = m_byteBuffer.getInt(idx);
-        idx += PKT_NS_LENGTH;
-
-        short queryType = m_byteBuffer.getShort(idx);
-        idx += PKT_QUERY_TYPE_LENGTH;
-
-        HistoryData history = null;
-        try {
-            history = m_driver.queryData(id, sec, ns, queryType);
-        } catch (HistoryDataSet.TooManyException e) {
-            // FIXME: return the error
-            return false;
-        }
-        short found;
-        if (history != null)
-            found = REPLY_QUERY_DATA_FOUND;
-        else
-            found = REPLY_QUERY_NOT_FOUND;
-
-        // write reply to the socket
-        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH +
-                     REPLY_QUERY_FOUND_FLAG_LENGTH;
-        m_byteBuffer.clear();
-        m_byteBuffer.putInt(length);
-        m_byteBuffer.putShort(PKT_CMD_QUERY_DATA);
-        m_byteBuffer.putInt(ErrorCode.SUCCESS);
-        m_byteBuffer.putShort(found);
-        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
-        if (history != null)
-            sendOneHistoryData(history);
-        m_ostream.flush();
-        return true;
-    }
-
     private boolean getMinimumTime(byte[] pktBuf, int idx) throws IOException {
 
         int putLength = PKT_ID_LENGTH;
-        if (!putBufferWithCheckLength(pktBuf, idx, putLength))
+        if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
+            replyQueryData(ErrorCode.PACKET_SHORT, null);
             return false;
+        }
 
         // get ID
         long id = m_byteBuffer.getLong(idx);
@@ -386,8 +377,10 @@ public class BridgeWorker extends Thread {
     private boolean getStatistics(byte[] pktBuf, int idx) throws IOException {
 
         int putLength = PKT_ID_LENGTH + PKT_SEC_LENGTH * 2;
-        if (!putBufferWithCheckLength(pktBuf, idx, putLength))
+        if (!putBufferWithCheckLength(pktBuf, idx, putLength)) {
+            replyQueryData(ErrorCode.PACKET_SHORT, null);
             return false;
+        }
 
         // get ID and ts0, and ts1
         long id = m_byteBuffer.getLong(idx);
@@ -576,6 +569,18 @@ public class BridgeWorker extends Thread {
     //
     // reply methods
     //
+    private void replyQueryData(int errorCode, HistoryData history) throws IOException {
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH;
+        m_byteBuffer.clear();
+        m_byteBuffer.putInt(length);
+        m_byteBuffer.putShort(PKT_CMD_QUERY_DATA);
+        m_byteBuffer.putInt(errorCode);
+        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
+        if (history != null)
+            sendOneHistoryData(history);
+        m_ostream.flush();
+    }
+
     private void replyGetMinimumTime(int errorCode, int sec, int ns) throws IOException {
         int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH
                      + PKT_SEC_LENGTH + PKT_NS_LENGTH;;

@@ -32,11 +32,6 @@ typedef enum {
 	HISTORY_GLUON_DELTE_TYPE_GREATER          = 4,
 } history_gluon_delete_way_t;
 
-enum {
-	HISTORY_GLUON_QUERY_NOT_FOUND  = 0,
-	HISTORY_GLUON_QUERY_DATA_FOUND = 1,
-};
-
 #define HISTORY_GLUON_NUM_ENTRIES_UNLIMITED 0
 
 typedef struct

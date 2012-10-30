@@ -1,7 +1,7 @@
 History Gluon Server-client protocol specification
 
 Date: 2012/10/30
-Version: 0.6.9
+Version: 0.7.0
 
 *** Basics rules ***
 Endian: Little
@@ -41,10 +41,6 @@ REPLY: Add Data
 [ 2] Reply type
   100: reply: Add Data
 [ 4] Result
-   Success
-   Unknown error
-   Server Error
-   Entry exists
 
 =========================================
 COMMAND PKT: Query Data
@@ -67,11 +63,6 @@ REPLY: Query Data
 [ 2] Reply type
   200: reply: Query Data
 [ 4] Result
-   Success
-   Unknown error
-   Server Error
-   Not found
-[ 2] Found
 << Body part: If Found is 0, this part is omitted>>
 [ 8] ID
 [ 4] Time: second
@@ -116,11 +107,6 @@ REPLY: Range Query
 [ 2] Reply type
   300: reply: Range Query
 [ 4] Result
-   Success
-   Unknown error
-   Server Error
-   Not found
-   Too many enties
 [ 8] The number of entries
 [ 2] Sort order
   0: ascending
@@ -145,10 +131,6 @@ REPLY: Get Minimum Time
 [ 2] Reply Type
   400: Get Mininum Time
 [ 4] Result
-   Success
-   Unknown error
-   Server Error
-   Not found
 [ 4] Minimum time: second
 [ 4] Minimum time: nano-second
 
@@ -175,12 +157,6 @@ REPLY PKT: Get Statistics
 [ 2] Reply type
   500: reply: Get Statistics
 [ 4] Result
-   Success
-   Unknown error
-   Server Error
-   Not found
-   Too many enties
-   Invalid type
 [ 8] ID
 [ 8] Count: Interger (64bit)
 [ 8] Minimum: Float (IEEE754)
@@ -210,9 +186,6 @@ REPLY PKT: Delete Data
 [ 2] Reply type
   600: reply: Delete Data
 [ 4] Result
-   Success
-   Unknown error
-   Server Error
 [ 8] The count of the deleted data: Integer (64bit)
 
 ==================================================

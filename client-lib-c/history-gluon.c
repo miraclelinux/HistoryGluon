@@ -76,13 +76,10 @@ do { \
  PKT_NS_LENGTH + \
  PKT_QUERY_TYPE_LENGTH)
 
-#define REPLY_QUERY_DATA_FOUND_FLAG_LENGTH 2
-
 #define REPLY_QUERY_DATA_HEADER_LENGTH \
 (PKT_SIZE_LENGTH + \
  PKT_CMD_TYPE_LENGTH + \
- REPLY_RESULT_LENGTH + \
- REPLY_QUERY_DATA_FOUND_FLAG_LENGTH)
+ REPLY_RESULT_LENGTH)
 
 /* Range Query */
 #define PKT_NUM_ENTRIES_LENGTH 8
@@ -1008,12 +1005,7 @@ history_gluon_query(history_gluon_context_t _ctx, uint64_t id, struct timespec *
 	                                PKT_CMD_QUERY_DATA, &idx);
 	RETURN_IF_ERROR(ret);
 
-	/* found flag */
-	uint16_t found_flag = restore_le16(ctx, &reply[idx]);
-	idx += REPLY_QUERY_DATA_FOUND_FLAG_LENGTH;
-	if (found_flag == HISTORY_GLUON_QUERY_NOT_FOUND)
-		return HGLSVERR_NOT_FOUND;
-
+	/* read data */
 	ret = read_gluon_data(ctx, gluon_data);
 	RETURN_IF_ERROR(ret);
 
