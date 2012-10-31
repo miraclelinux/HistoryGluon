@@ -1,0 +1,16 @@
+======================
+Preparation
+======================
+(0) install PHPUnit
+
+(1) Enables dynamic loading
+Set 'enable_dl = On' in php.ini
+  (php.ini is in /etc/php5/cli on Ubuntu 12.10)
+
+(2) install history_gluon.so in extension directory.
+This usually is done by executing 'make install' in extension's source directory.
+
+======================
+How to test
+======================
+$ phpunit --colors ApiTest
