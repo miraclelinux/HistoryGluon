@@ -228,7 +228,7 @@ static void assert_delete_all_for_id(uint64_t id, uint64_t *num_deleted)
 	struct timespec ts = {0, 0};
 	history_gluon_result_t ret;
 	ret = history_gluon_delete(g_ctx, id, &ts,
-	                           HISTORY_GLUON_DELTE_TYPE_EQUAL_OR_GREATER,
+	                           HISTORY_GLUON_DELETE_TYPE_EQUAL_OR_GREATER,
 	                           num_deleted);
 	cut_assert_equal_int(HGL_SUCCESS, ret);
 }
@@ -1125,7 +1125,7 @@ assert_delete_eq(uint64_t num_samples, history_gluon_data_t *samples, uint64_t i
 	uint64_t cut_idx = 3;
 	uint64_t expected_num_deleted = 1;
 	asert_delete_common(id, add_samples_fn, &samples[cut_idx].ts,
-	                    HISTORY_GLUON_DELTE_TYPE_EQUAL, expected_num_deleted);
+	                    HISTORY_GLUON_DELETE_TYPE_EQUAL, expected_num_deleted);
 }
 
 void test_delete_eq_uint(void)
@@ -1160,7 +1160,7 @@ assert_delete_eq_or_less(uint64_t num_samples, history_gluon_data_t *samples, ui
 	uint64_t cut_idx = 3;
 	uint64_t expected_num_deleted = cut_idx + 1;
 	asert_delete_common(id, add_samples_fn, &samples[cut_idx].ts,
-	                    HISTORY_GLUON_DELTE_TYPE_EQUAL_OR_LESS, expected_num_deleted);
+	                    HISTORY_GLUON_DELETE_TYPE_EQUAL_OR_LESS, expected_num_deleted);
 }
 
 void test_delete_eq_or_less_uint(void)
@@ -1195,7 +1195,7 @@ assert_delete_less(uint64_t num_samples, history_gluon_data_t *samples, uint64_t
 	uint64_t cut_idx = 3;
 	uint64_t expected_num_deleted = cut_idx;
 	asert_delete_common(id, add_samples_fn, &samples[cut_idx].ts,
-	                    HISTORY_GLUON_DELTE_TYPE_LESS, expected_num_deleted);
+	                    HISTORY_GLUON_DELETE_TYPE_LESS, expected_num_deleted);
 }
 
 void test_delete_less_uint(void)
@@ -1230,7 +1230,7 @@ assert_delete_eq_or_gt(uint64_t num_samples, history_gluon_data_t *samples, uint
 	uint64_t cut_idx = 3;
 	uint64_t expected_num_deleted = num_samples - cut_idx;
 	asert_delete_common(id, add_samples_fn, &samples[cut_idx].ts,
-	                    HISTORY_GLUON_DELTE_TYPE_EQUAL_OR_GREATER,
+	                    HISTORY_GLUON_DELETE_TYPE_EQUAL_OR_GREATER,
 	                    expected_num_deleted);
 }
 
@@ -1265,7 +1265,7 @@ assert_delete_gt(uint64_t num_samples, history_gluon_data_t *samples, uint64_t i
 	uint64_t cut_idx = 3;
 	uint64_t expected_num_deleted = num_samples - cut_idx - 1;
 	asert_delete_common(id, add_samples_fn, &samples[cut_idx].ts,
-	                    HISTORY_GLUON_DELTE_TYPE_GREATER, expected_num_deleted);
+	                    HISTORY_GLUON_DELETE_TYPE_GREATER, expected_num_deleted);
 }
 
 void test_delete_gt_uint(void)
@@ -1302,7 +1302,7 @@ assert_delete_not_found(uint64_t num_samples, history_gluon_data_t *samples, uin
 	struct timespec ts;
 	set_mean_ts(&samples[cut_idx].ts, &samples[cut_idx+1].ts, &ts);
 	asert_delete_common(id, add_samples_fn, &ts,
-	                    HISTORY_GLUON_DELTE_TYPE_EQUAL, expected_num_deleted);
+	                    HISTORY_GLUON_DELETE_TYPE_EQUAL, expected_num_deleted);
 }
 
 void test_delete_not_found_uint(void)
