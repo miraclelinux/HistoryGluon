@@ -34,7 +34,8 @@ class ApiTest extends PHPUnit_Framework_TestCase
         $sec = 10203040;
         $ns = 200111500;
         $data = 0x87654321;
-        $ret = $this->assertGloblCreateContext($this->g_ctx, $id, $sec, $ns, $data);
+        $this->assertGloblCreateContext();
+        $ret = history_gluon_add_uint($this->g_ctx, $id, $sec, $ns, $data);
         $this->assertEquals(HGL_SUCCESS, $ret);
     }
 

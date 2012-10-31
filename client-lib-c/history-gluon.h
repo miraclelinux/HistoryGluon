@@ -81,6 +81,7 @@ typedef enum {
 	HGLERR_UNKNOWN_REASON        = -1,
 	HGLERR_NOT_IMPLEMENTED       = -2,
 	HGLERR_MEM_ALLOC             = -3,
+	HGLERR_INVALID_CONTEXT       = -10,
 	HGLERR_READ_STREAM_END       = -100,
 	HGLERR_READ_ERROR            = -101,
 	HGLERR_WRITE_ERROR           = -200,
