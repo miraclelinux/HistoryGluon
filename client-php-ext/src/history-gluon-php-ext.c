@@ -84,8 +84,10 @@ PHP_FUNCTION(history_gluon_add_uint)
 {
 	// get arguments
 	long l_ctx, l_id, l_sec, l_ns, l_data; 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lllll",
-	                          &l_ctx, &l_id, &l_sec, &l_ns, &l_data) == FAILURE)
+	int pret;
+	pret = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lllll",
+	                             &l_ctx, &l_id, &l_sec, &l_ns, &l_data);
+	if (pret == FAILURE)
 		RETURN_NULL();
 	
 	history_gluon_context_t ctx = (history_gluon_context_t *)l_ctx;
@@ -106,10 +108,12 @@ PHP_FUNCTION(history_gluon_range_query)
 	// get arguments
 	long l_ctx, l_id, l_sec0, l_ns0, l_sec1, l_ns1, l_sort_request, l_max_entries;
 	zval *z_array;
-	int param_ret = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "llllllllz",
-	                                      &l_ctx, &l_id, &l_sec0, &l_ns0,
-	                                      &l_sec1, &l_ns1, &l_sort_request, &z_array);
-	if (param_ret == FAILURE)
+	int pret;
+	pret = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "llllllllz",
+	                             &l_ctx, &l_id, &l_sec0, &l_ns0,
+	                             &l_sec1, &l_ns1, &l_sort_request,
+	                             &z_array);
+	if (pret == FAILURE)
 		RETURN_NULL();
 	
 	history_gluon_context_t ctx = (history_gluon_context_t *)l_ctx;
@@ -134,10 +138,13 @@ PHP_FUNCTION(history_gluon_range_query)
 PHP_FUNCTION(history_gluon_delete)
 {
 	// get arguments
-	long l_ctx, l_id, l_sec, l_ns, l_del_way, z_num_deleted;
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lllllz",
-	                          &l_ctx, &l_id, &l_sec, &l_ns, &l_del_way,
-	                          &z_num_deleted) == FAILURE)
+	long l_ctx, l_id, l_sec, l_ns, l_del_way;
+	zval *z_num_deleted;
+	int pret;
+	pret = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lllllz",
+	                             &l_ctx, &l_id, &l_sec, &l_ns, &l_del_way,
+	                             &z_num_deleted);
+	if (pret == FAILURE)
 		RETURN_NULL();
 	
 	history_gluon_context_t ctx = (history_gluon_context_t *)l_ctx;
@@ -153,6 +160,6 @@ PHP_FUNCTION(history_gluon_delete)
 
 	// call the library function and return the return.
 	ret = history_gluon_delete(ctx, id, &ts, delete_way, &num_deleted);
-	ZVAL_LONG(&z_num_deleted, num_deleted);
+	ZVAL_LONG(z_num_deleted, num_deleted);
 	RETURN_LONG((long)ret);
 }
