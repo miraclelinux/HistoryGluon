@@ -33,6 +33,7 @@ The sources in the repository doesn't contain 'configure' script. So you have to
  Optionally, install the following tools if you do test.
  - JUnit4
  - Cutter
+ - PHPUnit
 
 1) execute the autogen.sh
 $ autogen.sh
