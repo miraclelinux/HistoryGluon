@@ -1,0 +1,6 @@
+20121101-001: Fix client-lib-php-ext/Makefile.am
+Current implementation uses 'export' in Makefile.am
+This may not work with shell other than bash.
+The reason why 'export' is used is to pass CFLAGS and LDFLAGS
+to configure. This, however, may not be a good way.
+Should we set these parameters by client-lib-php-ext/src/config.m4 ?
