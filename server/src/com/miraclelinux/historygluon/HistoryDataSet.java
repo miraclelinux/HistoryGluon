@@ -20,7 +20,7 @@ public class HistoryDataSet extends TreeSet<HistoryData> {
     public HistoryDataSet() {
     }
 
-    public HistoryDataSet(Comparator comparator) {
+    public HistoryDataSet(Comparator<HistoryData> comparator) {
         super(comparator);
     }
 }

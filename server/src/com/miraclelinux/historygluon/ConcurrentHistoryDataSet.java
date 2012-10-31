@@ -16,7 +16,7 @@ public class ConcurrentHistoryDataSet extends HistoryDataSet {
     public ConcurrentHistoryDataSet() {
     }
 
-    public ConcurrentHistoryDataSet(Comparator comparator) {
+    public ConcurrentHistoryDataSet(Comparator<HistoryData> comparator) {
         super(comparator);
     }
 
