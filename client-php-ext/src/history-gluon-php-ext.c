@@ -106,13 +106,14 @@ PHP_FUNCTION(history_gluon_add_uint)
 PHP_FUNCTION(history_gluon_range_query)
 {
 	// get arguments
-	long l_ctx, l_id, l_sec0, l_ns0, l_sec1, l_ns1, l_sort_request, l_max_entries;
+	long l_ctx, l_id, l_sec0, l_ns0, l_sec1, l_ns1;
+	long l_sort_request, l_max_entries;
 	zval *z_array;
 	int pret;
 	pret = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "llllllllz",
 	                             &l_ctx, &l_id, &l_sec0, &l_ns0,
 	                             &l_sec1, &l_ns1, &l_sort_request,
-	                             &z_array);
+	                             &l_max_entries, &z_array);
 	if (pret == FAILURE)
 		RETURN_NULL();
 	
@@ -120,7 +121,7 @@ PHP_FUNCTION(history_gluon_range_query)
 	uint64_t id = l_id;
 	struct timespec ts0 = {l_sec0, l_ns0};
 	struct timespec ts1 = {l_sec1, l_ns1};
-	history_gluon_sort_order_t sort_request;
+	history_gluon_sort_order_t sort_request = l_sort_request;
 	uint64_t num_max_entries = l_max_entries;
 	history_gluon_data_array_t *array;
 
@@ -132,6 +133,13 @@ PHP_FUNCTION(history_gluon_range_query)
 	// call the library function and return the return.
 	ret = history_gluon_range_query(ctx, id, &ts0, &ts1, sort_request,
 	                                num_max_entries, &array);
+	if (ret != HGL_SUCCESS)
+		RETURN_LONG((long)ret);
+
+	// make data for return
+	array_init(z_array);
+	add_assoc_long(z_array, ""
+	
 	RETURN_LONG((long)ret);
 }
 
