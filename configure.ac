@@ -39,6 +39,7 @@ Makefile
 server/Makefile
 client-lib-c/Makefile
 history-gluon-1.0.pc
+client-php-ext/Makefile
 test/Makefile
 ])
 

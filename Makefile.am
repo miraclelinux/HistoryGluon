@@ -1,4 +1,4 @@
-SUBDIRS = . server client-lib-c test
+SUBDIRS = . server client-lib-c client-php-ext test
 ACLOCAL_AMFLAGS = -I m4
 
 EXTRA_DIST = history-gluon-1.0.pc.in
