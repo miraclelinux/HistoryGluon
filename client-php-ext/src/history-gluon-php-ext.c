@@ -6,7 +6,9 @@
 #include "history-gluon-php-ext.h"
 
 static zend_function_entry php_history_gluon_functions[] = {
-    PHP_FE(create_context, NULL)
+    PHP_FE(history_gluon_create_context, NULL)
+    PHP_FE(history_gluon_free_context, NULL)
+    PHP_FE(history_gluon_add_uint, NULL)
     {NULL, NULL, NULL}
 };
 
@@ -48,9 +50,26 @@ PHP_RINIT_FUNCTION(history_gluon)
 	return SUCCESS;
 }
 
-PHP_FUNCTION(create_context)
+PHP_FUNCTION(history_gluon_create_context)
 {
 	if (!g_ctx)
 		g_ctx = history_gluon_create_context();
 	RETURN_LONG((long)g_ctx);
+}
+
+PHP_FUNCTION(history_gluon_free_context)
+{
+	if (!g_ctx) {
+		history_gluon_free_context(g_ctx);
+		g_ctx = NULL;
+	}
+}
+
+PHP_FUNCTION(history_gluon_add_uint)
+{
+	history_gluon_context_t ctx;
+	uint64_t id;
+	struct timespec ts;
+	uint64_t data;
+	RETURN_LONG((long)history_gluon_add_uint(ctx, id, &ts, data));
 }

@@ -7,7 +7,9 @@ PHP_MINIT_FUNCTION(history_gluon);
 PHP_MSHUTDOWN_FUNCTION(history_gluon);
 PHP_RINIT_FUNCTION(history_gluon);
 
-PHP_FUNCTION(create_context);
+PHP_FUNCTION(history_gluon_create_context);
+PHP_FUNCTION(history_gluon_free_context);
+PHP_FUNCTION(history_gluon_add_uint);
 
 extern zend_module_entry php_history_gluon_module_entry;
 #define phpext_history_gluon_ptr &php_history_gluon_module_entry
