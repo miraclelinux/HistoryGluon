@@ -10,6 +10,7 @@ PHP_RINIT_FUNCTION(history_gluon);
 PHP_FUNCTION(history_gluon_create_context);
 PHP_FUNCTION(history_gluon_free_context);
 PHP_FUNCTION(history_gluon_add_uint);
+PHP_FUNCTION(history_gluon_range_query);
 PHP_FUNCTION(history_gluon_delete);
 
 extern zend_module_entry php_history_gluon_module_entry;
