@@ -2,6 +2,7 @@
 #include "config.h"
 #endif
 #include "php.h"
+#include "history-gluon.h"
 #include "history-gluon-php-ext.h"
 
 static zend_function_entry php_history_gluon_functions[] = {
@@ -30,6 +31,8 @@ zend_module_entry php_history_gluon_module_entry = {
 ZEND_GET_MODULE(php_history_gluon)
 #endif
 
+static history_gluon_context_t *g_ctx = NULL;;
+
 PHP_MINIT_FUNCTION(history_gluon)
 {
 	return SUCCESS;
@@ -47,5 +50,7 @@ PHP_RINIT_FUNCTION(history_gluon)
 
 PHP_FUNCTION(create_context)
 {
-	RETURN_LONG((long)0);
+	if (!g_ctx)
+		g_ctx = history_gluon_create_context();
+	RETURN_LONG((long)g_ctx);
 }

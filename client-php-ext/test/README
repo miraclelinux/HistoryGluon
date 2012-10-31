@@ -14,3 +14,6 @@ This usually is done by executing 'make install' in extension's source directory
 How to test
 ======================
 $ phpunit --colors ApiTest
+
+[Hint] add runtime library path if you do test before the C client library is installed.
+$ LD_LIBRARY_PATH=../../client-lib-c/.libs phpunit --colors ApiTest.php
