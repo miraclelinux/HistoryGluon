@@ -146,11 +146,9 @@ public abstract class BasicStorageDriver implements StorageDriver {
         if (arg == null)
             return 0;
 
-        System.out.println("way: " + way + ", KEY::: " + startKey + " - " + stopKey);
         Iterator<HistoryData> it = dataSet.iterator();
         while (it.hasNext()) {
             HistoryData history = it.next();
-            System.out.println("***** " + history.toString());
             if (deleteRow(history, arg))
                 numDeleted++;
         }
