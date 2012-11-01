@@ -10,6 +10,10 @@ src/Makefile: src/configure
 src/configure: src/config.m4
 	cd src; phpize
 
+.PHONY: install
+install:
+	make -C src install
+
 .PHONY: clean
 clean:
 	-make -C src clean
