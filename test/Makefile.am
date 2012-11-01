@@ -8,6 +8,7 @@ TESTS_ENVIRONMENT = NO_MAKE=yes CUTTER="$(CUTTER)"
 
 noinst_LTLIBRARIES = \
 	test-client-lib.la \
+	test-client-bug-follow-up.la \
 	libtest-utils.la
 
 endif
@@ -25,6 +26,9 @@ libtest_utils_la_LDFLAGS =
 # Test cases
 test_client_lib_la_SOURCES = test-client-lib.c
 test_client_lib_la_LIBADD = ./libtest-utils.la
+
+test_client_bug_follow_up_la_SOURCES = test-client-bug-follow-up.c
+test_client_bug_follow_up_la_LIBADD = ./libtest-utils.la
 
 echo-cutter:
 	@echo $(CUTTER)

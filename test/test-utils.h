@@ -16,4 +16,22 @@ void create_global_context(void);
 void free_global_context(void);
 void cleanup_global_data(void);
 
+void assert_delete_all_for_id(uint64_t id, uint64_t *num_deleted);
+void assert_make_context_delete_add_samples(uint64_t id, void (*add_samples_fn)(void));
+
+/* add */
+void assert_add_uint(uint64_t id, struct timespec *ts, uint64_t value);
+void assert_add_samples_with_data(uint64_t num, history_gluon_data_t *sample_array);
+void assert_add_uint_hgl_data(history_gluon_data_t *gluon_data);
+
+/* verify */
+void assert_equal_hgl_data(history_gluon_data_t *expect, history_gluon_data_t *actual);
+
+/* query */
+void
+asset_range_query_common(uint64_t id, history_gluon_data_t *samples,
+                         struct timespec *ts0, struct timespec *ts1,
+                         history_gluon_sort_order_t sort_order, uint64_t num_max_entries,
+                         uint64_t num_expected_entries, uint64_t expected_first_idx);
+
 #endif // _test_uitls_h
