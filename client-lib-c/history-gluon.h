@@ -1,4 +1,5 @@
 #ifndef _history_gluon_h_
+#define _history_gluon_h_
 #include <stdint.h>
 #include <time.h>
 
