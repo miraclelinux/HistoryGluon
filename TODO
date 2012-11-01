@@ -4,3 +4,7 @@ This may not work with shell other than bash.
 The reason why 'export' is used is to pass CFLAGS and LDFLAGS
 to configure. This, however, may not be a good way.
 Should we set these parameters by client-php-ext/src/config.m4 ?
+
+20121101-002: Test PHP extension on 32bit platform
+On 32bit platfrom, integer may be 32bit. So the 64bit items
+such as ID and UINT may not be handled correctly.
