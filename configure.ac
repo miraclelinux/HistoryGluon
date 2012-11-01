@@ -39,8 +39,9 @@ Makefile
 server/Makefile
 client-lib-c/Makefile
 client-lib-c/history-gluon-1.0.pc
+client-lib-c/src/Makefile
+client-lib-c/test/Makefile
 client-php-ext/Makefile
-test/Makefile
 ])
 
 dnl **************************************************************

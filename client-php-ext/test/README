@@ -24,10 +24,10 @@ $ phpunit --colors ApiTest
 
 [Hint 1] add runtime library path if you do test before the C client library is installed.
 
-$ LD_LIBRARY_PATH=../../client-lib-c/.libs phpunit --colors ApiTest.php
+$ LD_LIBRARY_PATH=../../client-lib-c/src/.libs phpunit --colors ApiTest.php
 
 [Hint 2] set HISTORY_GLUON_MSG_LV environment variable when you control stdout message.
 For more detail see client-lib-c/README.
 
 <Ex.>
-$ HISTORY_GLUON_MSG_LV=WARN LD_LIBRARY_PATH=../../client-lib-c/.libs phpunit --colors ApiTest.php
+$ HISTORY_GLUON_MSG_LV=WARN LD_LIBRARY_PATH=../../client-lib-c/src/.libs phpunit --colors ApiTest.php
