@@ -1,26 +1,33 @@
 ======================
 Preparation
 ======================
-(0) install PHPUnit
+(0) Install PHPUnit
 
-(1) Enables dynamic loading
+(1) Enables a dynamic loading feature.
 Set 'enable_dl = On' in php.ini
-  (php.ini is in /etc/php5/cli on Ubuntu 12.10)
+<ref: php.ini is in /etc/php5/cli on Ubuntu 12.10>
 
-(2) install history_gluon.so in extension directory.
-This usually is done by executing 'make install' in extension's source directory.
+(2) Install history_gluon.so in extension directory.
+This is done by 'make install' in 'client-php-ext/src' directory.
+Or if you don't want to do 'make install' every fix of an extension,
+you can make a symbolic link to your build directory's history_gluon.so from
+PHP's extention directory.
+
+<Ex.: Ubunt 12.10>
+$ cd /usr/lib/php5/20100525
+$ ln -s ~/build/history-gluon/client-php-ext/src/modules/history_gluon.so
 
 ======================
 How to test
 ======================
 $ phpunit --colors ApiTest
 
-[Hint] add runtime library path if you do test before the C client library is installed.
+[Hint 1] add runtime library path if you do test before the C client library is installed.
 
 $ LD_LIBRARY_PATH=../../client-lib-c/.libs phpunit --colors ApiTest.php
 
-[Hint] set HISTORY_GLUON_MSG_LV environment variable when you control stdout message.
+[Hint 2] set HISTORY_GLUON_MSG_LV environment variable when you control stdout message.
 For more detail see client-lib-c/README.
 
-Ex.)
+<Ex.>
 $ HISTORY_GLUON_MSG_LV=WARN LD_LIBRARY_PATH=../../client-lib-c/.libs phpunit --colors ApiTest.php
