@@ -16,8 +16,8 @@ endif
 # default
 AM_CFLAGS = -g -Wall
 AM_LDFLAGS = -module -rpath $(libdir) -avoid-version -no-undefined
-INCLUDES = $(CUTTER_CFLAGS) -I ../client-lib-c
-LIBS = $(CUTTER_LIBS) ../client-lib-c/libhistory-gluon.la
+INCLUDES = $(CUTTER_CFLAGS) -I ../src
+LIBS = $(CUTTER_LIBS) ../src/libhistory-gluon.la
 
 # utility
 libtest_utils_la_SOURCES = test-utils.c
