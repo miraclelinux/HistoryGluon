@@ -1,18 +1,10 @@
 #include <cutter.h>
+#include "test-utils.h"
 #include "history-gluon.h"
-
-#define TEST_STD_ID_UINT   0x10
-#define TEST_STD_ID_FLOAT  0x65536
-#define TEST_STD_ID_STRING 0x87654321
-#define TEST_STD_ID_BLOB   0x123456789abcdef
 
 /* --------------------------------------------------------------------------------------
  * Global variables
  * ----------------------------------------------------------------------------------- */
-static history_gluon_context_t g_ctx = NULL;
-static history_gluon_data_t *g_data = NULL;
-static history_gluon_data_array_t *g_array = NULL;
-
 static history_gluon_data_t g_uint_samples[] = {
 	{
 		.id = TEST_STD_ID_UINT,
@@ -211,18 +203,6 @@ static const int NUM_BLOB_SAMPLES =
 /* --------------------------------------------------------------------------------------
  * Utility functions
  * ----------------------------------------------------------------------------------- */
-static void create_global_context(void)
-{
-	g_ctx = history_gluon_create_context();
-	cut_assert(g_ctx);
-}
-
-static void free_global_context()
-{
-	history_gluon_free_context(g_ctx);
-	g_ctx = NULL;
-}
-
 static void assert_delete_all_for_id(uint64_t id, uint64_t *num_deleted)
 {
 	struct timespec ts = {0, 0};
@@ -292,10 +272,20 @@ static void assert_add_hgl_data(history_gluon_data_t *gluon_data)
 		cut_fail("Unknown type: %d", gluon_data->type);
 }
 
+static void
+assert_add_samples_with_data(uint64_t num, history_gluon_data_t *sample_array)
+{
+	uint64_t i;
+	for (i = 0; i < num; i++)
+		assert_add_uint_hgl_data(&sample_array[i]);
+}
+
 static void assert_add_uint_samples(void) {
-	int i;
+	assert_add_samples_with_data(NUM_UINT_SAMPLES, g_uint_samples);
+	/*int i;
 	for (i = 0; i < NUM_UINT_SAMPLES; i++)
 		assert_add_uint_hgl_data(&g_uint_samples[i]);
+	*/
 }
 
 static void assert_add_float_samples(void) {
@@ -420,18 +410,7 @@ void setup(void)
 
 void teardown(void)
 {
-	if (g_data) {
-		history_gluon_free_data(g_ctx, g_data);
-		g_data = NULL;
-	}
-	if (g_array) {
-		history_gluon_free_data_array(g_ctx, g_array);
-		g_array = NULL;
-	}
-	if (g_ctx) {
-		history_gluon_free_context(g_ctx);
-		g_ctx = NULL;
-	}
+	cleanup_global_data();
 }
 /* --------------------------------------------------------------------------------------
  * Context
@@ -726,7 +705,7 @@ static void
 asset_range_query_common(uint64_t id, history_gluon_data_t *samples,
                          struct timespec *ts0, struct timespec *ts1,
                          history_gluon_sort_order_t sort_order, uint64_t num_max_entries,
-                         uint64_t num_expected_entries, int idx_offset)
+                         uint64_t num_expected_entries, uint64_t expected_first_idx)
 {
 	history_gluon_result_t ret;
 	ret = history_gluon_range_query(g_ctx, id, ts0, ts1, sort_order, num_max_entries,
@@ -737,9 +716,9 @@ asset_range_query_common(uint64_t id, history_gluon_data_t *samples,
 	cut_assert_equal_int_least64(num_expected_entries, g_array->num_data);
 	uint64_t i;
 	for  (i = 0; i < g_array->num_data; i++) {
-		int exp_idx = idx_offset + i;
+		int exp_idx = expected_first_idx + i;
 		if (sort_order == HISTORY_GLUON_SORT_DESCENDING)
-			exp_idx = idx_offset + (g_array->num_data - i - 1);
+			exp_idx = expected_first_idx + (g_array->num_data - i - 1);
 		history_gluon_data_t *expect_data = &samples[exp_idx];
 		history_gluon_data_t *actual_data = g_array->array[i];
 		assert_equal_hgl_data(expect_data, actual_data);

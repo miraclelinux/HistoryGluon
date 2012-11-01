@@ -7,14 +7,24 @@ TESTS = run-test.sh
 TESTS_ENVIRONMENT = NO_MAKE=yes CUTTER="$(CUTTER)"
 
 noinst_LTLIBRARIES = \
-	test-client-lib.la
+	test-client-lib.la \
+	libtest-utils.la
+
 endif
 
-test_client_lib_la_SOURCES = test-client-lib.c
-AM_LDFLAGS = -module -rpath $(libdir) -avoid-version -no-undefined
+# default
 AM_CFLAGS = -g -Wall
+AM_LDFLAGS = -module -rpath $(libdir) -avoid-version -no-undefined
 INCLUDES = $(CUTTER_CFLAGS) -I ../client-lib-c
 LIBS = $(CUTTER_LIBS) ../client-lib-c/libhistory-gluon.la
+
+# utility
+libtest_utils_la_SOURCES = test-utils.c
+libtest_utils_la_LDFLAGS = 
+
+# Test cases
+test_client_lib_la_SOURCES = test-client-lib.c
+test_client_lib_la_LIBADD = ./libtest-utils.la
 
 echo-cutter:
 	@echo $(CUTTER)
