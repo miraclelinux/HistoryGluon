@@ -486,7 +486,7 @@ public class BridgeWorker extends Thread {
         // get string body
         if (blobLength > 0x7fffffff) {
             // TODO: large Blob support
-            m_log.error("Current implementation hasn't supported the large size blobl > 0x7fffffff.");
+            m_log.error("Current implementation hasn't supported the large size blob > 0x7fffffff.");
             return ErrorCode.NOT_IMPLEMENTED;
         }
 
