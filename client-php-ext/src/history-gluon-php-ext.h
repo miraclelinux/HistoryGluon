@@ -10,6 +10,9 @@ PHP_RINIT_FUNCTION(history_gluon);
 PHP_FUNCTION(history_gluon_create_context);
 PHP_FUNCTION(history_gluon_free_context);
 PHP_FUNCTION(history_gluon_add_uint);
+PHP_FUNCTION(history_gluon_add_float);
+PHP_FUNCTION(history_gluon_add_string);
+PHP_FUNCTION(history_gluon_add_blob);
 PHP_FUNCTION(history_gluon_range_query);
 PHP_FUNCTION(history_gluon_delete);
 
