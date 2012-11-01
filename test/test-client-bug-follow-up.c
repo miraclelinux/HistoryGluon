@@ -54,8 +54,8 @@ void test_range_query_diff_ns(void)
 	int num_samples = 2;
 	struct timespec *ts0 = &samples_query_diff_ns[start_idx].ts;
 	struct timespec *ts1 = &samples_query_diff_ns[start_idx + num_samples -1].ts;
-	uint64_t expected_num_entries = 1;
-	uint64_t expected_first_idx = 0;
+	uint64_t expected_num_entries = num_samples - 1;
+	uint64_t expected_first_idx = start_idx;
 	asset_range_query_common(TEST_STD_ID_UINT, samples_query_diff_ns, ts0, ts1,
 	                         HISTORY_GLUON_SORT_ASCENDING, 
 	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED,
