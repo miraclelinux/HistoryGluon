@@ -34,10 +34,10 @@ public abstract class BasicStorageDriver implements StorageDriver {
     }
 
     @Override
-    public HistoryDataSet getData(long id, int sec0, int sec1)
+    public HistoryDataSet getData(long id, int sec0, int ns0, int sec1, int ns1)
       throws HistoryDataSet.TooManyException {
-        String startKey = makeKey(id, sec0, 0);
-        String stopKey = makeKey(id, sec1, 0);
+        String startKey = makeKey(id, sec0, ns0);
+        String stopKey = makeKey(id, sec1, ns1);
         return getDataSet(id, startKey, stopKey, COUNT_UNLIMITED);
     }
 

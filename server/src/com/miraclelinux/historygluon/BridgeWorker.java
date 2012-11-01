@@ -298,7 +298,7 @@ public class BridgeWorker extends Thread {
         // Get data
         HistoryDataSet dataSet = null;
         try {
-            dataSet = m_driver.getData(id, sec0, sec1);
+            dataSet = m_driver.getData(id, sec0, ns0, sec1, ns1);
         } catch (HistoryDataSet.TooManyException e) {
             replyRangeQuery(ErrorCode.TOO_MANY_ENTRIES, 0, sortOrder);
             return true;

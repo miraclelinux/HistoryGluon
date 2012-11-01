@@ -8,7 +8,7 @@ interface StorageDriver {
 
     public int addData(HistoryData history);
 
-    public HistoryDataSet getData(long itemId, int clock0, int clock1)
+    public HistoryDataSet getData(long itemId, int clock0, int ns0, int clock1, int ns1)
       throws HistoryDataSet.TooManyException;
 
     public HistoryData queryData(long itemId, int clock, int ns,
