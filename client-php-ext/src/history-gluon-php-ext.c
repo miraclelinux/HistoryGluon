@@ -272,6 +272,9 @@ PHP_FUNCTION(history_gluon_range_query)
 	for (i = 0; i < array->num_data; i++)
 		add_index_zval(arr_arr, i, create_gluon_data_zval(array->array[i]));
 	add_assoc_zval(z_array, KEY_DATA_ARRAY_ARRAY, arr_arr);
+
+	/* free gluon_data_array */
+	history_gluon_free_data_array(ctx, array);
 	
 	RETURN_LONG((long)ret);
 }
