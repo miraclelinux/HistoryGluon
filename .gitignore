@@ -26,8 +26,8 @@ client-lib-c/history-gluon.lo
 client-lib-c/libhistory-gluon.la
 test/.deps/
 test/.libs/
-test/test-client-lib.la
-test/test-client-lib.lo
+test/*.la
+test/*.lo
 touch
 missing
 history-gluon-1.0.pc
