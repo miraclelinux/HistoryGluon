@@ -70,17 +70,18 @@ static zval *create_gluon_data_zval(history_gluon_data_t *gluon_data)
 	add_assoc_long(data, KEY_DATA_TIME_NS,  gluon_data->ts.tv_nsec);
 	add_assoc_long(data, KEY_DATA_TYPE ,    gluon_data->type);
 
+	static const int DUPLICATE = 1;
 	if (gluon_data->type == HISTORY_GLUON_TYPE_FLOAT)
 		add_assoc_double(data, KEY_DATA_VALUE, gluon_data->v_float);
 	else if (gluon_data->type == HISTORY_GLUON_TYPE_UINT)
 		add_assoc_long(data, KEY_DATA_VALUE,   gluon_data->v_uint);
-	else if (gluon_data->type == HISTORY_GLUON_TYPE_STRING)
-		add_assoc_string(data,KEY_DATA_VALUE,
-		                 gluon_data->v_string, gluon_data->length);
-	else if (gluon_data->type == HISTORY_GLUON_TYPE_BLOB)
-		add_assoc_string(data, KEY_DATA_VALUE,
-		                 (char*)gluon_data->v_blob, gluon_data->length);
-	else {
+	else if (gluon_data->type == HISTORY_GLUON_TYPE_STRING) {
+		add_assoc_stringl(data,KEY_DATA_VALUE, gluon_data->v_string,
+		                  gluon_data->length, DUPLICATE);
+	} else if (gluon_data->type == HISTORY_GLUON_TYPE_BLOB) {
+		add_assoc_stringl(data, KEY_DATA_VALUE, (char*)gluon_data->v_blob,
+		                  gluon_data->length, DUPLICATE);
+	} else {
 		fprintf(stderr, "%s: %d: Unknown data type: %d",
 		        __FILE__, __LINE__, gluon_data->type);
 	}
@@ -149,7 +150,8 @@ PHP_FUNCTION(history_gluon_add_uint)
 PHP_FUNCTION(history_gluon_add_float)
 {
 	/* get arguments */
-	long l_ctx, l_id, l_sec, l_ns, d_data; 
+	long l_ctx, l_id, l_sec, l_ns;
+	double d_data;
 	int pret;
 	pret = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lllld",
 	                             &l_ctx, &l_id, &l_sec, &l_ns, &d_data);
@@ -166,13 +168,14 @@ PHP_FUNCTION(history_gluon_add_float)
 		RETURN_LONG(ret);
 
 	/* call the library function and return the return. */
-	RETURN_LONG(history_gluon_add_uint(ctx, id, &ts, data));
+	RETURN_LONG(history_gluon_add_float(ctx, id, &ts, data));
 }
 
 PHP_FUNCTION(history_gluon_add_string)
 {
 	/* get arguments */
-	long l_ctx, l_id, l_sec, l_ns, l_length;
+	long l_ctx, l_id, l_sec, l_ns;
+	int l_length;
 	char *s_data; 
 	int pret;
 	pret = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lllls",
@@ -197,7 +200,8 @@ PHP_FUNCTION(history_gluon_add_string)
 PHP_FUNCTION(history_gluon_add_blob)
 {
 	/* get arguments */
-	long l_ctx, l_id, l_sec, l_ns, l_length;
+	long l_ctx, l_id, l_sec, l_ns;
+	int l_length;
 	char *s_data; 
 	int pret;
 	pret = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "lllls",

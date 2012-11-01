@@ -120,11 +120,35 @@ class ApiTest extends PHPUnit_Framework_TestCase
     }
 
     public function testRangeQueryUintAsc() {
-        $this->assertRangeQueryUint(TEST_ID_UINT, HISTORY_GLUON_SORT_ASCENDING);
+        $this->assertRangeQueryI2N2(TEST_ID_UINT, HISTORY_GLUON_SORT_ASCENDING);
     }
 
     public function testRangeQueryUintDsc() {
-        $this->assertRangeQueryUint(TEST_ID_UINT, HISTORY_GLUON_SORT_DESCENDING);
+        $this->assertRangeQueryI2N2(TEST_ID_UINT, HISTORY_GLUON_SORT_DESCENDING);
+    }
+
+    public function testRangeQueryFloatAsc() {
+        $this->assertRangeQueryI2N2(TEST_ID_FLOAT, HISTORY_GLUON_SORT_ASCENDING);
+    }
+
+    public function testRangeQueryFloatDsc() {
+        $this->assertRangeQueryI2N2(TEST_ID_FLOAT, HISTORY_GLUON_SORT_DESCENDING);
+    }
+
+    public function testRangeQueryStringAsc() {
+        $this->assertRangeQueryI2N2(TEST_ID_STRING, HISTORY_GLUON_SORT_ASCENDING);
+    }
+
+    public function testRangeQueryStringDsc() {
+        $this->assertRangeQueryI2N2(TEST_ID_STRING, HISTORY_GLUON_SORT_DESCENDING);
+    }
+
+    public function testRangeQueryBlobAsc() {
+        $this->assertRangeQueryI2N2(TEST_ID_BLOB, HISTORY_GLUON_SORT_ASCENDING);
+    }
+
+    public function testRangeQueryBLobDsc() {
+        $this->assertRangeQueryI2N2(TEST_ID_BLOB, HISTORY_GLUON_SORT_DESCENDING);
     }
 
     /* -----------------------------------------------------------------------
@@ -136,18 +160,19 @@ class ApiTest extends PHPUnit_Framework_TestCase
     }
 
     private function assertDeleteAllDataWithId($id) {
-        $num_deleted = 0;
+        $numDeleted = 0;
         $ret = history_gluon_delete($this->g_ctx, $id, 0, 0,
                                     HISTORY_GLUON_DELETE_TYPE_EQUAL_OR_GREATER,
-                                    $num_deleted);
+                                    $numDeleted);
         $this->assertEquals(HGL_SUCCESS, $ret);
     }
 
     private function assertCreateContextDeleteAddSamples($id) {
         $this->assertGloblCreateContext();
         $this->assertDeleteAllDataWithId($id);
-        $addFuncName = $this->getSamplesAddFuncName($id);
-        $this->assertAddSamples($addFuncName);
+        $getSamplesFuncName = $this->getSamplesAddFuncName($id);
+        $addFuncName = $this->getAddFuncName($id);
+        $this->assertAddSamples($getSamplesFuncName, $addFuncName);
     }
 
     private function getSamplesAddFuncName($id) {
@@ -170,40 +195,114 @@ class ApiTest extends PHPUnit_Framework_TestCase
         return call_user_func(array($this, $addFuncName));
     }
 
-    private function assertAddSamples($getSamplesFunc) {
+    private function getAddFuncName($id) {
+        $name = null;
+        if ($id == TEST_ID_UINT)
+            $name = "history_gluon_add_uint";
+        else if ($id == TEST_ID_FLOAT)
+            $name = "history_gluon_add_float";
+        else if ($id == TEST_ID_STRING)
+            $name = "history_gluon_add_string";
+        else if ($id == TEST_ID_BLOB)
+            $name = "history_gluon_add_blob";
+        else
+            $this->ssertFalse(TRUE);
+        return $name;
+    }
+
+    private function assertAddSamples($getSamplesFunc, $addFuncName) {
         $samples = call_user_func(array($this, $getSamplesFunc));
-        $num_samples = count($samples);
-        for ($i = 0; $i < $num_samples; $i++) {
+        $numSamples = count($samples);
+        for ($i = 0; $i < $numSamples; $i++) {
             $id   = $samples[$i][HISTORY_GLUON_DATA_KEY_ID];
             $sec  = $samples[$i][HISTORY_GLUON_DATA_KEY_SEC];
             $ns   = $samples[$i][HISTORY_GLUON_DATA_KEY_NS];
             $data = $samples[$i][HISTORY_GLUON_DATA_KEY_VALUE];
-            $ret = history_gluon_add_uint($this->g_ctx, $id, $sec, $ns, $data);
+            $ret = call_user_func($addFuncName, $this->g_ctx, $id, $sec, $ns, $data);
             $this->assertEquals(HGL_SUCCESS, $ret);
         }
     }
 
     private function getSamplesUint() {
-        $data_type = HISTORY_GLUON_DATA_TYPE_UINT;
-        $samples[0] = $this->createSample(0x12345678, 100200300,
-                                          $data_type, 0x43214321);
-        $samples[1] = $this->createSample(0x20000000, 000000000,
-                                          $data_type, 0x22223333);
-        $samples[2] = $this->createSample(0x20000000, 000000003,
-                                          $data_type, 0x9a9a8b8b);
-        $samples[3] = $this->createSample(0x25010101, 200345003,
-                                          $data_type, 0x9a9a8b8b00);
-        $samples[4] = $this->createSample(0x353a0000, 879200003,
-                                          $data_type, 0x876543210fedcba);
+        $dataType = HISTORY_GLUON_DATA_TYPE_UINT;
+        $samples[0] = $this->createSample(TEST_ID_UINT, 0x12345678, 100200300,
+                                          $dataType, 0x43214321);
+        $samples[1] = $this->createSample(TEST_ID_UINT, 0x20000000, 000000000,
+                                          $dataType, 0x22223333);
+        $samples[2] = $this->createSample(TEST_ID_UINT, 0x20000000, 000000003,
+                                          $dataType, 0x9a9a8b8b);
+        $samples[3] = $this->createSample(TEST_ID_UINT, 0x25010101, 200345003,
+                                          $dataType, 0x9a9a8b8b00);
+        $samples[4] = $this->createSample(TEST_ID_UINT, 0x353a0000, 879200003,
+                                          $dataType, 0x876543210fedcba);
         return $samples;
     }
 
-    private function createSample($sec, $ns, $data_type, $data) {
-        $sample[HISTORY_GLUON_DATA_KEY_ID]   = TEST_ID_UINT;
+    private function getSamplesFloat() {
+        $dataType = HISTORY_GLUON_DATA_TYPE_FLOAT;
+        $samples[0] = $this->createSample(TEST_ID_FLOAT, 0x12345678, 100200300,
+                                          $dataType, 0.25);
+        $samples[1] = $this->createSample(TEST_ID_FLOAT, 0x20000000, 000000000,
+                                          $dataType, -1.55e-8);
+        $samples[2] = $this->createSample(TEST_ID_FLOAT, 0x20000000, 000000003,
+                                          $dataType, 8e10);
+        $samples[3] = $this->createSample(TEST_ID_FLOAT, 0x25010101, 200345003,
+                                          $dataType, 222.555);
+        $samples[4] = $this->createSample(TEST_ID_FLOAT, 0x353a0000, 879200003,
+                                          $dataType, 8922.321234412343);
+        return $samples;
+    }
+
+    private function getSamplesString() {
+        $dataType = HISTORY_GLUON_DATA_TYPE_STRING;
+        $samples[0] = $this->createSample(TEST_ID_STRING, 0x12345678, 100200300,
+                                          $dataType, "Dog");
+        $samples[1] = $this->createSample(TEST_ID_STRING, 0x20000000, 000000000,
+                                          $dataType, "Care killed the cat.");
+        $samples[2] = $this->createSample(TEST_ID_STRING, 0x20000000, 000000003,
+                                          $dataType, "Clothes make the man.");
+        $samples[3] = $this->createSample(TEST_ID_STRING, 0x25010101, 200345003,
+                                          $dataType, "Roma was not build in a day.");
+        $samples[4] = $this->createSample(TEST_ID_STRING, 0x353a0000, 879200003,
+                                          $dataType, "Walls have ears.");
+        return $samples;
+    }
+
+    private function getSamplesBlob() {
+        $dataType = HISTORY_GLUON_DATA_TYPE_BLOB;
+        $samples[0] = $this->createSample(TEST_ID_BLOB, 0x12005678, 100200300,
+                                          $dataType,
+                                          pack("CCCCCCCC", 0x43, 0x21, 0x43, 0x21,
+                                                           0x00, 0x00, 0xff, 0xff));
+        $samples[1] = $this->createSample(TEST_ID_BLOB, 0x20000000, 000000000,
+                                          $dataType,
+                                          pack("C", 0xab));
+        $samples[2] = $this->createSample(TEST_ID_BLOB, 0x20000000, 000000003,
+                                          $dataType,
+                                          pack("CCCC", 0xa5, 0xb0, 0xc2, 0x2));
+        $samples[3] = $this->createSample(TEST_ID_BLOB, 0x25010101, 200345003,
+                                          $dataType,
+                                          pack("CCCCCCCCCCCCCCCCCCCCCCCC",
+                                               0x11, 0xf8, 0xb3, 0x41, 0x00, 0x34,
+                                               0x27, 0x48, 0x55, 0x66, 0x89, 0x01,
+                                               0x43, 0x24, 0xda, 0xd8, 0x32, 0x48,
+                                               0x00, 0x05, 0x32, 0x48, 0x3f, 0xfe));
+        $samples[4] = $this->createSample(TEST_ID_BLOB, 0x353a0000, 879200003,
+                                          $dataType,
+                                          pack("CCCCCC",
+                                               0x43, 0x21, 0x43, 0x21, 0x00, 0xff));
+        return $samples;
+    }
+
+
+    private function createSample($id, $sec, $ns, $dataType, $data) {
+        $sample[HISTORY_GLUON_DATA_KEY_ID]   = $id;
         $sample[HISTORY_GLUON_DATA_KEY_SEC]  = $sec;
         $sample[HISTORY_GLUON_DATA_KEY_NS]   = $ns;
-        $sample[HISTORY_GLUON_DATA_KEY_TYPE] = $data_type;
+        $sample[HISTORY_GLUON_DATA_KEY_TYPE] = $dataType;
         $sample[HISTORY_GLUON_DATA_KEY_VALUE] = $data;
+        if ($id == TEST_ID_STRING || $id == TEST_ID_BLOB)
+            $sample[HISTORY_GLUON_DATA_KEY_LENGTH] = strlen($data);
         return $sample;
     }
 
@@ -274,7 +373,7 @@ class ApiTest extends PHPUnit_Framework_TestCase
         $time1 = $this->getSampleTime($id, $idx1);
         if ($ts1plug1ns == True) {
             $timeInc = array(0, 1);
-            $time1 = $this->addTIme($time1, $timeInc);
+            $time1 = $this->addTime($time1, $timeInc);
         }
         $sec0 = $time0[0];
         $ns0  = $time0[1];
@@ -286,8 +385,8 @@ class ApiTest extends PHPUnit_Framework_TestCase
                                          $array);
         $this->assertEquals(HGL_SUCCESS, $ret);
 
-        $arr_arr = $array[HISTORY_GLUON_DATA_KEY_ARRAY_ARRAY];
-        $numRetData = count($arr_arr);
+        $arrArr = $array[HISTORY_GLUON_DATA_KEY_ARRAY_ARRAY];
+        $numRetData = count($arrArr);
         $this->assertEquals($expectedNumRet, $numRetData);
 
         $samples = $this->getSamples($id);
@@ -295,11 +394,11 @@ class ApiTest extends PHPUnit_Framework_TestCase
             $expected_idx = $expectedRetIdx0 + $i;
             if ($sortRequest == HISTORY_GLUON_SORT_DESCENDING)
                 $expected_idx = $expectedRetIdx0 + $expectedNumRet - $i - 1;
-            $this->assertEqualGluonData($samples[$expected_idx], $arr_arr[$i]);
+            $this->assertEqualGluonData($samples[$expected_idx], $arrArr[$i]);
         }
     }
 
-    private function assertRangeQueryUint($id, $sortRequest) {
+    private function assertRangeQueryI2N2($id, $sortRequest) {
         $idx0 = 2;
         $num = 2;
         $ts1plug1ns = False;
