@@ -67,7 +67,9 @@ void test_range_query_diff_ns(void)
 
 void test_add_null_string(void)
 {
+	history_gluon_result_t ret;
 	create_global_context();
 	struct timespec ts = {0x56781234, 0};
-	assert_add_string(TEST_STD_ID_STRING, &ts, NULL);
+	ret = history_gluon_add_string(g_ctx, TEST_STD_ID_STRING, &ts, NULL);
+	cut_assert_equal_int(HGLERR_NULL_DATA, ret);
 }

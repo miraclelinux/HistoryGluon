@@ -919,6 +919,11 @@ history_gluon_add_string(history_gluon_context_t _ctx,
 	if (ctx == NULL)
 		return HGLERR_UNKNOWN_REASON;
 
+	if (!data) {
+		ERR_MSG("data: NULL. ignored.\n");
+		return HGLERR_NULL_DATA;
+	}
+
 	uint32_t len_string = strlen(data);
 	if (len_string > MAX_STRING_LENGTH) {
 		ERR_MSG("string length is too long: %u\n", len_string);
