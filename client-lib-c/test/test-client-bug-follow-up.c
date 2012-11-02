@@ -64,3 +64,10 @@ void test_range_query_diff_ns(void)
 	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED,
 	                         expected_num_entries, expected_first_idx);
 }
+
+void test_add_null_string(void)
+{
+	create_global_context();
+	struct timespec ts = {0x56781234, 0};
+	assert_add_string(TEST_STD_ID_STRING, &ts, NULL);
+}
