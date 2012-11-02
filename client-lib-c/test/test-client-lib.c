@@ -203,32 +203,14 @@ static const int NUM_BLOB_SAMPLES =
 /* --------------------------------------------------------------------------------------
  * Utility functions
  * ----------------------------------------------------------------------------------- */
-static void assert_add_float(uint64_t id, struct timespec *ts, double v)
-{
-	history_gluon_result_t ret = history_gluon_add_float(g_ctx, id, ts, v);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-}
-
 static void assert_add_float_hgl_data(history_gluon_data_t *gluon_data)
 {
 	assert_add_float(gluon_data->id, &gluon_data->ts, gluon_data->v_float);
 }
 
-static void assert_add_string(uint64_t id, struct timespec *ts, char *v)
-{
-	history_gluon_result_t ret = history_gluon_add_string(g_ctx, id, ts, v);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
-}
-
 static void assert_add_string_hgl_data(history_gluon_data_t *gluon_data)
 {
 	assert_add_string(gluon_data->id, &gluon_data->ts, gluon_data->v_string);
-}
-
-static void assert_add_blob(uint64_t id, struct timespec *ts, uint8_t *v, uint64_t len)
-{
-	history_gluon_result_t ret = history_gluon_add_blob(g_ctx, id, ts, v, len);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
 }
 
 static void assert_add_blob_hgl_data(history_gluon_data_t *gluon_data)

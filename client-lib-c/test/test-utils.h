@@ -22,6 +22,10 @@ void assert_make_context_delete_add_samples(uint64_t id,
 
 /* add */
 void assert_add_uint(uint64_t id, struct timespec *ts, uint64_t value);
+void assert_add_float(uint64_t id, struct timespec *ts, double v);
+void assert_add_string(uint64_t id, struct timespec *ts, char *v);
+void assert_add_blob(uint64_t id, struct timespec *ts, uint8_t *v, uint64_t len);
+
 void assert_add_samples_with_data(uint64_t num, history_gluon_data_t *sample_array);
 void assert_add_uint_hgl_data(history_gluon_data_t *gluon_data);
 

@@ -62,19 +62,38 @@ void assert_make_context_delete_add_samples(uint64_t id,
 }
 
 
+void assert_add_uint(uint64_t id, struct timespec *ts, uint64_t value)
+{
+	history_gluon_result_t ret =
+	  history_gluon_add_uint(g_ctx, id, ts, value);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+}
+
+void assert_add_float(uint64_t id, struct timespec *ts, double v)
+{
+	history_gluon_result_t ret = history_gluon_add_float(g_ctx, id, ts, v);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+}
+
+void assert_add_string(uint64_t id, struct timespec *ts, char *v)
+{
+	history_gluon_result_t ret = history_gluon_add_string(g_ctx, id, ts, v);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+}
+
+void assert_add_blob(uint64_t id, struct timespec *ts, uint8_t *v, uint64_t len)
+{
+	history_gluon_result_t ret =
+	  history_gluon_add_blob(g_ctx, id, ts, v, len);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
+}
+
 void assert_add_samples_with_data(uint64_t num,
                                   history_gluon_data_t *sample_array)
 {
 	uint64_t i;
 	for (i = 0; i < num; i++)
 		assert_add_uint_hgl_data(&sample_array[i]);
-}
-
-void assert_add_uint(uint64_t id, struct timespec *ts, uint64_t value)
-{
-	history_gluon_result_t ret =
-	  history_gluon_add_uint(g_ctx, id, ts, value);
-	cut_assert_equal_int(HGL_SUCCESS, ret);
 }
 
 void assert_add_uint_hgl_data(history_gluon_data_t *gluon_data)
