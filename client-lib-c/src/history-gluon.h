@@ -263,8 +263,8 @@ void history_gluon_free_data_array(history_gluon_context_t context,
  * @return \HGL_SUCCESS on success. If an error occured, the code is returned.
  */
 history_gluon_result_t
-history_gluon_get_minmum_time(history_gluon_context_t context,
-                              uint64_t id, struct timespec *minimum_ts);
+history_gluon_get_minimum_time(history_gluon_context_t context,
+                               uint64_t id, struct timespec *minimum_ts);
 
 /**
  * Get statistical information of the data with the specified ID

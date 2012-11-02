@@ -811,7 +811,7 @@ static void assert_get_minimum_time(uint64_t id, void (*add_samples_fn)(void),
 	/* get the minimum */
 	struct timespec ts;
 	history_gluon_result_t ret;
-	ret = history_gluon_get_minmum_time(g_ctx, id, &ts);
+	ret = history_gluon_get_minimum_time(g_ctx, id, &ts);
 	cut_assert_equal_int(HGL_SUCCESS, ret);
 
 	/* test the obtained time */
@@ -851,7 +851,7 @@ static void assert_get_minimum_time_not_found(uint64_t id)
 	/* get the minimum */
 	struct timespec ts;
 	history_gluon_result_t ret;
-	ret = history_gluon_get_minmum_time(g_ctx, id, &ts);
+	ret = history_gluon_get_minimum_time(g_ctx, id, &ts);
 	cut_assert_equal_int(HGLSVERR_NOT_FOUND, ret);
 }
 

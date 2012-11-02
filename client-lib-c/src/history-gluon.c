@@ -1122,8 +1122,8 @@ void history_gluon_free_data_array(history_gluon_context_t _ctx,
 }
 
 history_gluon_result_t
-history_gluon_get_minmum_time(history_gluon_context_t _ctx,
-                              uint64_t id, struct timespec *minimum_ts)
+history_gluon_get_minimum_time(history_gluon_context_t _ctx,
+                               uint64_t id, struct timespec *minimum_ts)
 {
 	history_gluon_result_t ret;
 	private_context_t *ctx = get_connected_private_context(_ctx);
