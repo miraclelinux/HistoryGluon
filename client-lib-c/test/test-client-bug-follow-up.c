@@ -31,12 +31,13 @@ static int NUM_SAMPLES_QUERY_DIFF_NS =
 
 static void add_query_diff_ns_samples(void)
 {
-	assert_add_samples_with_data(NUM_SAMPLES_QUERY_DIFF_NS, samples_query_diff_ns);
+	assert_add_samples_with_data(NUM_SAMPLES_QUERY_DIFF_NS,
+	                             samples_query_diff_ns);
 }
 
-/* --------------------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------
  * Teset cases
- * ----------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------- */
 void setup(void)
 {
 }
@@ -53,10 +54,12 @@ void test_range_query_diff_ns(void)
 	int start_idx = 0;
 	int num_samples = 2;
 	struct timespec *ts0 = &samples_query_diff_ns[start_idx].ts;
-	struct timespec *ts1 = &samples_query_diff_ns[start_idx + num_samples -1].ts;
+	struct timespec *ts1 =
+	  &samples_query_diff_ns[start_idx + num_samples -1].ts;
 	uint64_t expected_num_entries = num_samples - 1;
 	uint64_t expected_first_idx = start_idx;
-	asset_range_query_common(TEST_STD_ID_UINT, samples_query_diff_ns, ts0, ts1,
+	asset_range_query_common(TEST_STD_ID_UINT, samples_query_diff_ns,
+	                         ts0, ts1,
 	                         HISTORY_GLUON_SORT_ASCENDING, 
 	                         HISTORY_GLUON_NUM_ENTRIES_UNLIMITED,
 	                         expected_num_entries, expected_first_idx);
