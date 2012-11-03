@@ -406,7 +406,7 @@ void test_add_float(void)
 	assert_add_common(TEST_STD_ID_FLOAT, add_float_one_sample);
 }
 
-void test_add_uint_float(void)
+void test_add_float_twice(void)
 {
 	assert_add_common_twice(TEST_STD_ID_FLOAT, add_float_one_sample);
 }
@@ -426,7 +426,7 @@ void test_add_string(void)
 	assert_add_common(TEST_STD_ID_STRING, add_string_one_sample);
 }
 
-void test_add_uint_string_twice(void)
+void test_add_string_twice(void)
 {
 	assert_add_common_twice(TEST_STD_ID_STRING, add_string_one_sample);
 }
@@ -446,7 +446,7 @@ void test_add_blob(void)
 	assert_add_common(TEST_STD_ID_BLOB, add_blob_one_sample);
 }
 
-void test_add_uint_blob_twice(void)
+void test_add_blob_twice(void)
 {
 	assert_add_common_twice(TEST_STD_ID_BLOB, add_blob_one_sample);
 }
