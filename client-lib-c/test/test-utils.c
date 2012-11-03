@@ -127,6 +127,53 @@ void assert_equal_hgl_data(history_gluon_data_t *expect,
 
 /* query */
 void
+assert_query(uint64_t id, struct timespec *ts,
+             history_gluon_query_t query_type, int expected_result)
+{
+	history_gluon_result_t ret;
+	ret = history_gluon_query(g_ctx, id, ts, query_type, &g_data);
+	cut_assert_equal_int(expected_result, ret);
+}
+
+void
+assert_add_uint_and_query_verify(uint64_t id, struct timespec *ts,
+                                 uint64_t value)
+{
+	assert_add_uint(id, ts, value);
+	assert_query(id, ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, HGL_SUCCESS);
+	cut_assert_equal_int_least64(value, g_data->v_uint);
+}
+
+void
+assert_add_float_and_query_verify(uint64_t id, struct timespec *ts,
+                                  double value)
+{
+	assert_add_float(id, ts, value);
+	assert_query(id, ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, HGL_SUCCESS);
+	double err = 0.0;
+	cut_assert_equal_double(value, err, g_data->v_float);
+}
+
+void
+assert_add_string_and_query_verify(uint64_t id, struct timespec *ts,
+                                   char *value)
+{
+	assert_add_string(id, ts, value);
+	assert_query(id, ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, HGL_SUCCESS);
+	cut_assert_equal_string(value, g_data->v_string);
+}
+
+void
+assert_add_blob_and_query_verify(uint64_t id, struct timespec *ts,
+                                 uint8_t *value, uint64_t length)
+{
+	assert_add_blob(id, ts, value, length);
+	assert_query(id, ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, HGL_SUCCESS);
+	cut_assert_equal_memory(value, length,
+	                        g_data->v_blob, g_data->length);
+}
+
+void
 asset_range_query_common(uint64_t id, history_gluon_data_t *samples,
                          struct timespec *ts0, struct timespec *ts1,
                          history_gluon_sort_order_t sort_order,

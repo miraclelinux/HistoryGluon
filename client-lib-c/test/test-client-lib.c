@@ -202,9 +202,9 @@ static const int NUM_BLOB_SAMPLES =
   sizeof(g_blob_samples) / sizeof(history_gluon_data_t);
 
 
-/* --------------------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------
  * Utility functions
- * ----------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------- */
 static void assert_add_float_hgl_data(history_gluon_data_t *gluon_data)
 {
 	assert_add_float(gluon_data->id, &gluon_data->ts, gluon_data->v_float);
@@ -454,18 +454,48 @@ void test_add_blob_twice(void)
 	assert_add_common_twice(TEST_STD_ID_BLOB, add_blob_one_sample);
 }
 
+/* add twice and check */
+void test_add_uint_twice_and_check(void)
+{
+	struct timespec ts = {2000, 9012};
+	uint64_t v = 300;
+	create_global_context();
+	assert_add_uint_and_query_verify(TEST_STD_ID_UINT, &ts, v);
+	assert_add_uint_and_query_verify(TEST_STD_ID_UINT, &ts, v+1);
+}
+
+void test_add_float_twice_and_check(void)
+{
+	struct timespec ts = {2000, 9012};
+	double v = 1.2;
+	create_global_context();
+	assert_add_float_and_query_verify(TEST_STD_ID_FLOAT, &ts, v);
+	assert_add_float_and_query_verify(TEST_STD_ID_FLOAT, &ts, v+1);
+}
+
+void test_add_string_twice_and_check(void)
+{
+	struct timespec ts = {2000, 9012};
+	create_global_context();
+	assert_add_string_and_query_verify(TEST_STD_ID_STRING, &ts, "Dog");
+	assert_add_string_and_query_verify(TEST_STD_ID_STRING, &ts, "Cat");
+}
+
+void test_add_blob_twice_and_check(void)
+{
+	struct timespec ts = {2000, 9012};
+	uint8_t v1[] = {0x12, 0x45};
+	uint8_t v2[] = {0xaa, 0xbb, 0xcc};
+	create_global_context();
+	assert_add_blob_and_query_verify(TEST_STD_ID_BLOB, &ts, v1,
+	                                 sizeof(v1)/sizeof(uint8_t));
+	assert_add_blob_and_query_verify(TEST_STD_ID_BLOB, &ts, v2,
+	                                 sizeof(v2)/sizeof(uint8_t));
+}
+
 /* ---------------------------------------------------------------------------
  * Query
  * ------------------------------------------------------------------------ */
-static void
-assert_query_common(uint64_t id, struct timespec *ts, history_gluon_query_t query_type,
-                    int expected_result)
-{
-	history_gluon_result_t ret;
-	ret = history_gluon_query(g_ctx, id, ts, query_type, &g_data);
-	cut_assert_equal_int(expected_result, ret);
-}
-
 /* query */
 static void assert_add_and_query(history_gluon_data_t *samples)
 {
@@ -478,8 +508,8 @@ static void assert_add_and_query(history_gluon_data_t *samples)
 	assert_add_hgl_data(sample);
 
 	// query
-	assert_query_common(sample->id, &sample->ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH,
-	                    HGL_SUCCESS);
+	assert_query(sample->id, &sample->ts,
+	             HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, HGL_SUCCESS);
 	assert_equal_hgl_data(sample, g_data);
 }
 
@@ -516,9 +546,8 @@ static void assert_add_and_query_not_found(history_gluon_data_t *samples)
 	assert_add_hgl_data(sample);
 
 	// query
-	assert_query_common(sample->id+1, &sample->ts,
-	                    HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH,
-	                    HGLSVERR_NOT_FOUND);
+	assert_query(sample->id+1, &sample->ts,
+	             HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, HGLSVERR_NOT_FOUND);
 }
 
 void test_add_uint_and_query_not_found(void)
@@ -555,7 +584,7 @@ assert_add_and_query_less_greater(uint64_t id, void (*add_samples_fn)(void),
 	set_mean_ts(&samples[idx].ts, &samples[idx+1].ts, &ts);
 
 	// query
-	assert_query_common(id, &ts, query_type, HGL_SUCCESS);
+	assert_query(id, &ts, query_type, HGL_SUCCESS);
 
 	int exp_idx = idx;
 	if (query_type == HISTORY_GLUON_QUERY_TYPE_LESS_DATA)

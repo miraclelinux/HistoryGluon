@@ -35,6 +35,22 @@ void assert_equal_hgl_data(history_gluon_data_t *expect,
 
 /* query */
 void
+assert_query(uint64_t id, struct timespec *ts,
+             history_gluon_query_t query_type, int expected_result);
+void
+assert_add_uint_and_query_verify(uint64_t id, struct timespec *ts,
+                                 uint64_t value);
+void
+assert_add_float_and_query_verify(uint64_t id, struct timespec *ts,
+                                  double value);
+void
+assert_add_string_and_query_verify(uint64_t id, struct timespec *ts,
+                                   char *value);
+void
+assert_add_blob_and_query_verify(uint64_t id, struct timespec *ts,
+                                 uint8_t *value, uint64_t length);
+
+void
 asset_range_query_common(uint64_t id, history_gluon_data_t *samples,
                          struct timespec *ts0, struct timespec *ts1,
                          history_gluon_sort_order_t sort_order,
