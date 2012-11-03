@@ -8,3 +8,8 @@ Should we set these parameters by client-php-ext/src/config.m4 ?
 20121101-002: Test PHP extension on 32bit platform
 On 32bit platfrom, integer may be 32bit. So the 64bit items
 such as ID and UINT may not be handled correctly.
+
+20121103-001: install history-gluon.ini to php extension setting dir.
+Some distros use a directory that contains files to make PHP extensions
+load at php boot, such as /etc/php/conf.d on Ubuntu 12.10.
+We want to install the file in it.
