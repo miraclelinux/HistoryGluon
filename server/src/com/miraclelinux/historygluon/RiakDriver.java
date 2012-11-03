@@ -120,6 +120,8 @@ public class RiakDriver extends BasicStorageDriver {
               bucket.fetchIndex(KeyIndex.index).from(startKey).to(stopKey).execute();
             for (String key : keyList) {
                 ValueType value = bucket.fetch(key, ValueType.class).execute();
+                if (value == null)
+                    continue;
                 HistoryData history = getHistoryData(key, value);
                 dataSet.add(history);
             }
