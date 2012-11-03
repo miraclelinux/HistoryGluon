@@ -920,13 +920,16 @@ history_gluon_add_string(history_gluon_context_t _ctx,
 		return HGLERR_UNKNOWN_REASON;
 
 	if (!data) {
-		ERR_MSG("data: NULL. ignored.\n");
+		ERR_MSG("data: NULL. id: %" PRIu64 ", ts: %u.%09u\n",
+		        id, ts->tv_sec, ts->tv_nsec);
 		return HGLERR_NULL_DATA;
 	}
 
 	uint32_t len_string = strlen(data);
 	if (len_string > MAX_STRING_LENGTH) {
-		ERR_MSG("string length is too long: %u\n", len_string);
+		ERR_MSG("string length is too long: %u. "
+		        "id: %" PRIu64 ", ts:%u.%09u\n",
+		        len_string, id, ts->tv_sec, ts->tv_nsec);
 		return HGLERR_TOO_LONG_STRING;
 	}
 	uint32_t pkt_size = PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_STRING_SIZE_LENGTH;
