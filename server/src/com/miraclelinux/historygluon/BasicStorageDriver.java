@@ -16,6 +16,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
      * Private members
      * -------------------------------------------------------------------- */
     private Log m_log = null;
+    private boolean m_stopKeyMinus1 = false;
 
     /* -----------------------------------------------------------------------
      * Public Methods
@@ -37,7 +38,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
     public HistoryDataSet getData(long id, int sec0, int ns0, int sec1, int ns1)
       throws HistoryDataSet.TooManyException {
         String startKey = makeKey(id, sec0, ns0);
-        String stopKey = makeKey(id, sec1, ns1);
+        String stopKey = makeStopKey(id, sec1, ns1);
         return getDataSet(id, startKey, stopKey, COUNT_UNLIMITED);
     }
 
@@ -46,7 +47,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
       throws HistoryDataSet.TooManyException {
         final int max_count = 1;
         String startKey = makeKey(id, 0, 0);
-        String stopKey = makeKey(id+1, 0, 0);
+        String stopKey = makeStopKey(id+1, 0, 0);
         HistoryDataSet dataSet = getDataSet(id, startKey, stopKey, max_count);
         if (dataSet.isEmpty())
             return null;
@@ -95,7 +96,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
       throws HistoryDataSet.TooManyException, HistoryData.DataNotNumericException {
         // extract data set
         String startKey = makeKey(id, sec0, ns0);
-        String stopKey = makeKey(id, sec1, ns1);
+        String stopKey = makeStopKey(id, sec1, ns1);
         HistoryDataSet dataSet = getDataSet(id, startKey, stopKey, COUNT_UNLIMITED);
 
         // calcurate values
@@ -117,19 +118,19 @@ public abstract class BasicStorageDriver implements StorageDriver {
         String stopKey;
         if (way == DeleteType.EQUAL) {
             startKey = makeKey(id, sec, ns);
-            stopKey = makeKey(id, sec, ns+1);
+            stopKey = makeStopKey(id, sec, ns+1);
         } else if (way == DeleteType.EQUAL_OR_LESS) {
             startKey = makeKey(id, 0, 0);
-            stopKey = makeKey(id, sec, ns+1);
+            stopKey = makeStopKey(id, sec, ns+1);
         } else if (way == DeleteType.LESS) {
             startKey = makeKey(id, 0, 0);
-            stopKey = makeKey(id, sec, ns);
+            stopKey = makeStopKey(id, sec, ns);
         } else if (way == DeleteType.EQUAL_OR_GREATER) {
             startKey = makeKey(id, sec, ns);
-            stopKey = makeKey(id+1, 0, 0);
+            stopKey = makeStopKey(id+1, 0, 0);
         } else if (way == DeleteType.GREATER) {
             startKey = makeKey(id, sec, ns+1);
-            stopKey = makeKey(id+1, 0, 0);
+            stopKey = makeStopKey(id+1, 0, 0);
         } else
             throw new InternalCheckException("Unknown way type: " + way);
 
@@ -181,6 +182,25 @@ public abstract class BasicStorageDriver implements StorageDriver {
             ns = ns % 1000000000;
         }
         return String.format("%016x%08x%08x", id, sec, ns);
+    }
+
+    protected String makeStopKey(long id, int sec, int ns) {
+        if (m_stopKeyMinus1) {
+            if (ns == 0) {
+                if (sec == 0) {
+                    // We cannot do anything...
+                } else {
+                    sec--;
+                    ns = 999999999;
+                }
+            } else
+                ns--;
+        }
+        return makeKey(id, sec, ns);
+    }
+
+    protected void setStopKeyMinus1(boolean minus1) {
+        m_stopKeyMinus1 = minus1;
     }
 
     protected void fillItemIdClockNsWithKey(String key, HistoryData history) {

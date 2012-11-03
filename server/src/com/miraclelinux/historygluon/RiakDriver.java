@@ -36,6 +36,7 @@ public class RiakDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     public RiakDriver() {
         m_log = LogFactory.getLog(RiakDriver.class); 
+        setStopKeyMinus1(true);
     }
 
     @Override
