@@ -215,8 +215,7 @@ public class HBaseDriver extends BasicStorageDriver {
         }
 
         if (!history.fixupData()) {
-            m_log.warn("Failed: HistoryData::fixupData(): type:"
-                       + history.type);
+            m_log.warn("Failed: fixupData(): type:" + history.type);
             return;
         }
 

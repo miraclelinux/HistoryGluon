@@ -115,6 +115,7 @@ public class RiakDriver extends BasicStorageDriver {
       getDataSet(long id, String startKey, String stopKey, int maxCount) {
         HistoryDataSet dataSet = new HistoryDataSet();
         try {
+            HistoryData history;
             Bucket bucket = m_pbClient.fetchBucket(BUCKET_NAME).execute();
             List<String> keyList =
               bucket.fetchIndex(KeyIndex.index).from(startKey).to(stopKey).execute();
@@ -122,7 +123,9 @@ public class RiakDriver extends BasicStorageDriver {
                 ValueType value = bucket.fetch(key, ValueType.class).execute();
                 if (value == null)
                     continue;
-                HistoryData history = getHistoryData(key, value);
+                history = getHistoryData(key, value);
+                if (history == null)
+                    continue;
                 dataSet.add(history);
             }
         } catch (RiakException e) {
@@ -154,7 +157,10 @@ public class RiakDriver extends BasicStorageDriver {
         fillItemIdClockNsWithKey(key, history);
         history.type = (short)value.type;
         history.data = value.data;
-        history.fixupData();
+        if (!history.fixupData()) {
+            m_log.warn("Failed: fixupData(): type:" + history.type);
+            return null;
+        }
         return history;
     }
 }

@@ -97,7 +97,8 @@ public abstract class BasicStorageDriver implements StorageDriver {
         // extract data set
         String startKey = makeKey(id, sec0, ns0);
         String stopKey = makeStopKey(id, sec1, ns1);
-        HistoryDataSet dataSet = getDataSet(id, startKey, stopKey, COUNT_UNLIMITED);
+        HistoryDataSet dataSet = getDataSet(id, startKey, stopKey,
+                                            COUNT_UNLIMITED);
 
         // calcurate values
         Statistics statistics = new Statistics(id, sec0, sec1);
@@ -167,7 +168,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
      *         When an error occured, null is returned.
      */
     protected abstract HistoryDataSet
-      getDataSet(long id, String startKey, String stopKey, int maxCount) 
+      getDataSet(long id, String startKey, String stopKey, int maxCount)
       throws HistoryDataSet.TooManyException;
 
     protected abstract boolean deleteRow(HistoryData history, Object arg);
