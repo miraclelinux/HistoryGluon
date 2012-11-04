@@ -75,6 +75,7 @@ public class CassandraDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     public CassandraDriver() {
         m_log = LogFactory.getLog(CassandraDriver.class); 
+        setStopKeyMinus1(true);
     }
 
     @Override
