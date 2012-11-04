@@ -12,7 +12,7 @@ public class MemDriver extends BasicStorageDriver {
      * Private members
      * -------------------------------------------------------------------- */
     private Log m_log = null;
-    private ConcurrentHistoryDataSet m_dataSetPreferTime = null;
+    //private ConcurrentHistoryDataSet m_dataSetPreferTime = null;
     private ConcurrentHistoryDataSet m_dataSetPreferId = null;
 
     /* -----------------------------------------------------------------------
@@ -24,7 +24,7 @@ public class MemDriver extends BasicStorageDriver {
 
     @Override
     public boolean init() {
-        m_dataSetPreferTime = new ConcurrentHistoryDataSet();
+        //m_dataSetPreferTime = new ConcurrentHistoryDataSet();
         m_dataSetPreferId =
           new ConcurrentHistoryDataSet(new HistoryDataComparatorPreferId());
         return true;
@@ -42,12 +42,12 @@ public class MemDriver extends BasicStorageDriver {
 
     @Override
     public int addData(HistoryData history) {
-        boolean ret = m_dataSetPreferTime.add(history);
-        if (!ret)
+        /*
+        if (!dataSetPreferTime.add(history)
             return ErrorCode.ENTRY_EXISTS;
-        ret = m_dataSetPreferId.add(history);
-        if (!ret) {
-            m_dataSetPreferTime.delete(history);
+        */
+        if (!m_dataSetPreferId.add(history)) {
+            //m_dataSetPreferTime.delete(history);
             return ErrorCode.ENTRY_EXISTS;
         }
         return ErrorCode.SUCCESS;
@@ -55,7 +55,7 @@ public class MemDriver extends BasicStorageDriver {
 
     @Override
     public boolean deleteDB() {
-        // Nothing to do, because data is lost when HistoryGluon process terminates.
+        // Nothing to do, because data is lost when the server terminates.
         return true;
     }
 
@@ -74,9 +74,10 @@ public class MemDriver extends BasicStorageDriver {
 
     @Override
     protected boolean deleteRow(HistoryData history, Object arg) {
-        boolean ret0 = m_dataSetPreferTime.delete(history);
+        //boolean ret0 = m_dataSetPreferTime.delete(history);
         boolean ret1 = m_dataSetPreferId.delete(history);
-        return ret0 && ret1;
+        //return ret0 && ret1;
+        return ret1;
     }
 
 }
