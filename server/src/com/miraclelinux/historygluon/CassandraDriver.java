@@ -156,7 +156,7 @@ public class CassandraDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     @Override
     protected HistoryDataSet
-      getDataSet(long id, String startKey, String stopKey, int maxCount) 
+      getDataSet(long id, String startKey, String stopKey, int maxCount)
       throws HistoryDataSet.TooManyException {
         HistoryDataSet dataSet = new HistoryDataSet();
 
@@ -166,6 +166,14 @@ public class CassandraDriver extends BasicStorageDriver {
         if (maxCount == COUNT_UNLIMITED)
             maxCount = COUNT_INTERNAL_LIMIT;
         keyRange.setCount(maxCount);
+
+        // row filter
+        List<IndexExpression> rowFilter = new ArrayList<IndexExpression>();
+        IndexExpression idxExpr =
+          new IndexExpression(BB_COLUMN_TYPE, IndexOperator.GTE, 
+                              Utils.intToByteBuffer(0));
+        rowFilter.add(idxExpr);
+        keyRange.setRow_filter(rowFilter);
 
         ColumnParent columnParent = new ColumnParent(COLUMN_FAMILY);
         SlicePredicate predicate = new SlicePredicate();
@@ -194,8 +202,7 @@ public class CassandraDriver extends BasicStorageDriver {
             for (ColumnOrSuperColumn cs : cols)
                 obtainOneValue(cs, history);
             if (!history.fixupData()) {
-                m_log.warn("Failed: HistoryData::fixupData(): type:"
-                           + history.type);
+                m_log.warn("Failed: fixupData(): type:" + history.type);
                 continue;
             }
             dataSet.add(history);
