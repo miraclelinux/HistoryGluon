@@ -4,28 +4,27 @@ import java.util.Comparator;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class ConcurrentHistoryDataSet extends HistoryDataSet {
+public class ConcurrentHistoryDataSet {
     /* -----------------------------------------------------------------------
      * Private members
      * -------------------------------------------------------------------- */
     private ReadWriteLock m_rwlock = new ReentrantReadWriteLock();
+    private HistoryDataSet m_dataSet = null;
 
     /* -----------------------------------------------------------------------
      * Public Methods
      * -------------------------------------------------------------------- */
-    public ConcurrentHistoryDataSet() {
-    }
-
     public ConcurrentHistoryDataSet(Comparator<HistoryData> comparator) {
-        super(comparator);
+        m_dataSet = new HistoryDataSet(comparator);
     }
 
-    @Override
     public boolean add(HistoryData history) {
         boolean ret = false;
         try {
             m_rwlock.writeLock().lock();
-            ret = super.add(history);
+            ret = m_dataSet.add(history);
+            if (!ret)
+                ret = replaceElement(history);
         } finally {
             m_rwlock.writeLock().unlock();
         }
@@ -41,7 +40,7 @@ public class ConcurrentHistoryDataSet extends HistoryDataSet {
 
         try {
             m_rwlock.writeLock().lock();
-            ret = super.remove(entry);
+            ret = m_dataSet.remove(entry);
         } finally {
             m_rwlock.writeLock().unlock();
         }
@@ -52,7 +51,7 @@ public class ConcurrentHistoryDataSet extends HistoryDataSet {
         HistoryData history = null;
         try {
             m_rwlock.readLock().lock();
-            history = ceiling(keyHistory);
+            history = m_dataSet.ceiling(keyHistory);
             if (history != null) {
                 if (history.compareTo(keyHistory) != 0)
                     history = null;
@@ -63,15 +62,25 @@ public class ConcurrentHistoryDataSet extends HistoryDataSet {
         return history;
     }
 
-    public HistoryDataSet createSubSet(HistoryData history0, HistoryData history1) {
+    public HistoryDataSet createSubSet(HistoryData history0,
+                                       HistoryData history1) {
         HistoryDataSet dataSet = new HistoryDataSet();
         try {
             m_rwlock.readLock().lock();
-            for (HistoryData history : subSet(history0, history1))
+            for (HistoryData history : m_dataSet.subSet(history0, history1))
                 dataSet.add(new HistoryData(history));
         } finally {
             m_rwlock.readLock().unlock();
         }
         return dataSet;
     }
+
+    /* -----------------------------------------------------------------------
+     * Private Methods
+     * -------------------------------------------------------------------- */
+    private boolean replaceElement(HistoryData history) {
+        delete(history);
+        return m_dataSet.add(history);
+    }
+
 }
