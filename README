@@ -53,3 +53,14 @@ $ cat /usr/share/aclocal/dirlist
 
 - specify PKG_CONFIG_DIR environment variable in configure like
 $ PKG_CONFIG_DIR=/usr/local/lib/pkgconfig ./configure 
+
+3) copy client-php-ext/history-gluon.ini to httpd's php modules directory.
+To load the module when httpd is started.
+
+Ex. Ubuntu 12.10)
+/etc/php5/conf.d/
+
+Ex. CentOS 6.3)
+/etc/php.d/
+
+
