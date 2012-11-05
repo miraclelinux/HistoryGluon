@@ -8,21 +8,21 @@ static history_gluon_data_t samples_query_diff_ns[] = {
 		.type = HISTORY_GLUON_TYPE_UINT,
 		.ts.tv_sec = 0x20000000,
 		.ts.tv_nsec = 0,
-		.v_uint = 0x22223333,
+		.v.uint = 0x22223333,
 	},
 	{
 		.id = TEST_STD_ID_UINT,
 		.type = HISTORY_GLUON_TYPE_UINT,
 		.ts.tv_sec = 0x20000000,
 		.ts.tv_nsec = 3,
-		.v_uint = 0x9a9a8b8b,
+		.v.uint = 0x9a9a8b8b,
 	},
 	{
 		.id = TEST_STD_ID_UINT,
 		.type = HISTORY_GLUON_TYPE_UINT,
 		.ts.tv_sec = 0x25010101,
 		.ts.tv_nsec = 200345003,
-		.v_uint = 0x9a9a8b8b00,
+		.v.uint = 0x9a9a8b8b00,
 	},
 };
 

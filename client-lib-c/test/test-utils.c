@@ -98,7 +98,7 @@ void assert_add_samples_with_data(uint64_t num,
 
 void assert_add_uint_hgl_data(history_gluon_data_t *gluon_data)
 {
-	assert_add_uint(gluon_data->id, &gluon_data->ts, gluon_data->v_uint);
+	assert_add_uint(gluon_data->id, &gluon_data->ts, gluon_data->v.uint);
 }
 
 /* verify */
@@ -111,15 +111,15 @@ void assert_equal_hgl_data(history_gluon_data_t *expect,
 	cut_assert_equal_int(expect->type, actual->type);
 	if (expect->type == HISTORY_GLUON_TYPE_FLOAT) {
 		double err = 0.0;
-		cut_assert_equal_double(expect->v_float, err, actual->v_float);
+		cut_assert_equal_double(expect->v.fp, err, actual->v.fp);
 	} else if(expect->type == HISTORY_GLUON_TYPE_STRING) {
-		cut_assert_equal_string(expect->v_string, actual->v_string);
+		cut_assert_equal_string(expect->v.string, actual->v.string);
 		cut_assert_equal_int_least64(expect->length, actual->length);
 	} else if(expect->type == HISTORY_GLUON_TYPE_UINT) {
-		cut_assert_equal_int_least64(expect->v_uint, actual->v_uint);
+		cut_assert_equal_int_least64(expect->v.uint, actual->v.uint);
 	} else if(expect->type == HISTORY_GLUON_TYPE_BLOB) {
-		cut_assert_equal_memory(expect->v_blob, expect->length,
-		                        actual->v_blob, actual->length);
+		cut_assert_equal_memory(expect->v.blob, expect->length,
+		                        actual->v.blob, actual->length);
 	} else
 		cut_fail("Unknown type: %d", expect->type);
 }
@@ -141,7 +141,7 @@ assert_add_uint_and_query_verify(uint64_t id, struct timespec *ts,
 {
 	assert_add_uint(id, ts, value);
 	assert_query(id, ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, HGL_SUCCESS);
-	cut_assert_equal_int_least64(value, g_data->v_uint);
+	cut_assert_equal_int_least64(value, g_data->v.uint);
 }
 
 void
@@ -151,7 +151,7 @@ assert_add_float_and_query_verify(uint64_t id, struct timespec *ts,
 	assert_add_float(id, ts, value);
 	assert_query(id, ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, HGL_SUCCESS);
 	double err = 0.0;
-	cut_assert_equal_double(value, err, g_data->v_float);
+	cut_assert_equal_double(value, err, g_data->v.fp);
 }
 
 void
@@ -160,7 +160,7 @@ assert_add_string_and_query_verify(uint64_t id, struct timespec *ts,
 {
 	assert_add_string(id, ts, value);
 	assert_query(id, ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, HGL_SUCCESS);
-	cut_assert_equal_string(value, g_data->v_string);
+	cut_assert_equal_string(value, g_data->v.string);
 }
 
 void
@@ -170,7 +170,7 @@ assert_add_blob_and_query_verify(uint64_t id, struct timespec *ts,
 	assert_add_blob(id, ts, value, length);
 	assert_query(id, ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, HGL_SUCCESS);
 	cut_assert_equal_memory(value, length,
-	                        g_data->v_blob, g_data->length);
+	                        g_data->v.blob, g_data->length);
 }
 
 void

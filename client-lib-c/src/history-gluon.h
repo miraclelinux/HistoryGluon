@@ -55,11 +55,11 @@ typedef struct
 	struct timespec ts;
 	history_gluon_data_type_t type;
 	union {
-		double    v_float;
-		char *    v_string;
-		uint64_t  v_uint;
-		uint8_t * v_blob;
-	};
+		double    fp;
+		char *    string;
+		uint64_t  uint;
+		uint8_t * blob;
+	} v;
 
 	/**
 	 * This variable has a lenght of v_string or v_blob.

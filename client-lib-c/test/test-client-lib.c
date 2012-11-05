@@ -11,35 +11,35 @@ static history_gluon_data_t g_uint_samples[] = {
 		.type = HISTORY_GLUON_TYPE_UINT,
 		.ts.tv_sec = 1234567890,
 		.ts.tv_nsec = 123456789,
-		.v_uint = 1,
+		.v.uint = 1,
 	},
 	{
 		.id = TEST_STD_ID_UINT,
 		.type = HISTORY_GLUON_TYPE_UINT,
 		.ts.tv_sec = 1506070800,
 		.ts.tv_nsec = 100000000,
-		.v_uint = 10,
+		.v.uint = 10,
 	},
 	{
 		.id = TEST_STD_ID_UINT,
 		.type = HISTORY_GLUON_TYPE_UINT,
 		.ts.tv_sec = 1600000000,
 		.ts.tv_nsec = 500000000,
-		.v_uint = 12340,
+		.v.uint = 12340,
 	},
 	{
 		.id = TEST_STD_ID_UINT,
 		.type = HISTORY_GLUON_TYPE_UINT,
 		.ts.tv_sec = 1600000001,
 		.ts.tv_nsec = 200000000,
-		.v_uint = 0x123456789abcdef0,
+		.v.uint = 0x123456789abcdef0,
 	},
 	{
 		.id = TEST_STD_ID_UINT,
 		.type = HISTORY_GLUON_TYPE_UINT,
 		.ts.tv_sec = 2500000000,
 		.ts.tv_nsec = 300000000,
-		.v_uint = 0xfedcba9876543210,
+		.v.uint = 0xfedcba9876543210,
 	},
 };
 static const int NUM_UINT_SAMPLES =
@@ -51,35 +51,35 @@ static history_gluon_data_t g_float_samples[] = {
 		.type = HISTORY_GLUON_TYPE_FLOAT,
 		.ts.tv_sec = 1234567890,
 		.ts.tv_nsec = 123456789,
-		.v_float = 0.1,
+		.v.fp = 0.1,
 	},
 	{
 		.id = TEST_STD_ID_FLOAT,
 		.type = HISTORY_GLUON_TYPE_FLOAT,
 		.ts.tv_sec = 1506070800,
 		.ts.tv_nsec = 100000000,
-		.v_float = 99.9,
+		.v.fp = 99.9,
 	},
 	{
 		.id = TEST_STD_ID_FLOAT,
 		.type = HISTORY_GLUON_TYPE_FLOAT,
 		.ts.tv_sec = 1600000000,
 		.ts.tv_nsec = 500000000,
-		.v_float = 100.0,
+		.v.fp = 100.0,
 	},
 	{
 		.id = TEST_STD_ID_FLOAT,
 		.type = HISTORY_GLUON_TYPE_FLOAT,
 		.ts.tv_sec = 1600000001,
 		.ts.tv_nsec = 200000000,
-		.v_float = -10.5,
+		.v.fp = -10.5,
 	},
 	{
 		.id = TEST_STD_ID_FLOAT,
 		.type = HISTORY_GLUON_TYPE_FLOAT,
 		.ts.tv_sec = 2500000000,
 		.ts.tv_nsec = 300000000,
-		.v_float = -3.2e5,
+		.v.fp = -3.2e5,
 	},
 };
 static const int NUM_FLOAT_SAMPLES =
@@ -109,7 +109,7 @@ static history_gluon_data_t g_string_samples[] = {
 		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 1234567890,
 		.ts.tv_nsec = 123456789,
-		.v_string = string_sample0,
+		.v.string = string_sample0,
 		.length = sizeof(string_sample0) - 1,
 	},
 	{
@@ -117,7 +117,7 @@ static history_gluon_data_t g_string_samples[] = {
 		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 1506070800,
 		.ts.tv_nsec = 100000000,
-		.v_string = string_sample1,
+		.v.string = string_sample1,
 		.length = sizeof(string_sample1) - 1,
 	},
 	{
@@ -125,7 +125,7 @@ static history_gluon_data_t g_string_samples[] = {
 		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 1600000000,
 		.ts.tv_nsec = 500000000,
-		.v_string = string_sample2,
+		.v.string = string_sample2,
 		.length = sizeof(string_sample2) - 1,
 	},
 	{
@@ -133,7 +133,7 @@ static history_gluon_data_t g_string_samples[] = {
 		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 1600000001,
 		.ts.tv_nsec = 200000000,
-		.v_string = string_sample3,
+		.v.string = string_sample3,
 		.length = sizeof(string_sample3) - 1,
 	},
 	{
@@ -141,7 +141,7 @@ static history_gluon_data_t g_string_samples[] = {
 		.type = HISTORY_GLUON_TYPE_STRING,
 		.ts.tv_sec = 2500000000,
 		.ts.tv_nsec = 300000000,
-		.v_string = string_sample4,
+		.v.string = string_sample4,
 		.length = sizeof(string_sample4) - 1,
 	},
 };
@@ -162,7 +162,7 @@ static history_gluon_data_t g_blob_samples[] = {
 		.type = HISTORY_GLUON_TYPE_BLOB,
 		.ts.tv_sec = 1234567890,
 		.ts.tv_nsec = 123456789,
-		.v_blob = blob_sample0,
+		.v.blob = blob_sample0,
 		.length = sizeof(blob_sample0) / sizeof(uint8_t),
 	},
 	{
@@ -170,7 +170,7 @@ static history_gluon_data_t g_blob_samples[] = {
 		.type = HISTORY_GLUON_TYPE_BLOB,
 		.ts.tv_sec = 1506070800,
 		.ts.tv_nsec = 100000000,
-		.v_blob = blob_sample1,
+		.v.blob = blob_sample1,
 		.length = sizeof(blob_sample1) / sizeof(uint8_t),
 	},
 	{
@@ -178,7 +178,7 @@ static history_gluon_data_t g_blob_samples[] = {
 		.type = HISTORY_GLUON_TYPE_BLOB,
 		.ts.tv_sec = 1600000000,
 		.ts.tv_nsec = 500000000,
-		.v_blob = blob_sample2,
+		.v.blob = blob_sample2,
 		.length = sizeof(blob_sample2) / sizeof(uint8_t),
 	},
 	{
@@ -186,7 +186,7 @@ static history_gluon_data_t g_blob_samples[] = {
 		.type = HISTORY_GLUON_TYPE_BLOB,
 		.ts.tv_sec = 1600000001,
 		.ts.tv_nsec = 200000000,
-		.v_blob = blob_sample3,
+		.v.blob = blob_sample3,
 		.length = sizeof(blob_sample3) / sizeof(uint8_t),
 	},
 	{
@@ -194,7 +194,7 @@ static history_gluon_data_t g_blob_samples[] = {
 		.type = HISTORY_GLUON_TYPE_BLOB,
 		.ts.tv_sec = 2500000000,
 		.ts.tv_nsec = 300000000,
-		.v_blob = blob_sample4,
+		.v.blob = blob_sample4,
 		.length = sizeof(blob_sample4) / sizeof(uint8_t),
 	},
 };
@@ -207,17 +207,17 @@ static const int NUM_BLOB_SAMPLES =
  * ------------------------------------------------------------------------- */
 static void assert_add_float_hgl_data(history_gluon_data_t *gluon_data)
 {
-	assert_add_float(gluon_data->id, &gluon_data->ts, gluon_data->v_float);
+	assert_add_float(gluon_data->id, &gluon_data->ts, gluon_data->v.fp);
 }
 
 static void assert_add_string_hgl_data(history_gluon_data_t *gluon_data)
 {
-	assert_add_string(gluon_data->id, &gluon_data->ts, gluon_data->v_string);
+	assert_add_string(gluon_data->id, &gluon_data->ts, gluon_data->v.string);
 }
 
 static void assert_add_blob_hgl_data(history_gluon_data_t *gluon_data)
 {
-	assert_add_blob(gluon_data->id, &gluon_data->ts, gluon_data->v_blob,
+	assert_add_blob(gluon_data->id, &gluon_data->ts, gluon_data->v.blob,
 	                gluon_data->length);
 }
 
@@ -281,9 +281,9 @@ set_mean_ts(struct timespec *ts0, struct timespec *ts1, struct timespec *ts)
 static double get_history_gluon_data_value(history_gluon_data_t *gluon_data)
 {
 	if (gluon_data->type == HISTORY_GLUON_TYPE_FLOAT)
-		return gluon_data->v_float;
+		return gluon_data->v.fp;
 	else if (gluon_data->type == HISTORY_GLUON_TYPE_UINT)
-		return gluon_data->v_uint;
+		return gluon_data->v.uint;
 	return 0;
 }
 

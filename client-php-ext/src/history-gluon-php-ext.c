@@ -72,14 +72,14 @@ static zval *create_gluon_data_zval(history_gluon_data_t *gluon_data)
 
 	static const int DUPLICATE = 1;
 	if (gluon_data->type == HISTORY_GLUON_TYPE_FLOAT)
-		add_assoc_double(data, KEY_DATA_VALUE, gluon_data->v_float);
+		add_assoc_double(data, KEY_DATA_VALUE, gluon_data->v.fp);
 	else if (gluon_data->type == HISTORY_GLUON_TYPE_UINT)
-		add_assoc_long(data, KEY_DATA_VALUE,   gluon_data->v_uint);
+		add_assoc_long(data, KEY_DATA_VALUE,   gluon_data->v.uint);
 	else if (gluon_data->type == HISTORY_GLUON_TYPE_STRING) {
-		add_assoc_stringl(data,KEY_DATA_VALUE, gluon_data->v_string,
+		add_assoc_stringl(data,KEY_DATA_VALUE, gluon_data->v.string,
 		                  gluon_data->length, DUPLICATE);
 	} else if (gluon_data->type == HISTORY_GLUON_TYPE_BLOB) {
-		add_assoc_stringl(data, KEY_DATA_VALUE, (char*)gluon_data->v_blob,
+		add_assoc_stringl(data, KEY_DATA_VALUE, (char*)gluon_data->v.blob,
 		                  gluon_data->length, DUPLICATE);
 	} else {
 		fprintf(stderr, "%s: %d: Unknown data type: %d",

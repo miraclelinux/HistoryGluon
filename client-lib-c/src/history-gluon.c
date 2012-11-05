@@ -718,7 +718,7 @@ read_gluon_data_body_float(private_context_t *ctx,
 	uint8_t buf[PKT_DATA_FLOAT_LENGTH];
 	ret = read_data(ctx, buf, PKT_DATA_FLOAT_LENGTH);
 	RETURN_IF_ERROR(ret);
-	gluon_data->v_float = read_ieee754_double(ctx, buf);
+	gluon_data->v.fp = read_ieee754_double(ctx, buf);
 	return HGL_SUCCESS;
 }
 
@@ -735,17 +735,17 @@ read_gluon_data_body_string(private_context_t *ctx, history_gluon_data_t *gluon_
 
 	/* allocate body region */
 	uint64_t alloc_size = gluon_data->length + 1;
-	gluon_data->v_string = malloc(alloc_size);
-	if (!gluon_data->v_string) {
+	gluon_data->v.string = malloc(alloc_size);
+	if (!gluon_data->v.string) {
 		ERR_MSG("Failed to allocate: %" PRIu64 "\n", alloc_size);
 		return HGLERR_MEM_ALLOC;
 	}
 
 	/* read body */
-	ret = read_data(ctx, (uint8_t *)gluon_data->v_string,
+	ret = read_data(ctx, (uint8_t *)gluon_data->v.string,
 	                gluon_data->length);
 	RETURN_IF_ERROR(ret);
-	gluon_data->v_string[gluon_data->length] = '\0';
+	gluon_data->v.string[gluon_data->length] = '\0';
 
 	return HGL_SUCCESS;
 }
@@ -757,7 +757,7 @@ read_gluon_data_body_uint(private_context_t *ctx, history_gluon_data_t *gluon_da
 	uint8_t buf[PKT_DATA_UINT_LENGTH];
 	ret = read_data(ctx, buf, PKT_DATA_UINT_LENGTH);
 	RETURN_IF_ERROR(ret);
-	gluon_data->v_uint = restore_le64(ctx, buf);
+	gluon_data->v.uint = restore_le64(ctx, buf);
 	return HGL_SUCCESS;
 }
 
@@ -773,15 +773,15 @@ read_gluon_data_body_blob(private_context_t *ctx, history_gluon_data_t *gluon_da
 	gluon_data->length = restore_le64(ctx, buf);
 
 	/* allocate body region */
-	gluon_data->v_blob = malloc(gluon_data->length);
-	if (!gluon_data->v_blob) {
+	gluon_data->v.blob = malloc(gluon_data->length);
+	if (!gluon_data->v.blob) {
 		ERR_MSG("Failed to allocate: %" PRIu64 "\n",
 		        gluon_data->length);
 		return HGLERR_MEM_ALLOC;
 	}
 
 	/* read body */
-	ret = read_data(ctx, gluon_data->v_blob, gluon_data->length);
+	ret = read_data(ctx, gluon_data->v.blob, gluon_data->length);
 	RETURN_IF_ERROR(ret);
 
 	return HGL_SUCCESS;
@@ -1030,9 +1030,9 @@ void history_gluon_free_data(history_gluon_context_t _ctx,
                               history_gluon_data_t *gluon_data)
 {
 	if (gluon_data->type == HISTORY_GLUON_TYPE_STRING)
-		free(gluon_data->v_string);
+		free(gluon_data->v.string);
 	else if (gluon_data->type == HISTORY_GLUON_TYPE_BLOB)
-		free(gluon_data->v_blob);
+		free(gluon_data->v.blob);
 	free(gluon_data);
 }
 
