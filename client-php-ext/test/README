@@ -7,6 +7,12 @@ Preparation
 Set 'enable_dl = On' in php.ini
 <ref: php.ini is in /etc/php5/cli on Ubuntu 12.10>
 
+[Hint] Install on CentOS 6.3
+$ pear channel-discover pear.phpunit.de
+$ pear channel-discover pear.symfony.com
+$ pear install pear.symfony.com/Yaml
+$ pear install phpunit/PHPUnit
+
 (2) Install history_gluon.so in extension directory.
 This is done by 'make install' in 'client-php-ext/src' directory.
 Or if you don't want to do 'make install' every fix of an extension,
@@ -15,6 +21,10 @@ PHP's extention directory.
 
 <Ex.: Ubunt 12.10>
 $ cd /usr/lib/php5/20100525
+$ ln -s ~/build/history-gluon/client-php-ext/src/modules/history_gluon.so
+
+<Ex.: CentOS 6.3>
+cd /usr/lib64/php/modules
 $ ln -s ~/build/history-gluon/client-php-ext/src/modules/history_gluon.so
 
 ======================
