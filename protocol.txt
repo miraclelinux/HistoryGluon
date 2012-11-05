@@ -8,6 +8,25 @@ Endian: Little
 [<Number>] means Length in Byte (decimal)
 
 =========================================
+COMMAND: Connect
+=========================================
+[ 4] Packet length (not including this field)
+[ 4] Command type
+   10: Connect
+[ 2] Length of Domain
+[ v] Domain string
+ valid characters: A-z0-9._-
+ maximum length: 1024
+
+-----------------------------------------
+REPLY: Add Data
+-----------------------------------------
+[ 4] Packet length (not including this)
+[ 2] Reply type
+   10: Connect
+[ 4] Result
+
+=========================================
 COMMAND: Add Data
 =========================================
 [ 4] Packet length (not including this field)
@@ -197,6 +216,8 @@ Result Code
    3: Unsupported protocol version
    4: Not implemented
  100: Authentification failed
+ 101: Domain string is too long
+ 102: Invalid characters in domain string
  200: Packet short
  201: Invalid data type
  202: Invalid sort type
