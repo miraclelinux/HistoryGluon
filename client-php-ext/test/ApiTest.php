@@ -307,7 +307,8 @@ class ApiTest extends PHPUnit_Framework_TestCase
     }
 
     private function getSampleTime($id, $idx) {
-        $sample = $this->getSamples($id)[$idx];
+        $samples = $this->getSamples($id);
+        $sample = $samples[$idx];
         $sec = $sample[HISTORY_GLUON_DATA_KEY_SEC];
         $ns  = $sample[HISTORY_GLUON_DATA_KEY_NS];
         return array($sec, $ns);
