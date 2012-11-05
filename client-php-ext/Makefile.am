@@ -5,7 +5,7 @@ make_in_src: src/Makefile
 	make -C src
 
 src/Makefile: src/configure
-	cd src; export CFLAGS="-I ../../client-lib-c/src -g -Wall"; export LDFLAGS="-L../../client-lib-c/src/.libs -lhistory-gluon"; ./configure
+	cd src; export CFLAGS="-I ../../client-lib-c/src -g -Wall"; export LDFLAGS="-L../../client-lib-c/src/.libs -lhistory-gluon"; export LD_LIBRARY_PATH=../../client-lib-c/src/.libs; ./configure
 
 src/configure: src/config.m4
 	cd src; phpize
