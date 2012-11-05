@@ -51,8 +51,8 @@ public class BasicStorageDriverTest extends BasicStorageDriver
     }
 
     @Override
-    public boolean addData(HistoryData history) {
-        return true;
+    public int addData(HistoryData history) {
+        return ErrorCode.SUCCESS;
     }
 
     @Override
