@@ -171,6 +171,7 @@ typedef struct
 	int port;
 	int socket;
 	int endian;
+	char *db_name;
 }
 private_context_t;
 
@@ -186,6 +187,42 @@ struct timespec HISTORY_GLUON_TIMESPEC_END = {0xffffffff, 0xffffffff};
 /* ---------------------------------------------------------------------------
  * Private methods
  * ------------------------------------------------------------------------- */
+static const char valid_db_name_char_array[0x100] = {
+  ['A'] = 1, ['B'] = 1, ['C'] = 1, ['D'] = 1, ['E'] = 1, ['F'] = 1, ['G'] = 1,
+  ['H'] = 1, ['I'] = 1, ['J'] = 1, ['K'] = 1, ['L'] = 1, ['M'] = 1, ['N'] = 1,
+  ['O'] = 1, ['P'] = 1, ['Q'] = 1, ['R'] = 1, ['S'] = 1, ['T'] = 1, ['U'] = 1,
+  ['V'] = 1, ['W'] = 1, ['X'] = 1, ['Y'] = 1, ['Z'] = 1,
+  ['a'] = 1, ['b'] = 1, ['c'] = 1, ['d'] = 1, ['e'] = 1, ['f'] = 1, ['g'] = 1,
+  ['h'] = 1, ['i'] = 1, ['j'] = 1, ['k'] = 1, ['l'] = 1, ['m'] = 1, ['N'] = 1,
+  ['o'] = 1, ['p'] = 1, ['q'] = 1, ['r'] = 1, ['s'] = 1, ['t'] = 1, ['u'] = 1,
+  ['v'] = 1, ['w'] = 1, ['x'] = 1, ['y'] = 1, ['z'] = 1,
+  ['0'] = 1, ['1'] = 1, ['2'] = 1, ['3'] = 1, ['4'] = 1, ['5'] = 1, ['6'] = 1,
+  ['7'] = 1, ['8'] = 1, ['9'] = 1,
+  ['.'] = 1, ['_'] = 1, ['-'] = 1, ['@'] = 1, ['/'] = 1,
+  /* The linker shall fill 0 for other characters, because this is
+     static varible region */
+};
+
+static history_gluon_result_t check_database_name(const char *database_name)
+{
+	if (!database_name)
+		return HGLERR_INVALID_DB_NAME;
+	size_t len = strlen(database_name);
+	if (len > HISTORY_GLUON_MAX_DATABASE_NAME_LENGTH) {
+		ERR_MSG("Too long database name: %zd\n", len);
+		return HGLERR_TOO_LONG_DB_NAME;
+	}
+	size_t i;
+	for (i = 0; i < len; i++) {
+		const unsigned char c = database_name[i];
+		if (!valid_db_name_char_array[c]) {
+			ERR_MSG("invalid char: %02x at %d\n", c, i);
+			return HGLERR_INVALID_DB_NAME;
+		}
+	}
+	return HGL_SUCCESS;
+}
+
 static int get_system_endian(void)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -837,15 +874,30 @@ error:
 /* ---------------------------------------------------------------------------
  * Public functions                                                           *
  * ------------------------------------------------------------------------- */
-history_gluon_context_t history_gluon_create_context(void)
+history_gluon_result_t
+history_gluon_create_context(const char *database_name, const char *server_name,
+                             int port, history_gluon_context_t *context)
 {
+	history_gluon_result_t ret;
+	ret = check_database_name(database_name);
+	if (ret != HGL_SUCCESS)
+		return ret;
+
 	private_context_t *ctx = malloc(sizeof(private_context_t));
 	ctx->connected = 0;
-	ctx->server_name = DEFAULT_SERVER_NAME;
-	ctx->port = DEFAULT_PORT;
+	ctx->db_name = strdup(database_name);
+	if (server_name)
+		ctx->server_name = strdup(server_name);
+	else
+		ctx->server_name = strdup(DEFAULT_SERVER_NAME);
+	if (port > 0)
+		ctx->port = port;
+	else
+		ctx->port = DEFAULT_PORT;
 	ctx->socket = -1;
 	ctx->endian = get_system_endian();
-	return ctx;
+	*context = ctx;
+	return HGL_SUCCESS;
 }
 
 void history_gluon_free_context(history_gluon_context_t _ctx)
@@ -853,6 +905,10 @@ void history_gluon_free_context(history_gluon_context_t _ctx)
 	private_context_t *ctx = (private_context_t *)_ctx;
 	if (ctx->connected)
 		close(ctx->socket);
+	if (ctx->db_name)
+		free(ctx->db_name);
+	if (ctx->server_name)
+		free(ctx->server_name);
 	free(ctx);
 }
 

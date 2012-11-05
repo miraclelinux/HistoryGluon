@@ -51,7 +51,7 @@ ZEND_GET_MODULE(php_history_gluon)
 /* -------------------------------------------------------------------------------------
  * Static member and functions
  * ---------------------------------------------------------------------------------- */
-static history_gluon_context_t *g_ctx = NULL;;
+static history_gluon_context_t g_ctx = NULL;;
 
 static history_gluon_result_t validate_context(history_gluon_context_t ctx)
 {
@@ -111,9 +111,29 @@ PHP_RINIT_FUNCTION(history_gluon)
 
 PHP_FUNCTION(history_gluon_create_context)
 {
-	if (!g_ctx)
-		g_ctx = history_gluon_create_context();
-	RETURN_LONG((long)g_ctx);
+	char *s_db_name;
+	char *s_server_name;
+	int i_db_name_len, i_server_name_len;
+	long l_port;
+	zval *z_ctx;
+	int pret;
+	pret = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sslz",
+	                             &s_db_name, &i_db_name_len,
+	                             &s_server_name, &i_server_name_len,
+	                             &l_port, &z_ctx);
+	if (pret == FAILURE)
+		RETURN_NULL();
+	if (i_server_name_len == 0)
+		s_server_name = NULL;
+	if (!g_ctx) {
+		history_gluon_result_t ret;
+		ret = history_gluon_create_context(s_db_name, s_server_name,
+		                                   l_port, &g_ctx);
+		if (ret != HGL_SUCCESS)
+			RETURN_LONG((long)ret);
+	}
+	ZVAL_LONG(z_ctx, (long)g_ctx);
+	RETURN_LONG((long)HGL_SUCCESS);
 }
 
 PHP_FUNCTION(history_gluon_free_context)

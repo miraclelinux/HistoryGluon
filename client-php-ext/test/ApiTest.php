@@ -65,7 +65,9 @@ class ApiTest extends PHPUnit_Framework_TestCase
     }
 
     public function testCreateContext() {
-        $ctx = history_gluon_create_context();
+        $ctx = null;
+        $ret = history_gluon_create_context("test", null, 0, $ctx);
+        $this->assertEquals(HGL_SUCCESS, $ret);
         $this->assertGreaterThan(0, $ctx);
     }
 
@@ -155,7 +157,8 @@ class ApiTest extends PHPUnit_Framework_TestCase
      * Private Methods
      * --------------------------------------------------------------------- */
     private function assertGloblCreateContext() {
-        $this->g_ctx = history_gluon_create_context();
+        $ret = history_gluon_create_context("test", null, 0, $this->g_ctx);
+        $this->assertEquals(HGL_SUCCESS, $ret);
         $this->assertGreaterThan(0, $this->g_ctx);
     }
 

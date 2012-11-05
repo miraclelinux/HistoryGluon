@@ -35,6 +35,8 @@ typedef enum {
 
 #define HISTORY_GLUON_NUM_ENTRIES_UNLIMITED 0
 
+#define HISTORY_GLUON_MAX_DATABASE_NAME_LENGTH 1024
+
 typedef struct
 {
 	uint64_t id;
@@ -83,6 +85,8 @@ typedef enum {
 	HGLERR_NOT_IMPLEMENTED       = -2,
 	HGLERR_MEM_ALLOC             = -3,
 	HGLERR_INVALID_CONTEXT       = -10,
+	HGLERR_TOO_LONG_DB_NAME      = -11,
+	HGLERR_INVALID_DB_NAME       = -12,
 	HGLERR_READ_STREAM_END       = -100,
 	HGLERR_READ_ERROR            = -101,
 	HGLERR_WRITE_ERROR           = -200,
@@ -103,6 +107,8 @@ typedef enum {
 	HGLSVERR_UNSUPPORTED_VERSION     = 3,
 	HGLSVERR_NOT_IMPLEMENTED         = 4,
 	HGLSVERR_AUTHENTIFICATION_FAILED = 100,
+	HGLSVERR_TOO_LONG_DB_NAME        = 101,
+	HGLSVERR_INVLIAD_CHARIN_DB_NAME  = 102,
 	HGLSVERR_PACKET_SHORT            = 200,
 	HGLSVERR_INVALID_DATA_TYPE       = 201,
 	HGLSVERR_INVALID_SORT_TYPE       = 202,
@@ -118,10 +124,19 @@ extern struct timespec HISTORY_GLUON_TIMESPEC_END;
 /**
  * Create a History Gluon's context.
  *
- * @return A context used for History Gluon's APIs on success.
+ * @param database_name a name to identify the DB this context uses
+ *        The maximum length is 1024. Valid characters are A-z, 0-9,
+ *        .(dot), _(underscore), -(hyphen), @(at), and /(slash).
+ * @param server A Histogy-Gluon Server name or an IP address. If NULL,
+ *               localhost is used.
+ * @param port The port number of History-Gluon Server. When 0,
+ *             default port is used.
+ * @param context A pointer in which the created context is returned.
+ * @return \HGL_SUCCESS on success. If an error occured, the code is returned.
  */
-history_gluon_context_t
-history_gluon_create_context(void);
+history_gluon_result_t
+history_gluon_create_context(const char *database_name, const char *server_name,
+                             int port, history_gluon_context_t *context);
 
 /**
  * Destroy History Gluon's context.
