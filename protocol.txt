@@ -13,9 +13,10 @@ COMMAND: Connect
 [ 4] Packet length (not including this field)
 [ 4] Command type
    10: Connect
-[ 2] Length of Domain
-[ v] Domain string
- valid characters: A-z0-9._-
+[ 2] Length of database name
+[ v] Database name
+ valid characters: A-z, 0-9, .(dot), _(underscore), -(hyphen), @(at),
+ and /(slash).
  maximum length: 1024
 
 -----------------------------------------
