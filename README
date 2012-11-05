@@ -15,8 +15,8 @@ The currently supported databases are the following.
 =========================================
 How to build souces from the repository
 =========================================
-The sources in the repository doesn't contain 'configure' script. So you have to crete
-'configure' with the following steps.
+The sources in the repository doesn't contain 'configure' script.
+So you have to crete 'configure' with the following steps.
 
 0) install the following programs.
 (Note: More programs may be needed depending on the system.)
@@ -42,3 +42,14 @@ $ autogen.sh
 $ ./configure
 $ make
 $ sudo make install
+
+[Hint]
+If you install some packages in /usr/local, you may need to the following
+steps.
+
+- added '/usr/local/share/aclocal' in /usr/share/aclocal/dirlist like
+$ cat /usr/share/aclocal/dirlist
+/usr/local/share/aclocal
+
+- specify PKG_CONFIG_DIR environment variable in configure like
+$ PKG_CONFIG_DIR=/usr/local/lib/pkgconfig ./configure 
