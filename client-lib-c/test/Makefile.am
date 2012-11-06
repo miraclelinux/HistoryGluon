@@ -9,7 +9,7 @@ TESTS_ENVIRONMENT = NO_MAKE=yes CUTTER="$(CUTTER)"
 noinst_LTLIBRARIES = \
 	test-client-lib.la \
 	test-client-bug-follow-up.la \
-	libtest-utils.la
+	libutils.la
 
 endif
 
@@ -20,15 +20,15 @@ INCLUDES = $(CUTTER_CFLAGS) -I ../src
 LIBS = $(CUTTER_LIBS) ../src/libhistory-gluon.la
 
 # utility
-libtest_utils_la_SOURCES = test-utils.c
-libtest_utils_la_LDFLAGS = 
+libutils_la_SOURCES = utils.c
+libutils_la_LDFLAGS = 
 
 # Test cases
 test_client_lib_la_SOURCES = test-client-lib.c
-test_client_lib_la_LIBADD = ./libtest-utils.la
+test_client_lib_la_LIBADD = ./libutils.la
 
 test_client_bug_follow_up_la_SOURCES = test-client-bug-follow-up.c
-test_client_bug_follow_up_la_LIBADD = ./libtest-utils.la
+test_client_bug_follow_up_la_LIBADD = ./libutils.la
 
 echo-cutter:
 	@echo $(CUTTER)

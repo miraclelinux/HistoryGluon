@@ -1,5 +1,5 @@
 #include <cutter.h>
-#include "test-utils.h"
+#include "utils.h"
 
 /* ---------------------------------------------------------------------------
  * Global variables
