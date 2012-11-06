@@ -100,6 +100,9 @@ typedef enum {
 	HGLERR_REPLY_ERROR           = -502,
 	HGLERR_INVALID_DATA_TYPE     = -600,
 
+	/* Error codes: from -1000000 to -19999999: for extensions */
+	/* Error codes: from -2000000 to -39999999: for applications */
+
 	/* Positive value is send from the server. */
 	HGLSV_SUCCESS                    = 0,
 	HGLSVERR_UKNOWN_ERROR            = 1,

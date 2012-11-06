@@ -1,6 +1,8 @@
 <?php
 
-define("HGL_SUCCESS", 0);
+define("HGL_SUCCESS",             0);
+define("HGLERR_TOO_LONG_DB_NAME", -11);
+define("HGLERR_INVALID_DB_NAME",  -12);
 
 define("HISTORY_GLUON_DELETE_TYPE_EQUAL",            0);
 define("HISTORY_GLUON_DELETE_TYPE_EQUAL_OR_LESS",    1);
@@ -75,6 +77,45 @@ class ApiTest extends PHPUnit_Framework_TestCase
         $this->assertGloblCreateContext();
         history_gluon_free_context($this->g_ctx);
         $this->g_ctx = null;
+    }
+
+    public function testCreateContextLocalhost() {
+        $ret = history_gluon_create_context("test", "localhost", 0, $this->g_ctx);
+        $this->assertEquals(HGL_SUCCESS, $ret);
+        $this->assertGreaterThan(0, $this->g_ctx);
+    }
+
+    public function testCreateContext127_0_0_1() {
+        $ret = history_gluon_create_context("test", "127.0.0.1", 0, $this->g_ctx);
+        $this->assertEquals(HGL_SUCCESS, $ret);
+        $this->assertGreaterThan(0, $this->g_ctx);
+    }
+
+    public function testCreateContextPort30010() {
+        $ret = history_gluon_create_context("test", null, 30010, $this->g_ctx);
+        $this->assertEquals(HGL_SUCCESS, $ret);
+        $this->assertGreaterThan(0, $this->g_ctx);
+    }
+
+    public function testCreateContextValidDBName() {
+        $dbname = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345689.-_@/";
+        $ret = history_gluon_create_context($dbname, null, 0, $this->g_ctx);
+        $this->assertEquals(HGL_SUCCESS, $ret);
+        $this->assertGreaterThan(0, $this->g_ctx);
+    }
+
+    public function testCreateContextInvalidDBName() {
+        $dbname = "name!";
+        $ret = history_gluon_create_context($dbname, null, 0, $this->g_ctx);
+        $this->assertEquals(HGLERR_INVALID_DB_NAME, $ret);
+    }
+
+    public function testCreateContextDBName1024() {
+        $this->assertCreateContextLongName(1024, HGL_SUCCESS);
+    }
+
+    public function testCreateContextDBName1025() {
+        $this->assertCreateContextLongName(1025, HGLERR_TOO_LONG_DB_NAME);
     }
 
     public function testAddUint() {
@@ -344,6 +385,15 @@ class ApiTest extends PHPUnit_Framework_TestCase
         return False;
     }
 
+    private function assertCreateContextLongName($length, $expected) {
+        $i = 0;
+        $dbname = "";
+        for ($i = 0; $i < $length; $i++)
+            $dbname .= "A";
+        $ret = history_gluon_create_context($dbname, null, 0, $this->g_ctx);
+        $this->assertEquals($expected, $ret);
+    }
+
     private function assertEqualGluonData($expected, $actual) {
             $this->assertEquals($expected[HISTORY_GLUON_DATA_KEY_ID],
                                 $actual[HISTORY_GLUON_DATA_KEY_ID]);
@@ -412,6 +462,4 @@ class ApiTest extends PHPUnit_Framework_TestCase
                                 $sortRequest,
                                 $expectedRetIdx0, $expectedNumRet);
     }
-
-
 }
