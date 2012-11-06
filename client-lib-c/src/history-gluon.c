@@ -378,7 +378,7 @@ proc_connect(private_context_t *ctx)
 	RETURN_IF_ERROR(ret);
 
 	/* wait for reply */
-	int reply_len = MAGIC_CODE_LENGTH + DB_NAME_SIZE_LENGTH;
+	int reply_len = MAGIC_CODE_LENGTH + REPLY_RESULT_LENGTH;
 	uint8_t reply[reply_len];
 	ret = read_data(ctx, reply, reply_len);
 	RETURN_IF_ERROR(ret);

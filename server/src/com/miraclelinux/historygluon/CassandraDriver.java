@@ -41,7 +41,6 @@ public class CassandraDriver extends BasicStorageDriver {
     /* -----------------------------------------------------------------------
      * Private constant
      * -------------------------------------------------------------------- */
-    private static final String KEYSPACE = "zabbix";
     private static final String COLUMN_FAMILY = "history";
     private static final String COLUMN_ITEM_ID = "id";
     private static final String COLUMN_CLOCK = "sec";
@@ -67,6 +66,7 @@ public class CassandraDriver extends BasicStorageDriver {
      * Private members
      * -------------------------------------------------------------------- */
     private Log m_log = null;
+    private String m_keySpace = null;
     private Cassandra.Client m_client = null;
     private TTransport m_transport = null;
 
@@ -98,7 +98,7 @@ public class CassandraDriver extends BasicStorageDriver {
             return false;
         }
         m_client = new Cassandra.Client(protocol);
-        return makeTableIfNeeded();
+        return true;
     }
 
     @Override
@@ -113,6 +113,12 @@ public class CassandraDriver extends BasicStorageDriver {
     @Override
     public String getName() {
         return "Cassandra";
+    }
+
+    @Override
+    public void setDatabase(String dbName) {
+        m_keySpace = dbName;
+        makeTableIfNeeded();
     }
 
     @Override
@@ -141,14 +147,8 @@ public class CassandraDriver extends BasicStorageDriver {
 
     @Override
     public boolean deleteDB() {
-        try {
-            m_client.system_drop_keyspace(KEYSPACE);
-        } catch (Exception e) {
-            e.printStackTrace();
-            m_log.error(e);
-            return false;
-        }
-        return true;
+        m_log.error("HBaseDriver#deleteDB() is not implemented.");
+        return false;
     }
 
     /* -----------------------------------------------------------------------
@@ -232,7 +232,7 @@ public class CassandraDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     private boolean makeTableIfNeeded() {
         try {
-            m_client.set_keyspace(KEYSPACE);
+            m_client.set_keyspace(m_keySpace);
             return true;
         } catch (InvalidRequestException e) {
             // In this point, it is possible that keyspace doesnot exist.
@@ -247,7 +247,7 @@ public class CassandraDriver extends BasicStorageDriver {
             return false;
 
         try {
-            m_client.set_keyspace(KEYSPACE);
+            m_client.set_keyspace(m_keySpace);
         } catch (Exception e) {
             e.printStackTrace();
             m_log.error(e);
@@ -259,12 +259,12 @@ public class CassandraDriver extends BasicStorageDriver {
     private boolean makeTable() {
         try {
             KsDef ksDef = new KsDef();
-            ksDef.name = KEYSPACE;
+            ksDef.name = m_keySpace;
             ksDef.strategy_class = "org.apache.cassandra.locator.SimpleStrategy";
             Map<String,String> strategyOptions = new HashMap<String,String>();
             strategyOptions.put("replication_factor", "1");
             ksDef.strategy_options = strategyOptions;
-            CfDef cfDef = new CfDef(KEYSPACE, COLUMN_FAMILY);
+            CfDef cfDef = new CfDef(m_keySpace, COLUMN_FAMILY);
             cfDef.comparator_type = "UTF8Type";
 
             addColumn(cfDef, BB_COLUMN_ITEM_ID, "LongType", true);
@@ -280,7 +280,7 @@ public class CassandraDriver extends BasicStorageDriver {
             m_log.error(e);
             return false;
         }
-        m_log.info("Created keyspace: " + KEYSPACE);
+        m_log.info("Created keyspace: " + m_keySpace);
         return true;
     }
 

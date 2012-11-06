@@ -21,14 +21,10 @@ public class RiakDriver extends BasicStorageDriver {
     }
 
     /* -----------------------------------------------------------------------
-     * Private constant
-     * -------------------------------------------------------------------- */
-    private static final String BUCKET_NAME = "zabbix";
-
-    /* -----------------------------------------------------------------------
      * Private members
      * -------------------------------------------------------------------- */
     private Log m_log = null;
+    private String m_bucketName;
     private IRiakClient m_pbClient = null;
 
     /* -----------------------------------------------------------------------
@@ -72,9 +68,14 @@ public class RiakDriver extends BasicStorageDriver {
     }
 
     @Override
+    public void setDatabase(String dbName) {
+        m_bucketName = dbName;
+    }
+
+    @Override
     public int addData(HistoryData history) {
         try {
-            Bucket bucket = m_pbClient.fetchBucket(BUCKET_NAME).execute();
+            Bucket bucket = m_pbClient.fetchBucket(m_bucketName).execute();
             String key = makeKey(history.id, history.sec, history.ns);
             ValueType value = new ValueType();
             value.type = history.type;
@@ -91,7 +92,7 @@ public class RiakDriver extends BasicStorageDriver {
     @Override
     public boolean deleteDB() {
         try {
-            Bucket bucket = m_pbClient.fetchBucket(BUCKET_NAME).execute();
+            Bucket bucket = m_pbClient.fetchBucket(m_bucketName).execute();
             Iterable<String> keys = bucket.keys();
             long count = 0;
             for (String keyName : keys) {
@@ -116,7 +117,7 @@ public class RiakDriver extends BasicStorageDriver {
         HistoryDataSet dataSet = new HistoryDataSet();
         try {
             HistoryData history;
-            Bucket bucket = m_pbClient.fetchBucket(BUCKET_NAME).execute();
+            Bucket bucket = m_pbClient.fetchBucket(m_bucketName).execute();
             List<String> keyList =
               bucket.fetchIndex(KeyIndex.index).from(startKey).to(stopKey).execute();
             for (String key : keyList) {
@@ -138,7 +139,7 @@ public class RiakDriver extends BasicStorageDriver {
     @Override
     protected boolean deleteRow(HistoryData history, Object arg) {
         try {
-            Bucket bucket = m_pbClient.fetchBucket(BUCKET_NAME).execute();
+            Bucket bucket = m_pbClient.fetchBucket(m_bucketName).execute();
             bucket.delete(history.key).execute();
         } catch (RiakException e) {
             m_log.error(e);

@@ -12,6 +12,7 @@ public class MemDriver extends BasicStorageDriver {
      * Private members
      * -------------------------------------------------------------------- */
     private Log m_log = null;
+    private String m_dbName = null;
     //private ConcurrentHistoryDataSet m_dataSetPreferTime = null;
     private ConcurrentHistoryDataSet m_dataSetPreferId = null;
 
@@ -38,6 +39,11 @@ public class MemDriver extends BasicStorageDriver {
     @Override
     public String getName() {
         return "Mem";
+    }
+
+    @Override
+    public void setDatabase(String dbName) {
+        m_dbName = dbName;
     }
 
     @Override

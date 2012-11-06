@@ -5,6 +5,7 @@ interface StorageDriver {
     public boolean init();
     public void close();
     public String getName();
+    public void setDatabase(String dbName);
 
     public int addData(HistoryData history);
 
