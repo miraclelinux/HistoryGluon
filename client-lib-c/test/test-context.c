@@ -228,3 +228,44 @@ void test_context_invalid_0x10(void)
 	char *dbname = "name\x10";
 	assert_create_context(dbname, NULL, 0, HGLERR_INVALID_DB_NAME);
 }
+
+/* multi contexts */
+static void
+assert_multi_contexts(const char *name0, const char *name1,
+                      uint64_t value0, uint64_t value1,
+                      uint64_t expect0, uint64_t expect1)
+{
+	uint64_t id = 123;
+	struct timespec ts = {2345678, 200};
+
+	assert_create_context(name0, NULL, 0, HGL_SUCCESS);
+	history_gluon_context_t ctx0 = g_ctx;
+	assert_add_uint(id, &ts, value0);
+
+	assert_create_context(name1, NULL, 0, HGL_SUCCESS);
+	history_gluon_context_t ctx1 = g_ctx;
+	assert_add_uint(id, &ts, value1);
+
+	// retrive each data
+	g_ctx = ctx0;
+	assert_query(id, &ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, HGL_SUCCESS);
+	cut_assert_equal_int_least64(expect0, g_data->v.uint);
+
+	g_ctx = ctx1;
+	assert_query(id, &ts, HISTORY_GLUON_QUERY_TYPE_ONLY_MATCH, HGL_SUCCESS);
+	cut_assert_equal_int_least64(expect1, g_data->v.uint);
+}
+
+void test_context_different_name_with_same_id_time(void)
+{
+	uint64_t value0 = 0x56aa;
+	uint64_t value1 = 0xffbb;
+	assert_multi_contexts("ctx0", "ctx1", value0, value1, value0, value1);
+}
+
+void test_context_same_name_with_same_id_time(void)
+{
+	uint64_t value0 = 0x56aa;
+	uint64_t value1 = 0xffbb;
+	assert_multi_contexts("ctx1", "ctx1", value0, value1, value1, value1);
+}
