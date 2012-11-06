@@ -3,6 +3,7 @@
 define("HGL_SUCCESS",             0);
 define("HGLERR_TOO_LONG_DB_NAME", -11);
 define("HGLERR_INVALID_DB_NAME",  -12);
+define("HGLPHPERR__FAILED_ADD_TO_HASH_TABLE",  -1000010);
 
 define("HISTORY_GLUON_DELETE_TYPE_EQUAL",            0);
 define("HISTORY_GLUON_DELETE_TYPE_EQUAL_OR_LESS",    1);
@@ -31,6 +32,8 @@ define("HISTORY_GLUON_TIME_START_NS",   0x00000000);
 define("HISTORY_GLUON_TIME_END_SEC",    0x99999999);
 define("HISTORY_GLUON_TIME_END_NS",     0x99999999);
 
+define("HISTORY_GLUON_MAX_DATABASE_NAME_LENGTH", 1024);
+
 define("HISTORY_GLUON_NUM_ENTRIES_UNLIMITED",  0);
 
 define("HISTORY_GLUON_DATA_KEY_ARRAY_SORT_ORDER", "sort_order");
@@ -50,6 +53,7 @@ class ApiTest extends PHPUnit_Framework_TestCase
      * Private Members
      * --------------------------------------------------------------------- */
     private $g_ctx = null;
+    private $g_ctx_array = array();
 
     /* ------------------------------------------------------------------------
      * Test Methods
@@ -63,6 +67,12 @@ class ApiTest extends PHPUnit_Framework_TestCase
         if ($this->g_ctx != null) {
             history_gluon_free_context($this->g_ctx);
             $this->g_ctx = null;
+        }
+
+        if ($this->g_ctx_array != null) {
+            foreach($this->g_ctx_array as $key => $ctx)
+                history_gluon_free_context($ctx);
+            $this->g_ctx_array = array();
         }
     }
 
@@ -110,12 +120,18 @@ class ApiTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(HGLERR_INVALID_DB_NAME, $ret);
     }
 
-    public function testCreateContextDBName1024() {
-        $this->assertCreateContextLongName(1024, HGL_SUCCESS);
+    public function testCreateContextMaxDBName() {
+        $len = HISTORY_GLUON_MAX_DATABASE_NAME_LENGTH;
+        $this->assertCreateContextLongName($len, HGL_SUCCESS);
     }
 
-    public function testCreateContextDBName1025() {
-        $this->assertCreateContextLongName(1025, HGLERR_TOO_LONG_DB_NAME);
+    public function testCreateContextOverMaxDBName() {
+        $len = HISTORY_GLUON_MAX_DATABASE_NAME_LENGTH + 1;
+        $this->assertCreateContextLongName($len, HGLERR_TOO_LONG_DB_NAME);
+    }
+
+    public function testCreateContext1024Times() {
+        $this->assertCreateContextManyTime(1024, HGL_SUCCESS);
     }
 
     public function testAddUint() {
@@ -392,6 +408,15 @@ class ApiTest extends PHPUnit_Framework_TestCase
             $dbname .= "A";
         $ret = history_gluon_create_context($dbname, null, 0, $this->g_ctx);
         $this->assertEquals($expected, $ret);
+    }
+
+    private function assertCreateContextManyTime($times, $expected) {
+        $ctx = null;
+        for ($i = 0; $i < $times; $i++) {
+            $ret = history_gluon_create_context("test", null, 0, $ctx);
+            $this->assertEquals($expected, $ret);
+            array_push($this->g_ctx_array, $ctx);
+        }
     }
 
     private function assertEqualGluonData($expected, $actual) {
