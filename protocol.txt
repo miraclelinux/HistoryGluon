@@ -10,9 +10,8 @@ Endian: Little
 =========================================
 COMMAND: Connect
 =========================================
-[ 4] Packet length (not including this field)
-[ 4] Command type
-   10: Connect
+[ 4] Magic Code
+   0x48, 0x47, 0x4c, 0x00  ('H','G','L','\0')
 [ 2] Length of database name
 [ v] Database name
  valid characters: A-z, 0-9, .(dot), _(underscore), -(hyphen), @(at),
@@ -22,9 +21,8 @@ COMMAND: Connect
 -----------------------------------------
 REPLY: Add Data
 -----------------------------------------
-[ 4] Packet length (not including this)
-[ 2] Reply type
-   10: Connect
+[ 4] Magic Code
+   0x48, 0x47, 0x4c, 0x00  ('H','G','L','\0')
 [ 4] Result
 
 =========================================

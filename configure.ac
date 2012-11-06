@@ -1,4 +1,4 @@
-AC_INIT(history-gluon, 0.1.0)
+AC_INIT(history-gluon, 0.2.0)
 AM_INIT_AUTOMAKE()
 
 AC_DISABLE_STATIC
