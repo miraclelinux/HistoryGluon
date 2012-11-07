@@ -119,26 +119,34 @@ static void context_table_element_destructor(void *element)
 	// no action, because data is not added to the hash table.
 }
 
+static void create_context_table(void)
+{
+	ALLOC_HASHTABLE(g_context_table);
+	zend_hash_init(g_context_table, MAX_CONTEXT_TABLE_ELEMENTS, NULL,
+	               context_table_element_destructor, 0);
+}
+
 /* ----------------------------------------------------------------------------
  * Exported functions
  * ------------------------------------------------------------------------- */
 PHP_MINIT_FUNCTION(history_gluon)
 {
-	ALLOC_HASHTABLE(g_context_table);
-	zend_hash_init(g_context_table, MAX_CONTEXT_TABLE_ELEMENTS, NULL,
-	               context_table_element_destructor, 0);
 	return SUCCESS;
 }
 
 PHP_MSHUTDOWN_FUNCTION(history_gluon)
 {
+	/* TODO: confirm that HashTable is automatically destroyed.
 	zend_hash_destroy(g_context_table);
+	*/
 	FREE_HASHTABLE(g_context_table);
 	return SUCCESS;
 }
 
 PHP_RINIT_FUNCTION(history_gluon)
 {
+	if (!g_context_table)
+		create_context_table();
 	return SUCCESS;
 }
 
@@ -165,7 +173,7 @@ PHP_FUNCTION(history_gluon_create_context)
 	                                   l_port, &ctx);
 	if (ret != HGL_SUCCESS)
 		RETURN_LONG((long)ret);
-	
+
 	int zret;
 	zret = zend_hash_add(g_context_table, (const char *)&ctx, sizeof(ctx),
 	                     NULL, 0, NULL);
