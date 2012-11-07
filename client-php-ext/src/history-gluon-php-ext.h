@@ -23,6 +23,7 @@
 PHP_MINIT_FUNCTION(history_gluon);
 PHP_MSHUTDOWN_FUNCTION(history_gluon);
 PHP_RINIT_FUNCTION(history_gluon);
+PHP_RSHUTDOWN_FUNCTION(history_gluon);
 
 PHP_FUNCTION(history_gluon_create_context);
 PHP_FUNCTION(history_gluon_free_context);
