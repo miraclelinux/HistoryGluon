@@ -21,7 +21,7 @@ JUnit           : 4.10 (When you run tests)
 (1) download http://downloads.basho.com.s3-website-us-east-1.amazonaws.com/riak/CURRENT/rhel/6/riak-1.2.1-1.el6.x86_64.rpm
 (2) install the above rpm.
 (3a) donwload package riak-client-1.0.6.jar from http://search.maven.org/?#search%7Cgav%7C1%7Cg%3A%22com.basho.riak%22%20AND%20a%3A%22riak-client%22
-(4b) download package riak-pb-1.2.jar from  http://mvnrepository.com/artifact/com.basho.riak.protobuf/riak-pb
+(3b) download package riak-pb-1.2.jar from  http://mvnrepository.com/artifact/com.basho.riak.protobuf/riak-pb
 (4) put the jar files at /usr/local/riak-client
 
 ======================================
