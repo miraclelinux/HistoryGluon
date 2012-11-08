@@ -78,7 +78,9 @@ static HashTable* g_ctx_hash_table = NULL;
 
 static void context_table_element_destructor(void *element)
 {
-	// no action, because data is not added to the hash table.
+	history_gluon_context_t ctx;
+	memcpy(&ctx, element, sizeof(ctx));
+	history_gluon_free_context(ctx);
 }
 
 static void create_context_table(void)
@@ -198,7 +200,8 @@ PHP_FUNCTION(history_gluon_create_context)
 
 	int zret;
 	zret = zend_hash_add(get_context_table(),
-	                     (const char *)&ctx, sizeof(ctx), NULL, 0, NULL);
+	                     (const char *)&ctx, sizeof(ctx),
+	                     &ctx, sizeof(ctx), NULL);
 	if (zret == FAILURE) {
 		history_gluon_free_context(ctx);
 		RETURN_LONG((long)HGLPHPERR_FAILED_ADD_TO_HASH_TABLE);
@@ -219,7 +222,11 @@ PHP_FUNCTION(history_gluon_free_context)
 	if (validate_context(ctx) != HGL_SUCCESS)
 		return;
 	zend_hash_del(get_context_table(), (const char *)&ctx, sizeof(ctx));
-	history_gluon_free_context(ctx);
+
+	/* Note: freeing the context will be performed in
+	 *       context_table_element_destructor(), which is the destructor
+	 *       of a hash table's element.
+	 */
 }
 
 PHP_FUNCTION(history_gluon_add_uint)
