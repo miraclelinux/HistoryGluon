@@ -25,10 +25,12 @@ So you have to crete 'configure' with the following steps.
  - gcc
  - make
  - jdk
- - HBase (*)
- - Cassandra (*)
- - Riak (*)
-(*) If you don't support the DB, no need to install
+ - HBase (*1)
+ - Cassandra (*1)
+ - Riak (*1)
+ - PHP development package (*2)
+(*1) If you don't support the DB, no need to install
+(*2) If you don't build the PHP extension module, no need to install
 
  Optionally, install the following tools if you do test.
  - JUnit4
