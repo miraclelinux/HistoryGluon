@@ -3,6 +3,7 @@ AM_INIT_AUTOMAKE()
 
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
+AC_PROG_CXX
 
 dnl glib
 GLIB_REQUIRED=2.4
@@ -42,6 +43,8 @@ client-lib-c/history-gluon-1.0.pc
 client-lib-c/src/Makefile
 client-lib-c/test/Makefile
 client-php-ext/Makefile
+cli/Makefile
+cli/src/Makefile
 ])
 
 dnl **************************************************************
