@@ -20,6 +20,10 @@
 #include <stdint.h>
 #include <time.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void * history_gluon_context_t;
 
 typedef enum {
@@ -335,5 +339,9 @@ history_gluon_get_statistics(history_gluon_context_t context, uint64_t id,
 history_gluon_result_t
 history_gluon_delete(history_gluon_context_t context, uint64_t id, struct timespec *ts,
                      history_gluon_delete_way_t delete_way, uint64_t *num_deleted_entries);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // _history_gluon_h_
