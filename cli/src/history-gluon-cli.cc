@@ -115,6 +115,93 @@ static hgl_context_factory     g_hgl_ctx_factory;
 // --------------------------------------------------------------------------
 // static functions
 // --------------------------------------------------------------------------
+static void print_data_time(struct timespec *ts)
+{
+	struct tm _tm;
+	time_t _time = ts->tv_sec;
+	localtime_r(&_time, &_tm);
+	printf("%d-%02d%02d %02d:%02d:%02d.%09ld",
+	       _tm.tm_year+1900, _tm.tm_mon+1, _tm.tm_mday,
+	       _tm.tm_hour, _tm.tm_min, _tm.tm_sec, ts->tv_nsec);
+}
+
+static const char get_type_initial(history_gluon_data_type_t type)
+{
+	if (type == HISTORY_GLUON_TYPE_FLOAT)
+		return 'F';
+	else if (type == HISTORY_GLUON_TYPE_STRING)
+		return 'S';
+	else if (type == HISTORY_GLUON_TYPE_UINT)
+		return 'U';
+	else if (type == HISTORY_GLUON_TYPE_BLOB)
+		return 'B';
+
+	return '?';
+}
+
+static void print_float_data(history_gluon_data_t *data)
+{
+	printf("%+.15e\n", data->v.fp);
+}
+
+static void print_string_data(history_gluon_data_t *data)
+{
+	string str(data->v.string, data->length);
+	printf("(%"PRIu64") %s\n", data->length, str.c_str());
+}
+
+static void print_uint_data(history_gluon_data_t *data)
+{
+	printf("%"PRIu64"\n", data->v.uint);
+}
+
+static void print_blob_data(history_gluon_data_t *data)
+{
+	for (uint64_t i = 0; i < data->length; i++)
+		printf("%02x ", data->v.blob[i]);
+	printf("\n");
+}
+
+static void print_data(history_gluon_data_t *data)
+{
+	printf("[DATA] ID: 0x%016"PRIx64", ", data->id);
+	print_data_time(&data->ts);
+	printf(" [%c] ", get_type_initial(data->type));
+
+	history_gluon_data_type_t type = data->type;
+	if (type == HISTORY_GLUON_TYPE_FLOAT)
+		print_float_data(data);
+	else if (type == HISTORY_GLUON_TYPE_STRING)
+		print_string_data(data);
+	else if (type == HISTORY_GLUON_TYPE_UINT)
+		print_uint_data(data);
+	else if (type == HISTORY_GLUON_TYPE_BLOB)
+		print_blob_data(data);
+	else
+		printf("Unknown data type\n");
+}
+
+static const char *get_sort_order_str(history_gluon_sort_order_t order)
+{
+	if (order == HISTORY_GLUON_SORT_ASCENDING)
+		return "ASC";
+	else if (order == HISTORY_GLUON_SORT_DESCENDING)
+		return "DSC";
+	else if (order == HISTORY_GLUON_SORT_NOT_SORTED)
+		return "NOT";
+	return "???";
+}
+
+static void print_array_data(history_gluon_data_array_t *array)
+{
+	printf("[ARRAY] NUM: %"PRIx64", SORT: %s\n",
+	        array->num_data, get_sort_order_str(array->sort_order));
+	for (uint64_t i = 0; i < array->num_data; i++) {
+		history_gluon_data_t *data = array->array[i];
+		print_data(data);
+	}
+}
+
 static bool command_handler_query_all(history_gluon_context_t ctx, uint64_t id)
 {
 	history_gluon_data_array_t *array;
@@ -129,6 +216,9 @@ static bool command_handler_query_all(history_gluon_context_t ctx, uint64_t id)
 		printf("Error: history_gluon_range_query: %d\n", ret);
 		return false;
 	}
+
+	printf("[QUERY ALL] ID: %"PRIu64"\n", id);
+	print_array_data(array);
 
 	// free data array
 	history_gluon_free_data_array(ctx, array);
@@ -149,8 +239,13 @@ static bool command_handler_query(const vector<string> &args)
 
 	// parse ID
 	uint64_t id;
+	const char *scan_fmt;
 	const string &id_str = args[1];
-	if (sscanf(id_str.c_str(), "%"PRIu64, &id) < 1) {
+	if (id_str.size() > 2 && (id_str.compare(0, 2, "0x", 2) == 0))
+		scan_fmt = "%"PRIx64;
+	else
+		scan_fmt = "%"PRIu64;
+	if (sscanf(id_str.c_str(), scan_fmt, &id) < 1) {
 		printf("Error: sscanf(): %s\n", id_str.c_str());
 		return false;
 	}
