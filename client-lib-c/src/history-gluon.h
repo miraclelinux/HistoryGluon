@@ -144,6 +144,33 @@ typedef enum {
 
 } history_gluon_result_t;
 
+/* definitions for stream data event */
+typedef enum {
+	HISTORY_GLUON_STREAM_EVENT_END       = 0,
+	HISTORY_GLUON_STREAM_EVENT_GOT_DATA  = 1,
+} history_gluon_stream_event_type_t;
+
+#define HISTORY_GLUON_STREAM_EVENT_FLAG_DONT_FREE_DATA (1 << 0)
+
+typedef struct {
+	history_gluon_stream_event_type_t  type;
+	history_gluon_data_t              *data;
+	void                              *priv_data;
+
+	/**
+	 * When \type is HISTORY_GLUON_STREAM_EVENT_GOT_DATA,
+	 * HISTORY_GLUON_STREAM_EVENT_FLAG_DONT_FREE_DATA bit is cleared.
+	 * If the callback function sets to 1,
+	 * \data is not freed after the calback function returns.
+	 * In this case, \data has to be freed with
+	 * history_gluon_free_data() when it is no longer needed.
+	 */
+	uint32_t flags;
+} history_gluon_stream_event_t;
+
+typedef void
+(*history_gluon_stream_event_cb_func)(history_gluon_stream_event_t *evt);
+
 extern struct timespec HISTORY_GLUON_TIMESPEC_START;
 extern struct timespec HISTORY_GLUON_TIMESPEC_END;
 
@@ -258,6 +285,22 @@ history_gluon_query(history_gluon_context_t context, uint64_t id, struct timespe
  */
 void history_gluon_free_data(history_gluon_context_t context,
                              history_gluon_data_t *gluon_data);
+
+/**
+ * Get all data.
+ *
+ * @param context A History Gluon's context.
+ * @parame event_cb A callback function for data taking event and
+ *                  the stream end event.
+ *                  When event_cb->type is HISTORY_GLUON_STREAM_EVENT_GOT_DATA,
+ *                  the caller must be free event_ct->data with
+ * @param priv_data A pointer that is passed to the event callback function.
+ * @return \HGL_SUCCESS on success. If an error occured, the code is returned.
+ */
+history_gluon_result_t
+history_gluon_query_all(history_gluon_context_t context,
+                        history_gluon_stream_event_cb_func event_cb,
+                        void *priv_data);
 
 /**
  * Get data array with the specified ID and the interval.
