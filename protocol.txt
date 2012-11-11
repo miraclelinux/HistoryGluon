@@ -1,7 +1,7 @@
 History Gluon Server-client protocol specification
 
-Date: 2012/10/30
-Version: 0.7.0
+Date: 2012/11/11
+Version: 0.8.0
 
 *** Basics rules ***
 Endian: Little
@@ -133,6 +133,28 @@ REPLY: Range Query
 << Body part: Repeated the the number of entries times>>
 %%% The same as the body of 'REPLY: Query Data' %%%
 << End of Body part >>
+
+=========================================
+COMMAND PKT: Query All
+=========================================
+[ 4] Packet length (not including this field)
+[ 4] Command type
+  310: Query All
+
+-----------------------------------------
+REPLY: Query All
+-----------------------------------------
+[ 4] Packet length (not including this and up to 'Sort order')
+[ 2] Reply type
+  310: reply: Query All
+<< Body part: Repeated the the number of entries times>>
+%%% The same as the body of 'REPLY: Query Data' %%%
+<< End of Body part >>
+[ 8] 0
+[ 4] 0
+[ 4] 0
+[ 2] 0xf000
+[ 4] Result
 
 =========================================
 COMMAND PKT: Get Miminum Time
