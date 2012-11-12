@@ -929,7 +929,7 @@ read_gluon_data_body_blob(private_context_t *ctx, history_gluon_data_t *gluon_da
 }
 
 static history_gluon_result_t
-read_gluon_data(private_context_t *ctx, history_gluon_data_t **gluon_data)
+read_gluon_data_header(private_context_t *ctx, history_gluon_data_t **pp_data)
 {
 	history_gluon_result_t ret;
 
@@ -950,8 +950,19 @@ read_gluon_data(private_context_t *ctx, history_gluon_data_t **gluon_data)
 	/* parse header */
 	ret = parse_data_header(ctx, data_header, data);
 	GOTO_IF_ERROR(ret, error);
+	*pp_data = data;
+	return HGL_SUCCESS;
 
-	/* read data body */
+error:
+	history_gluon_free_data(ctx, data);
+	return ret;
+}
+
+static history_gluon_result_t
+read_gluon_data_body(private_context_t *ctx, history_gluon_data_t *gluon_data)
+{
+	history_gluon_result_t ret;
+	history_gluon_data_t *data = gluon_data;
 	if (data->type == HISTORY_GLUON_TYPE_FLOAT)
 		ret = read_gluon_data_body_float(ctx, data);
 	else if (data->type == HISTORY_GLUON_TYPE_STRING)
@@ -966,13 +977,29 @@ read_gluon_data(private_context_t *ctx, history_gluon_data_t **gluon_data)
 		goto error;
 	}
 	GOTO_IF_ERROR(ret, error);
-
-	*gluon_data = data;
 	return HGL_SUCCESS;
 
 error:
 	history_gluon_free_data(ctx, data);
 	return ret;
+}
+
+static history_gluon_result_t
+read_gluon_data(private_context_t *ctx, history_gluon_data_t **gluon_data)
+{
+	history_gluon_result_t ret;
+
+	/* read header */
+	history_gluon_data_t *data;
+	ret = read_gluon_data_header(ctx, &data);
+	RETURN_IF_ERROR(ret);
+
+	/* read body */
+	ret = read_gluon_data_body(ctx, data);
+	RETURN_IF_ERROR(ret);
+
+	*gluon_data = data;
+	return HGL_SUCCESS;
 }
 
 /* ---------------------------------------------------------------------------
@@ -1215,7 +1242,7 @@ history_gluon_query_all(history_gluon_context_t _ctx,
 	uint8_t reply[REPLY_QUERY_ALL_LENGTH];
 	ret = read_data(ctx, reply, REPLY_QUERY_ALL_LENGTH);
 	RETURN_IF_ERROR(ret);
-	uint16_t reply_type = restore_le16(ctx, &reply[PKT_QUERY_ALL_LENGTH]);
+	uint16_t reply_type = restore_le16(ctx, &reply[PKT_SIZE_LENGTH]);
 	if (reply_type != PKT_CMD_QUERY_ALL) {
 		ERR_MSG("reply type is not the expected: %d: %d\n",
 		        reply_type, PKT_CMD_QUERY_ALL);
@@ -1226,14 +1253,18 @@ history_gluon_query_all(history_gluon_context_t _ctx,
 	history_gluon_stream_event_t evt;
 	while (1) {
 		history_gluon_data_t *gluon_data;
-		ret = read_gluon_data(ctx, &gluon_data);
+		ret = read_gluon_data_header(ctx, &gluon_data);
+		BREAK_IF_ERROR(ret);
+		if (gluon_data->type == HISTORY_GLUON_TYPE_CTRL_STREAM_END) {
+			/* read result code */
+			break;
+		}
+		ret = read_gluon_data_body(ctx, gluon_data);
 		BREAK_IF_ERROR(ret);
 
 		/* make an argument for callback function */
-		ret = read_gluon_data(ctx, &evt.data);
-		BREAK_IF_ERROR(ret);
-
 		evt.type = HISTORY_GLUON_STREAM_EVENT_GOT_DATA;
+		evt.data = gluon_data;
 		evt.priv_data = priv_data;
 		evt.result = ret;
 		evt.flags = 0;

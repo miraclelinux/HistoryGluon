@@ -843,13 +843,14 @@ static void init_query_all_evt_vars(void)
 static void test_query_all_evt_cb(history_gluon_stream_event_t *evt)
 {
 	if (evt->type == HISTORY_GLUON_STREAM_EVENT_END) {
-		query_all_evt_result = HGL_SUCCESS;
-		return;
+		query_all_evt_called_end = 1;
+		query_all_evt_result = evt->result;
 	} else if (evt->type == HISTORY_GLUON_STREAM_EVENT_END) {
 		g_tree_insert(g_gtree, make_sample_key(evt->data), evt->data);
 		evt->flags |= HISTORY_GLUON_STREAM_EVENT_FLAG_DONT_FREE_DATA;
 	}
-	cut_fail("Unknown type: %d", evt->type);
+	else 
+		cut_fail("Unknown type: %d", evt->type);
 }
 
 static void
@@ -857,6 +858,12 @@ assert_compare_sample_and_delete_form_tree(GTree *tree,
                                            history_gluon_data_t *data_array,
                                            uint64_t num)
 {
+	uint64_t i;
+	for (i = 0; i < num; i++) {
+		history_gluon_data_t *data = &data_array[i];
+		gboolean ret = g_tree_remove(g_gtree, make_sample_key(data));
+		cut_assert_equal_int(TRUE, ret);
+	}
 }
 
 void test_query_all(void)

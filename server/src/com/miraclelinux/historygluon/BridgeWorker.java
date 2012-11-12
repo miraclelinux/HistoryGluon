@@ -56,6 +56,7 @@ public class BridgeWorker extends Thread {
     private static final short PKT_CMD_ADD_DATA       = 100;
     private static final short PKT_CMD_QUERY_DATA     = 200;
     private static final short PKT_CMD_RANGE_QUERY    = 300;
+    private static final short PKT_CMD_QUERY_ALL      = 310;
     private static final short PKT_CMD_GET_MIN_TIME   = 400;
     private static final short PKT_CMD_GET_STATISTICS = 500;
     private static final short PKT_CMD_DELETE         = 600;
@@ -69,6 +70,8 @@ public class BridgeWorker extends Thread {
     private static final int RESULT_ERROR_UNKNOWN_REASON = 1;
     private static final int RESULT_ERROR_TOO_MANY_RECORDS = 2;
     private static final int RESULT_ERROR_NO_DATA = 3;
+
+    private static final int STREAM_EVENT_TYPE_END = 0xf000;
 
     private static final int MAX_ENTRIES_UNLIMITED = 0;
 
@@ -215,6 +218,8 @@ public class BridgeWorker extends Thread {
             ret = queryData(pktBuf, idx);
         else if (cmd == PKT_CMD_RANGE_QUERY)
             ret = rangeQuery(pktBuf, idx);
+        else if (cmd == PKT_CMD_QUERY_ALL)
+            ret = queryAll(pktBuf, idx);
         else if (cmd == PKT_CMD_GET_MIN_TIME)
             ret = getMinimumTime(pktBuf, idx);
         else if (cmd == PKT_CMD_GET_STATISTICS)
@@ -403,6 +408,28 @@ public class BridgeWorker extends Thread {
         }
         m_ostream.flush();
 
+        return true;
+    }
+
+    private boolean queryAll(byte[] pktBuf, int idx) throws IOException {
+        try {
+            // write reply header to the socket
+            replyQueryAllHeader();
+
+            // data loop
+            HistoryStream stream = m_driver.getAllDataStream();
+            for (HistoryData history : stream) {
+                sendOneHistoryData(history);
+                m_ostream.flush();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            m_log.error(e);
+            replyQueryAllFooter(ErrorCode.UNKNOWN_ERROR);
+            return true;
+        }
+
+        replyQueryAllFooter(ErrorCode.SUCCESS);
         return true;
     }
 
@@ -654,6 +681,29 @@ public class BridgeWorker extends Thread {
         m_byteBuffer.putInt(errorCode);
         m_byteBuffer.putLong(numEntries);
         m_byteBuffer.putShort(sortOrder);
+        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
+        m_ostream.flush();
+    }
+
+    private void replyQueryAllHeader() throws IOException {
+        int length = PKT_CMD_LENGTH;
+        m_byteBuffer.clear();
+        m_byteBuffer.putInt(length);
+        m_byteBuffer.putShort(PKT_CMD_QUERY_ALL);
+        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
+        m_ostream.flush();
+    }
+
+    private void replyQueryAllFooter(int errorCode) throws IOException {
+        long dummyId = 0;
+        int dummySec = 0;
+        int dummyNSec = 0;
+        m_byteBuffer.clear();
+        m_byteBuffer.putLong(dummyId);
+        m_byteBuffer.putInt(dummySec);
+        m_byteBuffer.putInt(dummyNSec);
+        m_byteBuffer.putInt(STREAM_EVENT_TYPE_END);
+        m_byteBuffer.putInt(errorCode);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         m_ostream.flush();
     }

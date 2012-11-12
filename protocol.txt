@@ -144,7 +144,7 @@ COMMAND PKT: Query All
 -----------------------------------------
 REPLY: Query All
 -----------------------------------------
-[ 4] Packet length (not including this and up to 'Sort order')
+[ 4] Packet length (not including this and up to 'Reply type')
 [ 2] Reply type
   310: reply: Query All
 << Body part: Repeated the the number of entries times>>

@@ -33,6 +33,8 @@ interface StorageDriver {
                                  int searchWhenNotFound)
       throws HistoryDataSet.TooManyException;
 
+    public HistoryStream getAllDataStream();
+
     public HistoryData getMinimumTime(long itemId)
       throws HistoryDataSet.TooManyException;
 

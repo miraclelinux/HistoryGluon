@@ -32,7 +32,7 @@ typedef enum {
 	HISTORY_GLUON_TYPE_STRING = 1,
 	HISTORY_GLUON_TYPE_UINT   = 2,
 	HISTORY_GLUON_TYPE_BLOB   = 3,
-	HISTORY_GLUON_TYPE_CTRL_TERM = 0xf000,
+	HISTORY_GLUON_TYPE_CTRL_STREAM_END = 0xf000,
 } history_gluon_data_type_t;
 
 typedef enum {

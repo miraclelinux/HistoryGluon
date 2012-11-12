@@ -109,6 +109,12 @@ public abstract class BasicStorageDriver implements StorageDriver {
     }
 
     @Override
+    public HistoryStream getAllDataStream() {
+        return new HistoryStream();
+    }
+
+
+    @Override
     public Statistics getStatistics(long id, int sec0, int ns0, int sec1, int ns1)
       throws HistoryDataSet.TooManyException, HistoryData.DataNotNumericException {
         // extract data set
