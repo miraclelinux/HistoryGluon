@@ -155,6 +155,7 @@ typedef enum {
 
 typedef struct {
 	history_gluon_stream_event_type_t  type;
+	history_gluon_result_t             result;
 	history_gluon_data_t              *data;
 	void                              *priv_data;
 

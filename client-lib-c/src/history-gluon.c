@@ -1235,6 +1235,7 @@ history_gluon_query_all(history_gluon_context_t _ctx,
 
 		evt.type = HISTORY_GLUON_STREAM_EVENT_GOT_DATA;
 		evt.priv_data = priv_data;
+		evt.result = ret;
 		evt.flags = 0;
 
 		/* execute the callback function */
@@ -1245,6 +1246,7 @@ history_gluon_query_all(history_gluon_context_t _ctx,
 	evt.type = HISTORY_GLUON_STREAM_EVENT_END;
 	evt.data = NULL;
 	evt.priv_data = priv_data;
+	evt.result = ret;
 	evt.flags = 0;
 	(*event_cb)(&evt);
 
