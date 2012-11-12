@@ -1,3 +1,20 @@
+/* History Gluon
+   Copyright (C) 2012 MIRACLE LINUX CORPORATION
+ 
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -34,6 +51,9 @@ do { \
 		goto L; \
 } while(0)
 
+/* Connection */
+#define MAGIC_CODE_LENGTH         4
+#define DB_NAME_SIZE_LENGTH       2
 
 /* Common header */
 #define PKT_SIZE_LENGTH           4
@@ -171,6 +191,7 @@ typedef struct
 	int port;
 	int socket;
 	int endian;
+	char *db_name;
 }
 private_context_t;
 
@@ -186,6 +207,45 @@ struct timespec HISTORY_GLUON_TIMESPEC_END = {0xffffffff, 0xffffffff};
 /* ---------------------------------------------------------------------------
  * Private methods
  * ------------------------------------------------------------------------- */
+static const uint8_t
+connect_magic_code[MAGIC_CODE_LENGTH] = {'H', 'G', 'L', '\0'};
+
+static const char valid_db_name_char_array[0x100] = {
+  ['A'] = 1, ['B'] = 1, ['C'] = 1, ['D'] = 1, ['E'] = 1, ['F'] = 1, ['G'] = 1,
+  ['H'] = 1, ['I'] = 1, ['J'] = 1, ['K'] = 1, ['L'] = 1, ['M'] = 1, ['N'] = 1,
+  ['O'] = 1, ['P'] = 1, ['Q'] = 1, ['R'] = 1, ['S'] = 1, ['T'] = 1, ['U'] = 1,
+  ['V'] = 1, ['W'] = 1, ['X'] = 1, ['Y'] = 1, ['Z'] = 1,
+  ['a'] = 1, ['b'] = 1, ['c'] = 1, ['d'] = 1, ['e'] = 1, ['f'] = 1, ['g'] = 1,
+  ['h'] = 1, ['i'] = 1, ['j'] = 1, ['k'] = 1, ['l'] = 1, ['m'] = 1, ['n'] = 1,
+  ['o'] = 1, ['p'] = 1, ['q'] = 1, ['r'] = 1, ['s'] = 1, ['t'] = 1, ['u'] = 1,
+  ['v'] = 1, ['w'] = 1, ['x'] = 1, ['y'] = 1, ['z'] = 1,
+  ['0'] = 1, ['1'] = 1, ['2'] = 1, ['3'] = 1, ['4'] = 1, ['5'] = 1, ['6'] = 1,
+  ['7'] = 1, ['8'] = 1, ['9'] = 1,
+  ['.'] = 1, ['_'] = 1, ['-'] = 1, ['@'] = 1, ['/'] = 1,
+  /* The linker shall fill 0 for other characters, because this is
+     static varible region */
+};
+
+static history_gluon_result_t check_database_name(const char *database_name)
+{
+	if (!database_name)
+		return HGLERR_INVALID_DB_NAME;
+	size_t len = strlen(database_name);
+	if (len > HISTORY_GLUON_MAX_DATABASE_NAME_LENGTH) {
+		ERR_MSG("Too long database name: %zd\n", len);
+		return HGLERR_TOO_LONG_DB_NAME;
+	}
+	size_t i;
+	for (i = 0; i < len; i++) {
+		const unsigned char c = database_name[i];
+		if (!valid_db_name_char_array[c]) {
+			ERR_MSG("invalid char: %02x at %d\n", c, i);
+			return HGLERR_INVALID_DB_NAME;
+		}
+	}
+	return HGL_SUCCESS;
+}
+
 static int get_system_endian(void)
 {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
@@ -195,72 +255,6 @@ static int get_system_endian(void)
 #else
 #error Failed to detect byte order
 #endif
-}
-
-static void reset_context(private_context_t *ctx)
-{
-	if (ctx->socket != -1) {
-		close(ctx->socket);
-		ctx->socket = -1;
-	}
-	ctx->connected = 0;
-}
-
-static int connect_to_history_service(private_context_t *ctx)
-{
-	/* crate the string for the port */
-	static const int LEN_PORT_STR = 10;
-	char port_str[LEN_PORT_STR];
-	snprintf(port_str, LEN_PORT_STR, "%d", ctx->port);
-
-	/* get the address info */
-	int sock;
-	struct addrinfo* rp;
-	struct addrinfo hints;
-	struct addrinfo* result = NULL;
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_NUMERICSERV;  
-	if (getaddrinfo(ctx->server_name, port_str, &hints, &result) != 0) {
-		ERR_MSG("Failed to call getaddrinfo(): errno: %d, host: %s, port: %s\n",
-		        errno, ctx->server_name, port_str);
-		return HGLERR_GETADDRINFO;
-	}
-
-	/* try to connect to the addresses returned in the above */
-	for (rp = result; rp != NULL; rp = rp->ai_next) {
-		sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-		if (sock == -1)
-			continue;
-		if (connect(sock, rp->ai_addr, rp->ai_addrlen) != -1)
-			break; /* Success */
-		close(sock);
-	}
-
-	freeaddrinfo(result);
-	if (rp == NULL) {
-		ERR_MSG("Failed to connect: host: %s, port: %s\n",
-		        ctx->server_name, port_str);
-		return HGLERR_FAILED_CONNECT;
-	}
-
-	ctx->connected = 1;
-	ctx->socket = sock;
-	INFO("Connected to history server: host: %s, port: %s\n",
-	     ctx->server_name, port_str);
-
-	return HGL_SUCCESS;
-}
-
-static private_context_t *get_connected_private_context(history_gluon_context_t ctx)
-{
-	private_context_t *priv_ctx = ctx;
-	if (!priv_ctx->connected) {
-		if (connect_to_history_service(priv_ctx) == -1)
-			return NULL;
-	}
-	return priv_ctx;
 }
 
 static void reverse_byte_order(uint8_t *dest, uint8_t *src, int size)
@@ -324,6 +318,172 @@ static double read_ieee754_double(private_context_t *ctx, uint8_t *buf)
 	double d;
 	memcpy(&d, buf, 8);
 	return d;
+}
+
+static void reset_context(private_context_t *ctx)
+{
+	if (ctx->socket != -1) {
+		close(ctx->socket);
+		ctx->socket = -1;
+	}
+	ctx->connected = 0;
+}
+
+static history_gluon_result_t
+write_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
+{
+	uint8_t *ptr = buf;
+	while (1) {
+		ssize_t written_byte = write(ctx->socket, ptr, count);
+		if (written_byte == -1) {
+			ERR_MSG("Failed to write data: %d\n", errno);
+			reset_context(ctx);
+			return HGLERR_WRITE_ERROR;
+		}
+		if (written_byte >= count)
+			break;
+		count -= written_byte;
+		ptr += written_byte;
+	}
+	return HGL_SUCCESS;
+}
+
+static history_gluon_result_t
+read_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
+{
+	uint8_t *ptr = buf;
+	while (1) {
+		size_t read_request_count = READ_CHUNK_SIZE;
+		if (count < read_request_count)
+			read_request_count = count;
+		ssize_t read_byte = read(ctx->socket, ptr, read_request_count);
+		if (read_byte == 0) {
+			ERR_MSG("file stream has unexpectedly closed @ "
+			        "remaing count: %" PRIu64 "\n", count);
+			reset_context(ctx);
+			return HGLERR_READ_STREAM_END;
+		} else if (read_byte == -1) {
+			ERR_MSG("Failed to read data: %d\n", errno);
+			reset_context(ctx);
+			return HGLERR_READ_ERROR;
+		}
+		if (read_byte >= count)
+			break;
+		count -= read_byte;
+		ptr += read_byte;
+	}
+	return HGL_SUCCESS;
+}
+
+static history_gluon_result_t
+proc_connect(private_context_t *ctx)
+{
+	history_gluon_result_t ret;
+
+	/* magic code */
+	ret = write_data(ctx, (uint8_t *)connect_magic_code, MAGIC_CODE_LENGTH);
+	RETURN_IF_ERROR(ret);
+
+	/* length of DB name */
+	uint16_t len_db_name = strlen(ctx->db_name);
+	uint16_t le_buf_length = conv_le16(ctx, len_db_name);
+	ret = write_data(ctx, (uint8_t *)&le_buf_length, DB_NAME_SIZE_LENGTH);
+	RETURN_IF_ERROR(ret);
+
+	/* DB name */
+	ret = write_data(ctx, (uint8_t *)ctx->db_name, len_db_name);
+	RETURN_IF_ERROR(ret);
+
+	/* wait for reply */
+	int reply_len = MAGIC_CODE_LENGTH + REPLY_RESULT_LENGTH;
+	uint8_t reply[reply_len];
+	ret = read_data(ctx, reply, reply_len);
+	RETURN_IF_ERROR(ret);
+
+	/* magic code */
+	int idx = 0;
+	if (memcmp(connect_magic_code, &reply[idx], MAGIC_CODE_LENGTH) != 0) {
+		ERR_MSG("Unexpected reply magic code: %02x %02x %02x %02x\n",
+		        reply[0], reply[1], reply[2], reply[3]);
+		reset_context(ctx);
+		return HGLERR_UNEXPECTED_MAGIC_CODE;
+	}
+	idx += MAGIC_CODE_LENGTH;
+
+	/* result */
+	uint32_t result = restore_le32(ctx, &reply[idx]);
+	idx += REPLY_RESULT_LENGTH;
+
+	if (result != HGLSV_SUCCESS) {
+		ERR_MSG("Connect process failed: %d\n", result);
+		reset_context(ctx);
+	}
+
+	return result;
+}
+
+static history_gluon_result_t
+connect_to_history_service(private_context_t *ctx)
+{
+	/* crate the string for the port */
+	static const int LEN_PORT_STR = 10;
+	char port_str[LEN_PORT_STR];
+	snprintf(port_str, LEN_PORT_STR, "%d", ctx->port);
+
+	/* get the address info */
+	int sock;
+	struct addrinfo* rp;
+	struct addrinfo hints;
+	struct addrinfo* result = NULL;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_NUMERICSERV;
+	if (getaddrinfo(ctx->server_name, port_str, &hints, &result) != 0) {
+		ERR_MSG("Failed to call getaddrinfo(): errno: %d, host: %s, port: %s\n",
+		        errno, ctx->server_name, port_str);
+		return HGLERR_GETADDRINFO;
+	}
+
+	/* try to connect to the addresses returned in the above */
+	for (rp = result; rp != NULL; rp = rp->ai_next) {
+		sock = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+		if (sock == -1)
+			continue;
+		if (connect(sock, rp->ai_addr, rp->ai_addrlen) != -1)
+			break; /* Success */
+		close(sock);
+	}
+
+	freeaddrinfo(result);
+	if (rp == NULL) {
+		ERR_MSG("Failed to connect: host: %s, port: %s\n",
+		        ctx->server_name, port_str);
+		return HGLERR_FAILED_CONNECT;
+	}
+
+	ctx->connected = 1;
+	ctx->socket = sock;
+	INFO("Connected to history server: host: %s, port: %s\n",
+	     ctx->server_name, port_str);
+
+	return proc_connect(ctx);
+}
+
+static history_gluon_result_t
+get_connected_private_context(history_gluon_context_t ctx,
+                              private_context_t **ctx_out)
+{
+	private_context_t *priv_ctx = ctx;
+	if (priv_ctx->connected) {
+		*ctx_out = priv_ctx;
+		return HGL_SUCCESS;
+	}
+
+	history_gluon_result_t ret = connect_to_history_service(priv_ctx);
+	if (ret == HGL_SUCCESS)
+		*ctx_out = priv_ctx;
+	return ret;
 }
 
 static int fill_add_data_header(private_context_t *ctx, uint64_t id,
@@ -522,52 +682,6 @@ static int fill_get_statistics(private_context_t *ctx, uint8_t *buf, uint64_t id
 	idx += PKT_NS_LENGTH;
 
 	return idx;
-}
-
-static history_gluon_result_t
-write_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
-{
-	uint8_t *ptr = buf;
-	while (1) {
-		ssize_t written_byte = write(ctx->socket, ptr, count);
-		if (written_byte == -1) {
-			ERR_MSG("Failed to write data: %d\n", errno);
-			reset_context(ctx);
-			return HGLERR_WRITE_ERROR;
-		}
-		if (written_byte >= count)
-			break;
-		count -= written_byte;
-		ptr += written_byte;
-	}
-	return HGL_SUCCESS;
-}
-
-static history_gluon_result_t
-read_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
-{
-	uint8_t *ptr = buf;
-	while (1) {
-		size_t read_request_count = READ_CHUNK_SIZE;
-		if (count < read_request_count)
-			read_request_count = count;
-		ssize_t read_byte = read(ctx->socket, ptr, read_request_count);
-		if (read_byte == 0) {
-			ERR_MSG("file stream has unexpectedly closed @ "
-			        "remaing count: %" PRIu64 "\n", count);
-			reset_context(ctx);
-			return HGLERR_READ_STREAM_END;
-		} else if (read_byte == -1) {
-			ERR_MSG("Failed to read data: %d\n", errno);
-			reset_context(ctx);
-			return HGLERR_READ_ERROR;
-		}
-		if (read_byte >= count)
-			break;
-		count -= read_byte;
-		ptr += read_byte;
-	}
-	return HGL_SUCCESS;
 }
 
 static history_gluon_result_t
@@ -837,15 +951,30 @@ error:
 /* ---------------------------------------------------------------------------
  * Public functions                                                           *
  * ------------------------------------------------------------------------- */
-history_gluon_context_t history_gluon_create_context(void)
+history_gluon_result_t
+history_gluon_create_context(const char *database_name, const char *server_name,
+                             int port, history_gluon_context_t *context)
 {
+	history_gluon_result_t ret;
+	ret = check_database_name(database_name);
+	if (ret != HGL_SUCCESS)
+		return ret;
+
 	private_context_t *ctx = malloc(sizeof(private_context_t));
 	ctx->connected = 0;
-	ctx->server_name = DEFAULT_SERVER_NAME;
-	ctx->port = DEFAULT_PORT;
+	ctx->db_name = strdup(database_name);
+	if (server_name)
+		ctx->server_name = strdup(server_name);
+	else
+		ctx->server_name = strdup(DEFAULT_SERVER_NAME);
+	if (port > 0)
+		ctx->port = port;
+	else
+		ctx->port = DEFAULT_PORT;
 	ctx->socket = -1;
 	ctx->endian = get_system_endian();
-	return ctx;
+	*context = ctx;
+	return HGL_SUCCESS;
 }
 
 void history_gluon_free_context(history_gluon_context_t _ctx)
@@ -853,6 +982,10 @@ void history_gluon_free_context(history_gluon_context_t _ctx)
 	private_context_t *ctx = (private_context_t *)_ctx;
 	if (ctx->connected)
 		close(ctx->socket);
+	if (ctx->db_name)
+		free(ctx->db_name);
+	if (ctx->server_name)
+		free(ctx->server_name);
 	free(ctx);
 }
 
@@ -860,10 +993,9 @@ history_gluon_result_t
 history_gluon_add_float(history_gluon_context_t _ctx,
                         uint64_t id, struct timespec *ts, double data)
 {
-	history_gluon_result_t ret;
-	private_context_t *ctx = get_connected_private_context(_ctx);
-	if (ctx == NULL)
-		return HGLERR_UNKNOWN_REASON;
+	private_context_t *ctx;
+	history_gluon_result_t ret = get_connected_private_context(_ctx, &ctx);
+	RETURN_IF_ERROR(ret);
 
 	int pkt_size = PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_FLOAT_LENGTH;
 	uint8_t buf[pkt_size];
@@ -887,10 +1019,9 @@ history_gluon_result_t
 history_gluon_add_uint(history_gluon_context_t _ctx,
                        uint64_t id, struct timespec *ts, uint64_t data)
 {
-	history_gluon_result_t ret;
-	private_context_t *ctx = get_connected_private_context(_ctx);
-	if (ctx == NULL)
-		return HGLERR_UNKNOWN_REASON;
+	private_context_t *ctx;
+	history_gluon_result_t ret = get_connected_private_context(_ctx, &ctx);
+	RETURN_IF_ERROR(ret);
 
 	int pkt_size = PKT_ADD_DATA_HEADER_LENGTH + PKT_DATA_UINT_LENGTH;
 	uint8_t buf[pkt_size];
@@ -914,10 +1045,9 @@ history_gluon_result_t
 history_gluon_add_string(history_gluon_context_t _ctx,
                          uint64_t id, struct timespec *ts, char *data)
 {
-	history_gluon_result_t ret;
-	private_context_t *ctx = get_connected_private_context(_ctx);
-	if (ctx == NULL)
-		return HGLERR_UNKNOWN_REASON;
+	private_context_t *ctx;
+	history_gluon_result_t ret = get_connected_private_context(_ctx, &ctx);
+	RETURN_IF_ERROR(ret);
 
 	if (!data) {
 		ERR_MSG("data: NULL. id: %" PRIu64 ", ts: %u.%09u\n",
@@ -961,10 +1091,9 @@ history_gluon_result_t
 history_gluon_add_blob(history_gluon_context_t _ctx, uint64_t id, struct timespec *ts,
                        uint8_t *data, uint64_t length)
 {
-	history_gluon_result_t ret;
-	private_context_t *ctx = get_connected_private_context(_ctx);
-	if (ctx == NULL)
-		return HGLERR_UNKNOWN_REASON;
+	private_context_t *ctx;
+	history_gluon_result_t ret = get_connected_private_context(_ctx, &ctx);
+	RETURN_IF_ERROR(ret);
 
 	if (length > MAX_BLOB_LENGTH) {
 		ERR_MSG("blob length is too long: %" PRIu64 "\n", length);
@@ -997,10 +1126,9 @@ history_gluon_result_t
 history_gluon_query(history_gluon_context_t _ctx, uint64_t id, struct timespec *ts,
                     history_gluon_query_t query_type, history_gluon_data_t **gluon_data)
 {
-	history_gluon_result_t ret;
-	private_context_t *ctx = get_connected_private_context(_ctx);
-	if (ctx == NULL)
-		return HGLERR_UNKNOWN_REASON;
+	private_context_t *ctx;
+	history_gluon_result_t ret = get_connected_private_context(_ctx, &ctx);
+	RETURN_IF_ERROR(ret);
 
 	/* make a request packet and write it */
 	uint8_t request[PKT_QUERY_DATA_LENGTH];
@@ -1043,10 +1171,9 @@ history_gluon_range_query(history_gluon_context_t _ctx, uint64_t id,
                           uint64_t num_max_entries,
                           history_gluon_data_array_t **array)
 {
-	history_gluon_result_t ret;
-	private_context_t *ctx = get_connected_private_context(_ctx);
-	if (ctx == NULL)
-		return HGLERR_UNKNOWN_REASON;
+	private_context_t *ctx;
+	history_gluon_result_t ret = get_connected_private_context(_ctx, &ctx);
+	RETURN_IF_ERROR(ret);
 
 	/* make a request packet and write it */
 	uint8_t request[PKT_RANGE_QUERY_LENGTH];
@@ -1128,10 +1255,9 @@ history_gluon_result_t
 history_gluon_get_minimum_time(history_gluon_context_t _ctx,
                                uint64_t id, struct timespec *minimum_ts)
 {
-	history_gluon_result_t ret;
-	private_context_t *ctx = get_connected_private_context(_ctx);
-	if (ctx == NULL)
-		return HGLERR_UNKNOWN_REASON;
+	private_context_t *ctx;
+	history_gluon_result_t ret = get_connected_private_context(_ctx, &ctx);
+	RETURN_IF_ERROR(ret);
 
 	// request
 	uint8_t request[PKT_GET_MIN_TIME_LENGTH];
@@ -1155,10 +1281,9 @@ history_gluon_get_statistics(history_gluon_context_t _ctx, uint64_t id,
                              struct timespec *ts0, struct timespec *ts1,
                              history_gluon_statistics_t *statistics)
 {
-	history_gluon_result_t ret;
-	private_context_t *ctx = get_connected_private_context(_ctx);
-	if (ctx == NULL)
-		return HGLERR_UNKNOWN_REASON;
+	private_context_t *ctx;
+	history_gluon_result_t ret = get_connected_private_context(_ctx, &ctx);
+	RETURN_IF_ERROR(ret);
 
 	// request
 	uint8_t request[PKT_GET_STATISTICS_LENGTH];
@@ -1206,10 +1331,9 @@ history_gluon_result_t
 history_gluon_delete(history_gluon_context_t _ctx, uint64_t id, struct timespec *ts,
                      history_gluon_delete_way_t delete_way, uint64_t *num_deleted_entries)
 {
-	history_gluon_result_t ret;
-	private_context_t *ctx = get_connected_private_context(_ctx);
-	if (ctx == NULL)
-		return HGLERR_UNKNOWN_REASON;
+	private_context_t *ctx;
+	history_gluon_result_t ret = get_connected_private_context(_ctx, &ctx);
+	RETURN_IF_ERROR(ret);
 
 	// request
 	uint8_t request[PKT_DELETE_LENGTH];

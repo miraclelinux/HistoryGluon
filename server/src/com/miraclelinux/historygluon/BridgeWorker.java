@@ -1,3 +1,20 @@
+/* History Gluon
+   Copyright (C) 2012 MIRACLE LINUX CORPORATION
+ 
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package com.miraclelinux.historygluon;
 
 import java.io.IOException;
@@ -17,6 +34,9 @@ public class BridgeWorker extends Thread {
     /* -----------------------------------------------------------------------
      * Private constant
      * -------------------------------------------------------------------- */
+    private static final byte[] MAGIC_CODE = {0x48, 0x47, 0x4c, 0x00};
+    private static final int PKT_MAGIC_CODE_LENGTH = 4;
+    private static final int PKT_DB_NAME_SIZE_LENGTH = 2;
     private static final int PKT_SIZE_LENGTH = 4;
     private static final int PKT_CMD_LENGTH = 2;
     private static final int PKT_ID_LENGTH = 8;
@@ -90,7 +110,9 @@ public class BridgeWorker extends Thread {
         try {
             m_ostream = new BufferedOutputStream(m_socket.getOutputStream());
             m_istream = new BufferedInputStream(m_socket.getInputStream());
-            while (doHandshake());
+            if (connect()) {
+                while (doHandshake());
+            }
         } catch (Exception e) {
             e.printStackTrace();
             m_log.error(e);
@@ -107,6 +129,56 @@ public class BridgeWorker extends Thread {
     /* -----------------------------------------------------------------------
      * Private Methods
      * -------------------------------------------------------------------- */
+    private boolean connect() throws IOException {
+        // magic code
+        byte[] magicCode = new byte[PKT_MAGIC_CODE_LENGTH];
+        if (m_istream.read(magicCode, 0, PKT_MAGIC_CODE_LENGTH) == -1)
+            return false;
+
+        boolean magicCodeOk = true;
+        for (int i = 0; i < PKT_MAGIC_CODE_LENGTH; i++) {
+            if (MAGIC_CODE[i] != magicCode[i]) {
+                magicCodeOk = false;
+                break;
+            }
+        }
+        if (magicCodeOk == false) {
+            String msg;
+            msg = String.format("Unexpected magic code: %02x %02x %02x %02x",
+                                magicCode[0], magicCode[1],
+                                magicCode[2], magicCode[3]);
+            m_log.error(msg);
+            return false;
+        }
+
+        // length of DB name
+        byte[] bufLenDBName = new byte[PKT_DB_NAME_SIZE_LENGTH];
+        if (m_istream.read(bufLenDBName, 0, PKT_DB_NAME_SIZE_LENGTH) == -1)
+            return false;
+        m_byteBuffer.clear();
+        m_byteBuffer.put(bufLenDBName);
+        short dbNameSize = m_byteBuffer.getShort(0);
+
+        // Database name
+        byte[] bufDBName = new byte[dbNameSize];
+        if (m_istream.read(bufDBName, 0, dbNameSize) == -1)
+            return false;
+        String dbName = new String(bufDBName);
+
+        // reply
+        int length = PKT_MAGIC_CODE_LENGTH + REPLY_RESULT_LENGTH;
+        m_byteBuffer.clear();
+        m_byteBuffer.put(MAGIC_CODE);
+        m_byteBuffer.putInt(ErrorCode.SUCCESS);
+        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
+        m_ostream.flush();
+
+        // Set the DB name to the storage
+        m_driver.setDatabase(dbName);
+
+        return true;
+    }
+
     private boolean doHandshake() throws IOException {
 
         // packet size

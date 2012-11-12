@@ -1,11 +1,29 @@
 History Gluon Server-client protocol specification
 
-Date: 2012/10/30
-Version: 0.7.0
+Date: 2012/11/11
+Version: 0.8.0
 
 *** Basics rules ***
 Endian: Little
 [<Number>] means Length in Byte (decimal)
+
+=========================================
+COMMAND: Connect
+=========================================
+[ 4] Magic Code
+   0x48, 0x47, 0x4c, 0x00  ('H','G','L','\0')
+[ 2] Length of database name
+[ v] Database name
+ valid characters: A-z, 0-9, .(dot), _(underscore), -(hyphen), @(at),
+ and /(slash).
+ maximum length: 1024
+
+-----------------------------------------
+REPLY: Add Data
+-----------------------------------------
+[ 4] Magic Code
+   0x48, 0x47, 0x4c, 0x00  ('H','G','L','\0')
+[ 4] Result
 
 =========================================
 COMMAND: Add Data
@@ -117,6 +135,28 @@ REPLY: Range Query
 << End of Body part >>
 
 =========================================
+COMMAND PKT: Query All
+=========================================
+[ 4] Packet length (not including this field)
+[ 4] Command type
+  310: Query All
+
+-----------------------------------------
+REPLY: Query All
+-----------------------------------------
+[ 4] Packet length (not including this and up to 'Sort order')
+[ 2] Reply type
+  310: reply: Query All
+<< Body part: Repeated the the number of entries times>>
+%%% The same as the body of 'REPLY: Query Data' %%%
+<< End of Body part >>
+[ 8] 0
+[ 4] 0
+[ 4] 0
+[ 2] 0xf000
+[ 4] Result
+
+=========================================
 COMMAND PKT: Get Miminum Time
 =========================================
 [ 4] Packet length (not including this)
@@ -197,6 +237,8 @@ Result Code
    3: Unsupported protocol version
    4: Not implemented
  100: Authentification failed
+ 101: Domain string is too long
+ 102: Invalid characters in domain string
  200: Packet short
  201: Invalid data type
  202: Invalid sort type

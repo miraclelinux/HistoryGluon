@@ -1,5 +1,5 @@
 #include <cutter.h>
-#include "test-utils.h"
+#include "utils.h"
 
 /* ---------------------------------------------------------------------------
  * Global variables
@@ -17,7 +17,9 @@ history_gluon_data_array_t *g_array = NULL;
  * ------------------------------------------------------------------------- */
 void create_global_context(void)
 {
-	g_ctx = history_gluon_create_context();
+	history_gluon_result_t ret;
+	ret = history_gluon_create_context("test", NULL, 0, &g_ctx);
+	cut_assert_equal_int(HGL_SUCCESS, ret);
 	cut_assert(g_ctx);
 }
 

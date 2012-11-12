@@ -1,9 +1,28 @@
+/* History Gluon
+   Copyright (C) 2012 MIRACLE LINUX CORPORATION
+ 
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 #include "php.h"
 #include "history-gluon.h"
 #include "history-gluon-php-ext.h"
+
+#define MAX_CONTEXT_TABLE_ELEMENTS 1024 /* must be power of 2 */
 
 #define KEY_DATA_ARRAY_SORT_ORDER "sort_order"
 #define KEY_DATA_ARRAY_ARRAY      "array"
@@ -14,6 +33,10 @@
 #define KEY_DATA_TYPE             "type"
 #define KEY_DATA_VALUE            "value"
 #define KEY_DATA_LENGTH           "length"
+
+enum {
+	HGLPHPERR_FAILED_ADD_TO_HASH_TABLE = -1000010,
+};
 
 static zend_function_entry php_history_gluon_functions[] = {
     PHP_FE(history_gluon_create_context, NULL)
@@ -36,7 +59,7 @@ zend_module_entry php_history_gluon_module_entry = {
     PHP_MINIT(history_gluon),
     PHP_MSHUTDOWN(history_gluon),
     PHP_RINIT(history_gluon),
-    NULL,
+    PHP_RSHUTDOWN(history_gluon),
     NULL,
 #if ZEND_MODULE_API_NO >= 20010901
     PHP_HISTORY_GLUON_VERSION,
@@ -48,14 +71,48 @@ zend_module_entry php_history_gluon_module_entry = {
 ZEND_GET_MODULE(php_history_gluon)
 #endif
 
-/* -------------------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------
  * Static member and functions
- * ---------------------------------------------------------------------------------- */
-static history_gluon_context_t *g_ctx = NULL;;
+ * ------------------------------------------------------------------------- */
+static HashTable* g_ctx_hash_table = NULL;
+
+static void context_table_element_destructor(void *element)
+{
+	history_gluon_context_t ctx;
+	memcpy(&ctx, element, sizeof(ctx));
+	history_gluon_free_context(ctx);
+}
+
+static void create_context_table(void)
+{
+	ALLOC_HASHTABLE(g_ctx_hash_table);
+	zend_hash_init(g_ctx_hash_table, MAX_CONTEXT_TABLE_ELEMENTS, NULL,
+	               context_table_element_destructor, 1);
+}
+
+static HashTable *get_context_table(void)
+{
+	// TOOD: be MT safe
+	if (!g_ctx_hash_table)
+		create_context_table();
+	return g_ctx_hash_table;
+}
+
+static void free_context_table_if_needed(void)
+{
+	if (g_ctx_hash_table) {
+		zend_hash_destroy(g_ctx_hash_table);
+		FREE_HASHTABLE(g_ctx_hash_table);
+		g_ctx_hash_table = NULL;
+	}
+}
 
 static history_gluon_result_t validate_context(history_gluon_context_t ctx)
 {
-	if (!g_ctx || ctx != g_ctx)
+	if (!ctx)
+		return HGLERR_INVALID_CONTEXT;
+	HashTable *ctx_table = get_context_table();
+	if (!zend_hash_exists(ctx_table, (const char*)&ctx, sizeof(ctx)))
 		return HGLERR_INVALID_CONTEXT;
 	return HGL_SUCCESS;
 }
@@ -91,9 +148,9 @@ static zval *create_gluon_data_zval(history_gluon_data_t *gluon_data)
 	return data;
 }
 
-/* -------------------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------
  * Exported functions
- * ---------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------- */
 PHP_MINIT_FUNCTION(history_gluon)
 {
 	return SUCCESS;
@@ -109,19 +166,67 @@ PHP_RINIT_FUNCTION(history_gluon)
 	return SUCCESS;
 }
 
+PHP_RSHUTDOWN_FUNCTION(history_gluon)
+{
+	free_context_table_if_needed();
+	return SUCCESS;
+}
+
 PHP_FUNCTION(history_gluon_create_context)
 {
-	if (!g_ctx)
-		g_ctx = history_gluon_create_context();
-	RETURN_LONG((long)g_ctx);
+	char *s_db_name;
+	char *s_server_name;
+	int i_db_name_len, i_server_name_len;
+	long l_port;
+	zval *z_ctx;
+	int pret;
+	pret = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sslz",
+	                             &s_db_name, &i_db_name_len,
+	                             &s_server_name, &i_server_name_len,
+	                             &l_port, &z_ctx);
+	if (pret == FAILURE)
+		RETURN_NULL();
+	if (i_db_name_len == 0)
+		s_db_name = NULL;
+	if (i_server_name_len == 0)
+		s_server_name = NULL;
+
+	history_gluon_context_t ctx;
+	history_gluon_result_t ret;
+	ret = history_gluon_create_context(s_db_name, s_server_name,
+	                                   l_port, &ctx);
+	if (ret != HGL_SUCCESS)
+		RETURN_LONG((long)ret);
+
+	int zret;
+	zret = zend_hash_add(get_context_table(),
+	                     (const char *)&ctx, sizeof(ctx),
+	                     &ctx, sizeof(ctx), NULL);
+	if (zret == FAILURE) {
+		history_gluon_free_context(ctx);
+		RETURN_LONG((long)HGLPHPERR_FAILED_ADD_TO_HASH_TABLE);
+		return;
+	}
+	ZVAL_LONG(z_ctx, (long)ctx);
+	RETURN_LONG((long)HGL_SUCCESS);
 }
 
 PHP_FUNCTION(history_gluon_free_context)
 {
-	if (!g_ctx) {
-		history_gluon_free_context(g_ctx);
-		g_ctx = NULL;
-	}
+	long l_ctx;
+	int pret;
+	pret = zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &l_ctx);
+	if (pret == FAILURE)
+		RETURN_NULL();
+	history_gluon_context_t ctx = (history_gluon_context_t)l_ctx;
+	if (validate_context(ctx) != HGL_SUCCESS)
+		return;
+	zend_hash_del(get_context_table(), (const char *)&ctx, sizeof(ctx));
+
+	/* Note: freeing the context will be performed in
+	 *       context_table_element_destructor(), which is the destructor
+	 *       of a hash table's element.
+	 */
 }
 
 PHP_FUNCTION(history_gluon_add_uint)

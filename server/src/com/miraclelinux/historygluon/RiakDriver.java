@@ -1,3 +1,20 @@
+/* History Gluon
+   Copyright (C) 2012 MIRACLE LINUX CORPORATION
+ 
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package com.miraclelinux.historygluon;
 
 import java.util.List;
@@ -21,14 +38,10 @@ public class RiakDriver extends BasicStorageDriver {
     }
 
     /* -----------------------------------------------------------------------
-     * Private constant
-     * -------------------------------------------------------------------- */
-    private static final String BUCKET_NAME = "zabbix";
-
-    /* -----------------------------------------------------------------------
      * Private members
      * -------------------------------------------------------------------- */
     private Log m_log = null;
+    private String m_bucketName;
     private IRiakClient m_pbClient = null;
 
     /* -----------------------------------------------------------------------
@@ -72,9 +85,14 @@ public class RiakDriver extends BasicStorageDriver {
     }
 
     @Override
+    public void setDatabase(String dbName) {
+        m_bucketName = dbName;
+    }
+
+    @Override
     public int addData(HistoryData history) {
         try {
-            Bucket bucket = m_pbClient.fetchBucket(BUCKET_NAME).execute();
+            Bucket bucket = m_pbClient.fetchBucket(m_bucketName).execute();
             String key = makeKey(history.id, history.sec, history.ns);
             ValueType value = new ValueType();
             value.type = history.type;
@@ -91,7 +109,7 @@ public class RiakDriver extends BasicStorageDriver {
     @Override
     public boolean deleteDB() {
         try {
-            Bucket bucket = m_pbClient.fetchBucket(BUCKET_NAME).execute();
+            Bucket bucket = m_pbClient.fetchBucket(m_bucketName).execute();
             Iterable<String> keys = bucket.keys();
             long count = 0;
             for (String keyName : keys) {
@@ -116,7 +134,7 @@ public class RiakDriver extends BasicStorageDriver {
         HistoryDataSet dataSet = new HistoryDataSet();
         try {
             HistoryData history;
-            Bucket bucket = m_pbClient.fetchBucket(BUCKET_NAME).execute();
+            Bucket bucket = m_pbClient.fetchBucket(m_bucketName).execute();
             List<String> keyList =
               bucket.fetchIndex(KeyIndex.index).from(startKey).to(stopKey).execute();
             for (String key : keyList) {
@@ -138,7 +156,7 @@ public class RiakDriver extends BasicStorageDriver {
     @Override
     protected boolean deleteRow(HistoryData history, Object arg) {
         try {
-            Bucket bucket = m_pbClient.fetchBucket(BUCKET_NAME).execute();
+            Bucket bucket = m_pbClient.fetchBucket(m_bucketName).execute();
             bucket.delete(history.key).execute();
         } catch (RiakException e) {
             m_log.error(e);

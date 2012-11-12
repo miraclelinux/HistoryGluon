@@ -1,3 +1,20 @@
+/* History Gluon
+   Copyright (C) 2012 MIRACLE LINUX CORPORATION
+ 
+   This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package com.miraclelinux.historygluon;
 
 import java.io.IOException;
@@ -34,7 +51,6 @@ public class HBaseDriver extends BasicStorageDriver {
     /* -----------------------------------------------------------------------
      * Const Members
      * -------------------------------------------------------------------- */
-    private static final String TABLE_NAME = "zabbix";
     private static final String HISTORY_FAMILY_NAME = "history";
     private static final String QUALIFIER_DATA = "data";
 
@@ -43,23 +59,22 @@ public class HBaseDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     private Log m_log = null;
     private Configuration m_config = null;
+    private String m_tableName = null;
+    private byte[] m_tableNameBytes = null;
 
     /* -----------------------------------------------------------------------
      * Public Methods
      * -------------------------------------------------------------------- */
     public HBaseDriver() {
-        m_log = LogFactory.getLog(HBaseDriver.class); 
+        m_log = LogFactory.getLog(HBaseDriver.class);
         m_config = HBaseConfiguration.create();
     }
 
     @Override
     public StorageDriver createInstance() {
-        return this;
-    }
-
-    @Override
-    public boolean init() {
-        return makeTableIfNeeded();
+        StorageDriver driver = new HBaseDriver();
+        driver.init();
+        return driver;
     }
 
     @Override
@@ -68,9 +83,16 @@ public class HBaseDriver extends BasicStorageDriver {
     }
 
     @Override
+    public void setDatabase(String dbName) {
+        m_tableName = dbName;
+        m_tableNameBytes = Bytes.toBytes(m_tableName);
+        makeTableIfNeeded();
+    }
+
+    @Override
     public int addData(HistoryData history) {
         try {
-            HTable table = new HTable(m_config, Bytes.toBytes(TABLE_NAME));
+            HTable table = new HTable(m_config, m_tableNameBytes);
             String key = String.format("%016x%08x%08x",
                                        history.id, history.sec,
                                        history.ns);
@@ -117,7 +139,7 @@ public class HBaseDriver extends BasicStorageDriver {
         HistoryDataSet dataSet = new HistoryDataSet();
         ResultScanner resultScanner = null;
         try {
-            HTable table = new HTable(m_config, Bytes.toBytes(TABLE_NAME));
+            HTable table = new HTable(m_config, m_tableNameBytes);
             byte[] startRow = Bytes.toBytes(startKey);
             byte[] stopRow = Bytes.toBytes(stopKey);
             Scan scan = new Scan(startRow, stopRow);
@@ -142,7 +164,7 @@ public class HBaseDriver extends BasicStorageDriver {
     protected Object deleteRowsPreAction() {
         HTable table = null;
         try {
-            table = new HTable(m_config, Bytes.toBytes(TABLE_NAME));
+            table = new HTable(m_config, m_tableNameBytes);
         } catch (IOException e) {
             e.printStackTrace();
             m_log.error(e);
@@ -172,7 +194,7 @@ public class HBaseDriver extends BasicStorageDriver {
     private boolean makeTableIfNeeded() {
         try {
             HBaseAdmin admin = new HBaseAdmin(m_config);
-            if (!admin.tableExists(Bytes.toBytes(TABLE_NAME)))
+            if (!admin.tableExists(m_tableNameBytes))
                 makeTable(admin);
         }
         catch (MasterNotRunningException e) {
@@ -194,8 +216,7 @@ public class HBaseDriver extends BasicStorageDriver {
     }
 
     private void makeTable(HBaseAdmin admin) throws IOException {
-        byte[] tableName = Bytes.toBytes(TABLE_NAME);
-        HTableDescriptor desc = new HTableDescriptor(tableName);
+        HTableDescriptor desc = new HTableDescriptor(m_tableNameBytes);
         desc.addFamily(new HColumnDescriptor(HISTORY_FAMILY_NAME));
         admin.createTable(desc);
     }

@@ -1,5 +1,5 @@
 #include <cutter.h>
-#include "test-utils.h"
+#include "utils.h"
 #include "history-gluon.h"
 
 static history_gluon_data_t samples_query_diff_ns[] = {

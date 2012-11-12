@@ -53,8 +53,8 @@ steps.
 $ cat /usr/share/aclocal/dirlist
 /usr/local/share/aclocal
 
-- specify PKG_CONFIG_DIR environment variable in configure like
-$ PKG_CONFIG_DIR=/usr/local/lib/pkgconfig ./configure 
+- specify PKG_CONFIG_PATH environment variable in configure like
+$ PKG_CONFIG_PATH=/usr/local/lib/pkgconfig ./configure 
 
 3) copy client-php-ext/history-gluon.ini to httpd's php modules directory.
 To load the module when httpd is started.

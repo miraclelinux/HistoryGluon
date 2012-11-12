@@ -1,4 +1,4 @@
-touch NEWS touch AUTHORS ChangeLog
+touch NEWS touch ChangeLog
 if [ ! -d m4 ]; then
   mkdir m4
 fi
