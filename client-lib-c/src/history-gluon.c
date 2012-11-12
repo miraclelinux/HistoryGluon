@@ -51,6 +51,12 @@ do { \
 		goto L; \
 } while(0)
 
+#define BREAK_IF_ERROR(R) \
+do { \
+	if (R != HGL_SUCCESS) \
+		break; \
+} while(0)
+
 /* Connection */
 #define MAGIC_CODE_LENGTH         4
 #define DB_NAME_SIZE_LENGTH       2
@@ -120,6 +126,10 @@ do { \
  PKT_NUM_ENTRIES_LENGTH + \
  PKT_SORT_ORDER_LENGTH)
 
+/* Query All */
+#define PKT_QUERY_ALL_LENGTH   (PKT_SIZE_LENGTH + PKT_CMD_TYPE_LENGTH)
+#define REPLY_QUERY_ALL_LENGTH (PKT_SIZE_LENGTH + PKT_CMD_TYPE_LENGTH)
+
 /* Get Minimum Time */
 #define PKT_GET_MIN_TIME_LENGTH \
 (PKT_SIZE_LENGTH + \
@@ -172,6 +182,7 @@ enum {
 	PKT_CMD_ADD_DATA           = 100,
 	PKT_CMD_QUERY_DATA         = 200,
 	PKT_CMD_RANGE_QUERY        = 300,
+	PKT_CMD_QUERY_ALL          = 310,
 	PKT_CMD_GET_MINIMUM_TIME   = 400,
 	PKT_CMD_GET_STATISTICS     = 500,
 	PKT_CMD_DELETE             = 600,
@@ -597,6 +608,22 @@ static int fill_range_query_header(private_context_t *ctx, uint8_t *buf, uint64_
 
 	return idx;
 }
+
+static int fill_query_all_packet(private_context_t *ctx, uint8_t *buf)
+{
+	int idx = 0;
+
+	/* pkt size */
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_QUERY_ALL_LENGTH - PKT_SIZE_LENGTH);
+	idx += PKT_SIZE_LENGTH;
+
+	/* command */
+	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_CMD_QUERY_ALL);
+	idx += PKT_CMD_TYPE_LENGTH;
+
+	return idx;
+}
+
 
 static int fill_get_minimum_time_packet(private_context_t *ctx, uint8_t *buf, uint64_t id)
 {
@@ -1162,6 +1189,66 @@ void history_gluon_free_data(history_gluon_context_t _ctx,
 	else if (gluon_data->type == HISTORY_GLUON_TYPE_BLOB)
 		free(gluon_data->v.blob);
 	free(gluon_data);
+}
+
+history_gluon_result_t
+history_gluon_query_all(history_gluon_context_t _ctx,
+                        history_gluon_stream_event_cb_func event_cb,
+                        void *priv_data)
+{
+	if (!event_cb) {
+		ERR_MSG("event_cb is NULL\n");
+		return HGLERR_INVALID_PARAMETER;
+	}
+
+	private_context_t *ctx;
+	history_gluon_result_t ret = get_connected_private_context(_ctx, &ctx);
+	RETURN_IF_ERROR(ret);
+
+	/* request */
+	uint8_t request[PKT_QUERY_ALL_LENGTH];
+	int cmd_length = fill_query_all_packet(ctx, request);
+	ret = write_data(ctx, request, cmd_length);
+	RETURN_IF_ERROR(ret);
+
+	/* reply */
+	uint8_t reply[REPLY_QUERY_ALL_LENGTH];
+	ret = read_data(ctx, reply, REPLY_QUERY_ALL_LENGTH);
+	RETURN_IF_ERROR(ret);
+	uint16_t reply_type = restore_le16(ctx, &reply[PKT_QUERY_ALL_LENGTH]);
+	if (reply_type != PKT_CMD_QUERY_ALL) {
+		ERR_MSG("reply type is not the expected: %d: %d\n",
+		        reply_type, PKT_CMD_QUERY_ALL);
+		return HGLERR_UNEXPECTED_REPLY_TYPE;
+	}
+
+	/* loop to send obtained data */
+	history_gluon_stream_event_t evt;
+	while (1) {
+		history_gluon_data_t *gluon_data;
+		ret = read_gluon_data(ctx, &gluon_data);
+		BREAK_IF_ERROR(ret);
+
+		/* make an argument for callback function */
+		ret = read_gluon_data(ctx, &evt.data);
+		BREAK_IF_ERROR(ret);
+
+		evt.type = HISTORY_GLUON_STREAM_EVENT_GOT_DATA;
+		evt.priv_data = priv_data;
+		evt.flags = 0;
+
+		/* execute the callback function */
+		(*event_cb)(&evt);
+	}
+
+	/* callback to tell the end. */
+	evt.type = HISTORY_GLUON_STREAM_EVENT_END;
+	evt.data = NULL;
+	evt.priv_data = priv_data;
+	evt.flags = 0;
+	(*event_cb)(&evt);
+
+	return ret;
 }
 
 history_gluon_result_t
