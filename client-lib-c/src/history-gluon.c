@@ -1240,6 +1240,10 @@ history_gluon_query_all(history_gluon_context_t _ctx,
 
 		/* execute the callback function */
 		(*event_cb)(&evt);
+		int dont_free =
+		  evt.flags & HISTORY_GLUON_STREAM_EVENT_FLAG_DONT_FREE_DATA;
+		if (!dont_free)
+			history_gluon_free_data(ctx, evt.data);
 	}
 
 	/* callback to tell the end. */

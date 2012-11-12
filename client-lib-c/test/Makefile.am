@@ -15,7 +15,7 @@ noinst_LTLIBRARIES = \
 endif
 
 # default
-AM_CFLAGS = -g -Wall
+AM_CFLAGS = -g -Wall $(GLIB_CFLAGS)
 AM_LDFLAGS = -module -rpath $(libdir) -avoid-version -no-undefined
 INCLUDES = $(CUTTER_CFLAGS) -I ../src
 LIBS = $(CUTTER_LIBS) ../src/libhistory-gluon.la

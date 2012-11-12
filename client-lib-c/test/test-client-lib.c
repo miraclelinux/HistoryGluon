@@ -1,4 +1,5 @@
 #include <cutter.h>
+#include <glib.h>
 #include "utils.h"
 #include "history-gluon.h"
 
@@ -624,9 +625,9 @@ void test_add_blob_and_query_greater(void)
 	                                  HISTORY_GLUON_QUERY_TYPE_GREATER_DATA);
 }
 
-/* --------------------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------
  * Range Query
- * ----------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------- */
 /* asc/dsc */
 static void
 assert_range_query_1_3(uint64_t id, void (*add_samples_fn)(void), 
@@ -822,6 +823,71 @@ void test_range_query_blob_get_tail(void)
 {
 	assert_range_query_get_tail(TEST_STD_ID_BLOB, assert_add_blob_samples,
 	                            g_blob_samples, NUM_BLOB_SAMPLES);
+}
+
+/* ---------------------------------------------------------------------------
+ * Query all
+ * ------------------------------------------------------------------------ */
+static int                    query_all_evt_called_end = 0;
+static history_gluon_result_t query_all_evt_result;
+
+static void init_query_all_evt_vars(void)
+{
+	query_all_evt_called_end = 0;
+	query_all_evt_result = HGLERR_UNKNOWN_REASON;
+	g_gtree = g_tree_new_full(sample_compare_func, NULL,
+	                          sample_key_destory_func,
+	                          sample_value_destroy_func);
+}
+
+static void test_query_all_evt_cb(history_gluon_stream_event_t *evt)
+{
+	if (evt->type == HISTORY_GLUON_STREAM_EVENT_END) {
+		query_all_evt_result = HGL_SUCCESS;
+		return;
+	} else if (evt->type == HISTORY_GLUON_STREAM_EVENT_END) {
+		g_tree_insert(g_gtree, make_sample_key(evt->data), evt->data);
+		evt->flags |= HISTORY_GLUON_STREAM_EVENT_FLAG_DONT_FREE_DATA;
+	}
+	cut_fail("Unknown type: %d", evt->type);
+}
+
+static void
+assert_compare_sample_and_delete_form_tree(GTree *tree,
+                                           history_gluon_data_t *data_array,
+                                           uint64_t num)
+{
+}
+
+void test_query_all(void)
+{
+	init_query_all_evt_vars();
+	create_global_context();
+	assert_delete_all_for_id(TEST_STD_ID_UINT, NULL);
+	assert_delete_all_for_id(TEST_STD_ID_FLOAT, NULL);
+	assert_delete_all_for_id(TEST_STD_ID_STRING, NULL);
+	assert_delete_all_for_id(TEST_STD_ID_BLOB, NULL);
+	assert_add_uint_samples();
+	assert_add_float_samples();
+	assert_add_string_samples();
+	assert_add_blob_samples();
+	history_gluon_result_t ret;
+	ret = history_gluon_query_all(g_ctx, test_query_all_evt_cb, NULL);
+	cut_assert_equal_int_least32(HGL_SUCCESS, ret);
+	cut_assert_equal_int(1, query_all_evt_called_end);
+	cut_assert_equal_int_least32(HGL_SUCCESS, query_all_evt_result);
+
+	// check if all data is received
+	assert_compare_sample_and_delete_form_tree(g_gtree, g_uint_samples,
+	                                           NUM_UINT_SAMPLES);
+	assert_compare_sample_and_delete_form_tree(g_gtree, g_float_samples,
+	                                           NUM_FLOAT_SAMPLES);
+	assert_compare_sample_and_delete_form_tree(g_gtree, g_string_samples,
+	                                           NUM_STRING_SAMPLES);
+	assert_compare_sample_and_delete_form_tree(g_gtree, g_blob_samples,
+	                                           NUM_BLOB_SAMPLES);
+
+	cut_assert_equal_int(0, g_tree_nnodes(g_gtree));
 }
 
 /* ---------------------------------------------------------------------------

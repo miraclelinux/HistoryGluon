@@ -1,4 +1,5 @@
 #include <cutter.h>
+#include <glib.h>
 #include "utils.h"
 
 /* ---------------------------------------------------------------------------
@@ -7,6 +8,7 @@
 history_gluon_context_t g_ctx = NULL;
 history_gluon_data_t *g_data = NULL;
 history_gluon_data_array_t *g_array = NULL;
+GTree *g_gtree = NULL;
 
 /* ---------------------------------------------------------------------------
  * Private functions
@@ -42,6 +44,10 @@ void cleanup_global_data(void)
 	if (g_ctx) {
 		history_gluon_free_context(g_ctx);
 		g_ctx = NULL;
+	}
+	if (g_gtree) {
+		g_tree_unref(g_gtree);
+		g_gtree = NULL;
 	}
 }
 
@@ -155,7 +161,6 @@ void assert_equal_hgl_data(history_gluon_data_t *expect,
 		cut_fail("Unknown type: %d", expect->type);
 }
 
-
 /* query */
 void
 assert_query(uint64_t id, struct timespec *ts,
@@ -232,3 +237,42 @@ asset_range_query_common(uint64_t id, history_gluon_data_t *samples,
 	}
 }
 
+/* sample comparision function */
+gint sample_compare_func(gconstpointer a, gconstpointer b, gpointer user_data)
+{
+	/* ID is given priory over time */
+	history_gluon_data_t *data0 = (history_gluon_data_t *)a;
+	history_gluon_data_t *data1 = (history_gluon_data_t *)b;
+
+	if (data0->id < data1->id)
+		return -1;
+	if (data0->id > data1->id)
+		return 1;
+	if (data0->ts.tv_sec < data1->ts.tv_sec)
+		return -1;
+	if (data0->ts.tv_sec > data1->ts.tv_sec)
+		return 1;
+	if (data0->ts.tv_nsec < data1->ts.tv_nsec)
+		return -1;
+	if (data0->ts.tv_sec > data1->ts.tv_nsec)
+		return 1;
+	return 0;
+}
+
+void *make_sample_key(history_gluon_data_t *gluon_data)
+{
+	return gluon_data;
+}
+
+void sample_key_destory_func(gpointer data)
+{
+	/* Nothing to do.
+	 * The key is just point the gluon data that is also registered
+	 * as the value. the data is freed in sample_value_destroy_func().
+	 */
+}
+
+void sample_value_destroy_func(gpointer data)
+{
+	history_gluon_free_data(g_ctx, data);
+}

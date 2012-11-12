@@ -1,6 +1,7 @@
 #ifndef _test_uitls_h
 #define _test_uitls_h
 
+#include <glib.h>
 #include "history-gluon.h"
 
 #define TEST_STD_ID_UINT   0x10
@@ -11,6 +12,7 @@
 extern history_gluon_context_t g_ctx;
 extern history_gluon_data_t *g_data;
 extern history_gluon_data_array_t *g_array;
+extern GTree *g_gtree;
 
 void create_global_context(void);
 void free_global_context(void);
@@ -62,5 +64,11 @@ asset_range_query_common(uint64_t id, history_gluon_data_t *samples,
                          uint64_t num_max_entries,
                          uint64_t num_expected_entries,
                          uint64_t expected_first_idx);
+
+/* sample comparision function */
+gint sample_compare_func(gconstpointer a, gconstpointer b, gpointer user_data);
+void *make_sample_key(history_gluon_data_t *gluon_data);
+void sample_key_destory_func(gpointer data);
+void sample_value_destroy_func(gpointer data);
 
 #endif // _test_uitls_h
