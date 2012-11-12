@@ -63,7 +63,6 @@ void assert_make_context_delete_add_samples(uint64_t id,
 	(*add_samples_fn)();
 }
 
-
 void assert_add_uint(uint64_t id, struct timespec *ts, uint64_t value)
 {
 	history_gluon_result_t ret =
@@ -90,17 +89,47 @@ void assert_add_blob(uint64_t id, struct timespec *ts, uint8_t *v, uint64_t len)
 	cut_assert_equal_int(HGL_SUCCESS, ret);
 }
 
-void assert_add_samples_with_data(uint64_t num,
-                                  history_gluon_data_t *sample_array)
-{
-	uint64_t i;
-	for (i = 0; i < num; i++)
-		assert_add_uint_hgl_data(&sample_array[i]);
-}
-
 void assert_add_uint_hgl_data(history_gluon_data_t *gluon_data)
 {
 	assert_add_uint(gluon_data->id, &gluon_data->ts, gluon_data->v.uint);
+}
+
+void assert_add_float_hgl_data(history_gluon_data_t *gluon_data)
+{
+	assert_add_float(gluon_data->id, &gluon_data->ts, gluon_data->v.fp);
+}
+
+void assert_add_string_hgl_data(history_gluon_data_t *gluon_data)
+{
+	assert_add_string(gluon_data->id, &gluon_data->ts, gluon_data->v.string);
+}
+
+void assert_add_blob_hgl_data(history_gluon_data_t *gluon_data)
+{
+	assert_add_blob(gluon_data->id, &gluon_data->ts, gluon_data->v.blob,
+	                gluon_data->length);
+}
+
+void assert_add_hgl_data(history_gluon_data_t *gluon_data)
+{
+	if (gluon_data->type == HISTORY_GLUON_TYPE_FLOAT)
+		assert_add_float_hgl_data(gluon_data);
+	else if (gluon_data->type == HISTORY_GLUON_TYPE_STRING)
+		assert_add_string_hgl_data(gluon_data);
+	else if (gluon_data->type == HISTORY_GLUON_TYPE_UINT)
+		assert_add_uint_hgl_data(gluon_data);
+	else if (gluon_data->type == HISTORY_GLUON_TYPE_BLOB)
+		assert_add_blob_hgl_data(gluon_data);
+	else
+		cut_fail("Unknown type: %d", gluon_data->type);
+}
+
+void
+assert_add_samples_with_data(uint64_t num, history_gluon_data_t *sample_array)
+{
+	uint64_t i;
+	for (i = 0; i < num; i++)
+		assert_add_hgl_data(&sample_array[i]);
 }
 
 /* verify */

@@ -205,56 +205,20 @@ static const int NUM_BLOB_SAMPLES =
 /* ----------------------------------------------------------------------------
  * Utility functions
  * ------------------------------------------------------------------------- */
-static void assert_add_float_hgl_data(history_gluon_data_t *gluon_data)
-{
-	assert_add_float(gluon_data->id, &gluon_data->ts, gluon_data->v.fp);
-}
-
-static void assert_add_string_hgl_data(history_gluon_data_t *gluon_data)
-{
-	assert_add_string(gluon_data->id, &gluon_data->ts, gluon_data->v.string);
-}
-
-static void assert_add_blob_hgl_data(history_gluon_data_t *gluon_data)
-{
-	assert_add_blob(gluon_data->id, &gluon_data->ts, gluon_data->v.blob,
-	                gluon_data->length);
-}
-
-static void assert_add_hgl_data(history_gluon_data_t *gluon_data)
-{
-	if (gluon_data->type == HISTORY_GLUON_TYPE_FLOAT)
-		assert_add_float_hgl_data(gluon_data);
-	else if (gluon_data->type == HISTORY_GLUON_TYPE_STRING)
-		assert_add_string_hgl_data(gluon_data);
-	else if (gluon_data->type == HISTORY_GLUON_TYPE_UINT)
-		assert_add_uint_hgl_data(gluon_data);
-	else if (gluon_data->type == HISTORY_GLUON_TYPE_BLOB)
-		assert_add_blob_hgl_data(gluon_data);
-	else
-		cut_fail("Unknown type: %d", gluon_data->type);
-}
-
 static void assert_add_uint_samples(void) {
 	assert_add_samples_with_data(NUM_UINT_SAMPLES, g_uint_samples);
 }
 
 static void assert_add_float_samples(void) {
-	int i;
-	for (i = 0; i < NUM_FLOAT_SAMPLES; i++)
-		assert_add_float_hgl_data(&g_float_samples[i]);
+	assert_add_samples_with_data(NUM_FLOAT_SAMPLES, g_float_samples);
 }
 
 static void assert_add_string_samples(void) {
-	int i;
-	for (i = 0; i < NUM_STRING_SAMPLES; i++)
-		assert_add_string_hgl_data(&g_string_samples[i]);
+	assert_add_samples_with_data(NUM_STRING_SAMPLES, g_string_samples);
 }
 
 static void assert_add_blob_samples(void) {
-	int i;
-	for (i = 0; i < NUM_BLOB_SAMPLES; i++)
-		assert_add_blob_hgl_data(&g_blob_samples[i]);
+	assert_add_samples_with_data(NUM_BLOB_SAMPLES, g_blob_samples);
 }
 
 static void
