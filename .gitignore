@@ -52,3 +52,7 @@ client-php-ext/src/run-tests.php
 client-php-ext/src/.libs/
 server/classes.test/
 server/classes/
+cli/src/.deps/
+cli/src/.libs/
+cli/src/history-gluon-cli
+cli/src/history-gluon-cli.o
