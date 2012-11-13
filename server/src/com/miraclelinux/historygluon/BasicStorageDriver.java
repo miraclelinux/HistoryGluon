@@ -18,6 +18,8 @@
 package com.miraclelinux.historygluon;
 
 import java.util.Iterator;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -109,10 +111,21 @@ public abstract class BasicStorageDriver implements StorageDriver {
     }
 
     @Override
-    public HistoryStream getAllDataStream() {
-        return new HistoryStream();
+    public BlockingQueue<HistoryData> getAllDataStream() {
+        //String key0 = makeKey(0, 0, 0);
+        //String key1 = makeKey(0xffffffffffffffffL, 0xffffffff, 0xffffffff);
+        BlockingQueue<HistoryData> queue =
+          new LinkedBlockingQueue<HistoryData>();
+        HistoryData term = HistoryData.getQueueEndMarker();
+        try {
+            queue.put(term);
+        } catch (InterruptedException e) {
+            // TODO: implement exception
+            e.printStackTrace();
+            m_log.error(e);
+        }
+        return queue;
     }
-
 
     @Override
     public Statistics getStatistics(long id, int sec0, int ns0, int sec1, int ns1)

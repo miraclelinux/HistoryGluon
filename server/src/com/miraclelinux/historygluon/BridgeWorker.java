@@ -25,6 +25,7 @@ import java.io.BufferedOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Iterator;
+import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -417,8 +418,11 @@ public class BridgeWorker extends Thread {
             replyQueryAllHeader();
 
             // data loop
-            HistoryStream stream = m_driver.getAllDataStream();
-            for (HistoryData history : stream) {
+            BlockingQueue<HistoryData> queue = m_driver.getAllDataStream();
+            while (true) {
+                HistoryData history = queue.take();
+                if (history.isQueueEndMarker())
+                    break;
                 sendOneHistoryData(history);
                 m_ostream.flush();
             }

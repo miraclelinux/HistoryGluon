@@ -28,6 +28,11 @@ public class HistoryData implements Comparable<HistoryData> {
     }
 
     // -----------------------------------------------------------------------
+    // Private constant
+    // -----------------------------------------------------------------------
+    public static final int TYPE_CTRL_QUEUE_END = 0x7fff;
+
+    // -----------------------------------------------------------------------
     // Public constant
     // -----------------------------------------------------------------------
     public static final int TYPE_UNKNOWN = -1;
@@ -73,6 +78,16 @@ public class HistoryData implements Comparable<HistoryData> {
     // Public method
     // -----------------------------------------------------------------------
     public HistoryData() {
+    }
+
+    public static HistoryData getQueueEndMarker() {
+        HistoryData marker = new HistoryData();
+        marker.type = TYPE_CTRL_QUEUE_END;
+        return marker;
+    }
+
+    public boolean isQueueEndMarker() {
+        return type == TYPE_CTRL_QUEUE_END;
     }
 
     public HistoryData(HistoryData history) {

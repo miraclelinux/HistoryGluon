@@ -17,6 +17,8 @@
 
 package com.miraclelinux.historygluon;
 
+import java.util.concurrent.BlockingQueue;
+
 interface StorageDriver {
     public StorageDriver createInstance();
     public boolean init();
@@ -33,7 +35,7 @@ interface StorageDriver {
                                  int searchWhenNotFound)
       throws HistoryDataSet.TooManyException;
 
-    public HistoryStream getAllDataStream();
+    public BlockingQueue<HistoryData> getAllDataStream();
 
     public HistoryData getMinimumTime(long itemId)
       throws HistoryDataSet.TooManyException;
