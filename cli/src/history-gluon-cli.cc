@@ -202,7 +202,7 @@ static void print_array_data(history_gluon_data_array_t *array)
 	}
 }
 
-static bool command_handler_query_all(history_gluon_context_t ctx, uint64_t id)
+static bool command_handler_range_query(history_gluon_context_t ctx, uint64_t id)
 {
 	history_gluon_data_array_t *array;
 	history_gluon_result_t ret;
@@ -225,9 +225,34 @@ static bool command_handler_query_all(history_gluon_context_t ctx, uint64_t id)
 	return true;
 }
 
+static void
+command_handler_query_all_evt_cb(history_gluon_stream_event_t *evt)
+{
+	if (evt->type == HISTORY_GLUON_STREAM_EVENT_END)
+		return;
+	if (evt->type != HISTORY_GLUON_STREAM_EVENT_GOT_DATA) {
+		printf("Unknown event type: %d\n", evt->type);
+		return;
+	}
+	print_data(evt->data);
+}
+
+static bool command_handler_query_all(history_gluon_context_t ctx)
+{
+	history_gluon_result_t ret;
+	printf("[QUERY ALL]\n");
+	ret = history_gluon_query_all(ctx, command_handler_query_all_evt_cb,
+	                              NULL);
+	if (ret != HGL_SUCCESS) {
+		printf("Error: history_gluon_query_all: %d\n", ret);
+		return false;
+	}
+	return true;
+}
+
 static bool command_handler_query(const vector<string> &args)
 {
-	if (args.size() < 2) {
+	if (args.size() < 1) {
 		printf("Error: query command needs args.\n");
 		return false;
 	}
@@ -236,6 +261,9 @@ static bool command_handler_query(const vector<string> &args)
 	string db_name = args[0];
 	g_hgl_ctx_factory.set_database_name(db_name);
 	history_gluon_context_t ctx = g_hgl_ctx_factory.get();
+
+	if (args.size() == 1)
+		return command_handler_query_all(ctx);
 
 	// parse ID
 	uint64_t id;
@@ -249,7 +277,7 @@ static bool command_handler_query(const vector<string> &args)
 		printf("Error: sscanf(): %s\n", id_str.c_str());
 		return false;
 	}
-	return command_handler_query_all(ctx, id);
+	return command_handler_range_query(ctx, id);
 }
 
 static void print_usage(void)
@@ -259,6 +287,7 @@ static void print_usage(void)
 	printf(" $ history-gluon-cli command args\n");
 	printf("\n");
 	printf("*** command list ***\n");
+	printf("  query db_name\n");
 	printf("  query db_name id\n");
 	printf("\n");
 }
