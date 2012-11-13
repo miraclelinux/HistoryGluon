@@ -52,8 +52,14 @@ public class HBaseDriver extends BasicStorageDriver {
      * Const Members
      * -------------------------------------------------------------------- */
     private static final String HISTORY_FAMILY_NAME = "history";
-    private static final String QUALIFIER_DATA = "data";
     private static final int NUM_QUALIFIERS = 5; // id, sec, ns, type, and data
+
+    private static final byte[] BYTES_FAMILY = Bytes.toBytes("history");
+    private static final byte[] BYTES_ID   = Bytes.toBytes("id");
+    private static final byte[] BYTES_SEC  = Bytes.toBytes("sec");
+    private static final byte[] BYTES_NS   = Bytes.toBytes("ns");
+    private static final byte[] BYTES_TYPE = Bytes.toBytes("type");
+    private static final byte[] BYTES_DATA = Bytes.toBytes("data");
 
     /* -----------------------------------------------------------------------
      * Private members
@@ -98,24 +104,11 @@ public class HBaseDriver extends BasicStorageDriver {
                                        history.id, history.sec,
                                        history.ns);
             Put putData = new Put(Bytes.toBytes(key));
-            byte[] familyBytes = Bytes.toBytes(HISTORY_FAMILY_NAME);
-
-            putData.add(familyBytes,
-                        Bytes.toBytes("id"),
-                        Bytes.toBytes(history.id));
-            putData.add(familyBytes,
-                        Bytes.toBytes("sec"),
-                        Bytes.toBytes(history.sec));
-            putData.add(familyBytes,
-                        Bytes.toBytes("ns"),
-                        Bytes.toBytes(history.ns));
-            putData.add(familyBytes,
-                        Bytes.toBytes("type"),
-                        Bytes.toBytes(history.type));
-
-            byte[] qualifierBytes = Bytes.toBytes(QUALIFIER_DATA);
-            byte[] dataBytes = history.getDataAsByteArray();
-            putData.add(familyBytes, qualifierBytes, dataBytes);
+            putData.add(BYTES_FAMILY, BYTES_ID,   Bytes.toBytes(history.id));
+            putData.add(BYTES_FAMILY, BYTES_SEC,  Bytes.toBytes(history.sec));
+            putData.add(BYTES_FAMILY, BYTES_NS,   Bytes.toBytes(history.ns));
+            putData.add(BYTES_FAMILY, BYTES_TYPE, Bytes.toBytes(history.type));
+            putData.add(BYTES_FAMILY, BYTES_DATA, history.getDataAsByteArray());
             table.put(putData);
         } catch (IOException e) {
             e.printStackTrace();
@@ -280,14 +273,14 @@ public class HBaseDriver extends BasicStorageDriver {
                        keyVal.getValueOffset(), length);
 
         if (qualifier.equals("id"))
-            history.id = Bytes.toLong(buf); 
+            history.id = Bytes.toLong(buf);
         else if (qualifier.equals("sec"))
-            history.sec = Bytes.toInt(buf); 
+            history.sec = Bytes.toInt(buf);
         else if (qualifier.equals("ns"))
-            history.ns = Bytes.toInt(buf); 
+            history.ns = Bytes.toInt(buf);
         else if (qualifier.equals("type"))
             history.type = Bytes.toShort(buf);
-        else if (qualifier.equals(QUALIFIER_DATA))
+        else if (qualifier.equals("data"))
             history.data = buf;
 
         return true;
