@@ -825,6 +825,52 @@ void test_range_query_blob_get_tail(void)
 	                            g_blob_samples, NUM_BLOB_SAMPLES);
 }
 
+/* get with specified number of entries */
+static void
+assert_range_query_with_max_entries(uint64_t id, uint64_t num_samples,
+                                    history_gluon_data_t *samples,
+                                    void (*add_samples_fn)(void))
+{
+	struct timespec *ts0 = &HISTORY_GLUON_TIMESPEC_START;
+	struct timespec *ts1 = &HISTORY_GLUON_TIMESPEC_END;
+
+	assert_make_context_delete_add_samples(id, add_samples_fn);
+	uint64_t max_num = num_samples / 2;
+	asset_range_query_common(id, samples, ts0, ts1,
+	                         HISTORY_GLUON_SORT_ASCENDING, 
+	                         max_num, max_num, 0);
+}
+
+void test_range_query_with_max_entries_uint(void)
+{
+	assert_range_query_with_max_entries(TEST_STD_ID_UINT, NUM_UINT_SAMPLES,
+	                                    g_uint_samples,
+	                                    assert_add_uint_samples);
+}
+
+void test_range_query_with_max_entries_float(void)
+{
+	assert_range_query_with_max_entries(TEST_STD_ID_FLOAT,
+	                                    NUM_FLOAT_SAMPLES,
+	                                    g_float_samples,
+	                                    assert_add_float_samples);
+}
+
+void test_range_query_with_max_entries_string(void)
+{
+	assert_range_query_with_max_entries(TEST_STD_ID_STRING,
+	                                    NUM_STRING_SAMPLES,
+	                                    g_string_samples,
+	                                    assert_add_string_samples);
+}
+
+void test_range_query_with_max_entries_blob(void)
+{
+	assert_range_query_with_max_entries(TEST_STD_ID_BLOB, NUM_BLOB_SAMPLES,
+	                                    g_blob_samples,
+	                                    assert_add_blob_samples);
+}
+
 /* ---------------------------------------------------------------------------
  * Query all
  * ------------------------------------------------------------------------ */
@@ -845,7 +891,7 @@ static void test_query_all_evt_cb(history_gluon_stream_event_t *evt)
 	if (evt->type == HISTORY_GLUON_STREAM_EVENT_END) {
 		query_all_evt_called_end = 1;
 		query_all_evt_result = evt->result;
-	} else if (evt->type == HISTORY_GLUON_STREAM_EVENT_END) {
+	} else if (evt->type == HISTORY_GLUON_STREAM_EVENT_GOT_DATA) {
 		g_tree_insert(g_gtree, make_sample_key(evt->data), evt->data);
 		evt->flags |= HISTORY_GLUON_STREAM_EVENT_FLAG_DONT_FREE_DATA;
 	}

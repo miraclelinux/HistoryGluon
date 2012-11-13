@@ -254,7 +254,7 @@ gint sample_compare_func(gconstpointer a, gconstpointer b, gpointer user_data)
 		return 1;
 	if (data0->ts.tv_nsec < data1->ts.tv_nsec)
 		return -1;
-	if (data0->ts.tv_sec > data1->ts.tv_nsec)
+	if (data0->ts.tv_nsec > data1->ts.tv_nsec)
 		return 1;
 	return 0;
 }
