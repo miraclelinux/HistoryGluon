@@ -80,12 +80,14 @@ public class ConcurrentHistoryDataSet {
     }
 
     public HistoryDataSet createSubSet(HistoryData history0,
-                                       HistoryData history1) {
+                                       HistoryData history1, long maxCount) {
         HistoryDataSet dataSet = new HistoryDataSet();
         try {
             m_rwlock.readLock().lock();
-            for (HistoryData history : m_dataSet.subSet(history0, history1))
-                dataSet.add(new HistoryData(history));
+            if (maxCount == BridgeWorker.MAX_ENTRIES_UNLIMITED)
+                addSubSet(history0, history1, dataSet);
+            else
+                addDataWithMaxEntries(history0, history1, dataSet, maxCount);
         } finally {
             m_rwlock.readLock().unlock();
         }
@@ -100,4 +102,31 @@ public class ConcurrentHistoryDataSet {
         return m_dataSet.add(history);
     }
 
+    private void addSubSet(HistoryData history0, HistoryData history1,
+                           HistoryDataSet dataSet) {
+        for (HistoryData history : m_dataSet.subSet(history0, history1))
+            dataSet.add(new HistoryData(history));
+    }
+
+    private void addDataWithMaxEntries(HistoryData history0,
+                                       HistoryData history1,
+                                       HistoryDataSet dataSet, long maxCount) {
+        long count = 0;
+        HistoryData history = m_dataSet.ceiling(history0);
+        if (history == null)
+            return;
+
+        if (HistoryData.comparePreferId(history, history1) >= 0)
+            return;
+        dataSet.add(new HistoryData(history));
+        count++;
+
+        while (count < maxCount) {
+            history = m_dataSet.higher(history);
+            if (HistoryData.comparePreferId(history, history1) >= 0)
+                break;
+            dataSet.add(new HistoryData(history));
+            count++;
+        }
+    }
 }

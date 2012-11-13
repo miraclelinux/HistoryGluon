@@ -26,6 +26,11 @@ import org.apache.commons.logging.LogFactory;
 public class DataStreamThread extends Thread {
 
     /* -----------------------------------------------------------------------
+     * Private constant
+     * -------------------------------------------------------------------- */
+    private int NUM_MAX_DATA_AT_ONCE = 100;
+
+    /* -----------------------------------------------------------------------
      * Private member
      * -------------------------------------------------------------------- */
     private Log m_log = null;
@@ -77,6 +82,37 @@ public class DataStreamThread extends Thread {
      * Private Methods
      * -------------------------------------------------------------------- */
     private void getDataStream() {
+        /*
+        while (true) {
+            HistoryDataSet dataSet = getDataSet(id, m_key0, m_key1,
+                                                 NUM_MAX_DATA_AT_ONCE);
+            int dataSize = dataSet.size();
+            if (dataSize == 0)
+                break;
+
+            // push obtained data to the queue
+            Iterator<HistoryData> it = dataSet.iterator();
+            HistoryData history = null;
+            while (it.hasNext()) {
+                history = it.next();
+                m_queue.put(history);
+            }
+
+            // break if this is the last chnuk.
+            if (dataSize <  NUM_MAX_DATA_AT_ONCE)
+                break;
+
+            if (history.sec == 0xffffffff && history.ns == 0xffffffff)
+                m_key0 =  m_basicStorage.makeKey(history.id+1, 0, 0);
+            else
+                m_key0 =  m_basicStorage.makeKey(history.id, history.sec,
+                                                 history.ns + 1);
+        }
+        */
+        putEndOfStream();
+    }
+
+    private void putEndOfStream() {
         HistoryData term = HistoryData.getEndOfStreamMarker();
         try {
             m_queue.put(term);

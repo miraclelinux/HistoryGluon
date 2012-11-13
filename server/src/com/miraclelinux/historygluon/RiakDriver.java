@@ -130,7 +130,7 @@ public class RiakDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     @Override
     protected HistoryDataSet
-      getDataSet(long id, String startKey, String stopKey, int maxCount) {
+      getDataSet(long id, String startKey, String stopKey, long maxCount) {
         HistoryDataSet dataSet = new HistoryDataSet();
         try {
             HistoryData history;
@@ -146,6 +146,7 @@ public class RiakDriver extends BasicStorageDriver {
                     continue;
                 dataSet.add(history);
             }
+            // TODO: implemnets to return just maxCount
         } catch (RiakException e) {
             m_log.error(e);
             e.printStackTrace();

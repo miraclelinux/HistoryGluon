@@ -173,16 +173,21 @@ public class CassandraDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     @Override
     protected HistoryDataSet
-      getDataSet(long id, String startKey, String stopKey, int maxCount)
+      getDataSet(long id, String startKey, String stopKey, long maxCount)
       throws HistoryDataSet.TooManyException {
         HistoryDataSet dataSet = new HistoryDataSet();
 
         KeyRange keyRange = new KeyRange();
         keyRange.setStart_key(Utils.stringToByteBuffer(startKey));
         keyRange.setEnd_key(Utils.stringToByteBuffer(stopKey));
-        if (maxCount == COUNT_UNLIMITED)
+        if (maxCount > Integer.MAX_VALUE) {
+            String msg = "maxCount > " + Integer.MAX_VALUE + ": not supported, "
+                         + "request: " + maxCount;
+            throw new InternalCheckException(msg);
+        }
+        if (maxCount == BridgeWorker.MAX_ENTRIES_UNLIMITED)
             maxCount = COUNT_INTERNAL_LIMIT;
-        keyRange.setCount(maxCount);
+        keyRange.setCount((int)maxCount);
 
         // row filter
         List<IndexExpression> rowFilter = new ArrayList<IndexExpression>();

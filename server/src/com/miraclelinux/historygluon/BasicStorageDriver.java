@@ -27,11 +27,6 @@ import org.apache.commons.logging.LogFactory;
 public abstract class BasicStorageDriver implements StorageDriver {
 
     /* -----------------------------------------------------------------------
-     * Protected constant
-     * -------------------------------------------------------------------- */
-    protected static final int COUNT_UNLIMITED = -1;
-
-    /* -----------------------------------------------------------------------
      * Private members
      * -------------------------------------------------------------------- */
     private Log m_log = null;
@@ -55,11 +50,12 @@ public abstract class BasicStorageDriver implements StorageDriver {
     }
 
     @Override
-    public HistoryDataSet getData(long id, int sec0, int ns0, int sec1, int ns1)
+    public HistoryDataSet getData(long id, int sec0, int ns0, int sec1, int ns1,
+                                  long maxEntries)
       throws HistoryDataSet.TooManyException {
         String startKey = makeKey(id, sec0, ns0);
         String stopKey = makeStopKey(id, sec1, ns1);
-        return getDataSet(id, startKey, stopKey, COUNT_UNLIMITED);
+        return getDataSet(id, startKey, stopKey, maxEntries);
     }
 
     @Override
@@ -101,7 +97,8 @@ public abstract class BasicStorageDriver implements StorageDriver {
         // HBase doen't have inverse order scan, does it ?
         if (queryType == QueryType.LESS_DATA) {
             String keyS = makeKey(id, 0, 0);
-            dataSet = getDataSet(id, keyS, key0, COUNT_UNLIMITED);
+            dataSet = getDataSet(id, keyS, key0,
+                                 BridgeWorker.MAX_ENTRIES_UNLIMITED);
             if (dataSet.isEmpty())
                 return null;
             return dataSet.descendingIterator().next();
@@ -133,7 +130,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
         String startKey = makeKey(id, sec0, ns0);
         String stopKey = makeStopKey(id, sec1, ns1);
         HistoryDataSet dataSet = getDataSet(id, startKey, stopKey,
-                                            COUNT_UNLIMITED);
+                                            BridgeWorker.MAX_ENTRIES_UNLIMITED);
 
         // calcurate values
         Statistics statistics = new Statistics(id, sec0, sec1);
@@ -172,7 +169,8 @@ public abstract class BasicStorageDriver implements StorageDriver {
 
         HistoryDataSet dataSet = null;
         try {
-            dataSet = getDataSet(id, startKey, stopKey, COUNT_UNLIMITED);
+            dataSet = getDataSet(id, startKey, stopKey,
+                                 BridgeWorker.MAX_ENTRIES_UNLIMITED);
         } catch (HistoryDataSet.TooManyException e) {
             // FIXME: try to delete with a certin number of items
             m_log.error("Entries are too many: Cannot delete items.");
@@ -203,7 +201,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
      *         When an error occured, null is returned.
      */
     protected abstract HistoryDataSet
-      getDataSet(long id, String startKey, String stopKey, int maxCount)
+      getDataSet(long id, String startKey, String stopKey, long maxCount)
       throws HistoryDataSet.TooManyException;
 
     protected abstract boolean deleteRow(HistoryData history, Object arg);

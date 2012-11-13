@@ -135,7 +135,7 @@ public class HBaseDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     @Override
     protected HistoryDataSet
-      getDataSet(long id, String startKey, String stopKey, int maxCount) {
+      getDataSet(long id, String startKey, String stopKey, long maxCount) {
         HistoryDataSet dataSet = new HistoryDataSet();
         ResultScanner resultScanner = null;
         try {
@@ -148,6 +148,7 @@ public class HBaseDriver extends BasicStorageDriver {
             for (Result result : resultScanner) {
                 buildHistoryData(table, result, dataSet, id);
                 count++;
+                // FIXME: improve performance
                 if (count == maxCount)
                     break;
             }

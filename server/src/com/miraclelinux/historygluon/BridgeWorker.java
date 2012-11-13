@@ -74,7 +74,10 @@ public class BridgeWorker extends Thread {
 
     private static final int STREAM_EVENT_TYPE_END = 0xf000;
 
-    private static final int MAX_ENTRIES_UNLIMITED = 0;
+    /* -----------------------------------------------------------------------
+     * Public constant
+     * -------------------------------------------------------------------- */
+    public static final long MAX_ENTRIES_UNLIMITED = 0;
 
     /* -----------------------------------------------------------------------
      * Private members
@@ -359,7 +362,7 @@ public class BridgeWorker extends Thread {
         int ns1 = m_byteBuffer.getInt(idx);
         idx += PKT_NS_LENGTH;
 
-        int maxEntries = m_byteBuffer.getInt(idx);
+        long maxEntries = m_byteBuffer.getLong(idx);
         idx += PKT_NUM_ENTRIES_LENGTH;
 
         short sortOrder = m_byteBuffer.getShort(idx);
@@ -376,7 +379,7 @@ public class BridgeWorker extends Thread {
         // Get data
         HistoryDataSet dataSet = null;
         try {
-            dataSet = m_driver.getData(id, sec0, ns0, sec1, ns1);
+            dataSet = m_driver.getData(id, sec0, ns0, sec1, ns1, maxEntries);
         } catch (HistoryDataSet.TooManyException e) {
             replyRangeQuery(ErrorCode.TOO_MANY_ENTRIES, 0, sortOrder);
             return true;
@@ -392,10 +395,8 @@ public class BridgeWorker extends Thread {
             // This condition never happens, because it has been checked above.
         }
 
-        // calculate length and  entries
+        // calculate entries
         long numEntries = dataSet.size();
-        if (maxEntries != MAX_ENTRIES_UNLIMITED && numEntries > maxEntries)
-            numEntries = maxEntries;
 
         // write reply header to the socket
         replyRangeQuery(ErrorCode.SUCCESS, numEntries, sortOrder);
@@ -404,8 +405,6 @@ public class BridgeWorker extends Thread {
         while (it.hasNext()) {
             HistoryData history = it.next();
             sendOneHistoryData(history);
-            if (maxEntries != MAX_ENTRIES_UNLIMITED && numEntries == maxEntries)
-                break;
         }
         m_ostream.flush();
 
