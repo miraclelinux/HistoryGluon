@@ -36,6 +36,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
      * -------------------------------------------------------------------- */
     private Log m_log = null;
     private boolean m_stopKeyMinus1 = false;
+    private DataStreamThread m_dataStreamer = null;
 
     /* -----------------------------------------------------------------------
      * Public Methods
@@ -112,18 +113,16 @@ public abstract class BasicStorageDriver implements StorageDriver {
 
     @Override
     public BlockingQueue<HistoryData> getAllDataStream() {
-        //String key0 = makeKey(0, 0, 0);
-        //String key1 = makeKey(0xffffffffffffffffL, 0xffffffff, 0xffffffff);
+        String key0 = makeKey(0, 0, 0);
+        String key1 = makeKey(0xffffffffffffffffL, 0xffffffff, 0xffffffff);
+        if (m_dataStreamer == null) {
+            m_dataStreamer = new DataStreamThread(this);
+            m_dataStreamer.start();
+        }
+
         BlockingQueue<HistoryData> queue =
           new LinkedBlockingQueue<HistoryData>();
-        HistoryData term = HistoryData.getQueueEndMarker();
-        try {
-            queue.put(term);
-        } catch (InterruptedException e) {
-            // TODO: implement exception
-            e.printStackTrace();
-            m_log.error(e);
-        }
+        m_dataStreamer.openNewStream(queue, key0, key1);
         return queue;
     }
 

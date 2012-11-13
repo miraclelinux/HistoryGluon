@@ -30,7 +30,7 @@ public class HistoryData implements Comparable<HistoryData> {
     // -----------------------------------------------------------------------
     // Private constant
     // -----------------------------------------------------------------------
-    public static final int TYPE_CTRL_QUEUE_END = 0x7fff;
+    public static final int TYPE_CTRL_END_OF_STREAM = 0x7fff;
 
     // -----------------------------------------------------------------------
     // Public constant
@@ -80,14 +80,14 @@ public class HistoryData implements Comparable<HistoryData> {
     public HistoryData() {
     }
 
-    public static HistoryData getQueueEndMarker() {
+    public static HistoryData getEndOfStreamMarker() {
         HistoryData marker = new HistoryData();
-        marker.type = TYPE_CTRL_QUEUE_END;
+        marker.type = TYPE_CTRL_END_OF_STREAM;
         return marker;
     }
 
-    public boolean isQueueEndMarker() {
-        return type == TYPE_CTRL_QUEUE_END;
+    public boolean isEndOfStreamMarker() {
+        return type == TYPE_CTRL_END_OF_STREAM;
     }
 
     public HistoryData(HistoryData history) {

@@ -421,7 +421,7 @@ public class BridgeWorker extends Thread {
             BlockingQueue<HistoryData> queue = m_driver.getAllDataStream();
             while (true) {
                 HistoryData history = queue.take();
-                if (history.isQueueEndMarker())
+                if (history.isEndOfStreamMarker())
                     break;
                 sendOneHistoryData(history);
                 m_ostream.flush();
