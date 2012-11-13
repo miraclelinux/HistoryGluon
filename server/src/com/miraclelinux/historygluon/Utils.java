@@ -170,4 +170,11 @@ public class Utils {
         int digit7val = Integer.parseInt(str.substring(1), 16);
         return offsetArray32[top_num - 8] + digit7val;
     }
+
+    public static boolean memEquals(byte[] a, byte[] b, int length) {
+        for (int i = 0; i < length; i++)
+            if (a[i] != b[i])
+                return false;
+        return true;
+    }
 }

@@ -18,7 +18,6 @@
 package com.miraclelinux.historygluon;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -260,11 +259,11 @@ public class HBaseDriver extends BasicStorageDriver {
 
         // qualifier
         length = keyVal.getQualifierLength();
-        if (buf.length < length)
-            buf = new byte[length];
-        Bytes.putBytes(buf, 0, keyVal.getBuffer(),
+        byte[] qualBuf = buf;
+        if (qualBuf.length < length)
+            qualBuf = new byte[length];
+        Bytes.putBytes(qualBuf, 0, keyVal.getBuffer(),
                        keyVal.getQualifierOffset(), length);
-        String qualifier = Bytes.toString(buf, 0, length);
 
         // value
         length = keyVal.getValueLength();
@@ -272,15 +271,15 @@ public class HBaseDriver extends BasicStorageDriver {
         Bytes.putBytes(buf, 0, keyVal.getBuffer(),
                        keyVal.getValueOffset(), length);
 
-        if (qualifier.equals("id"))
+        if (Utils.memEquals(qualBuf, BYTES_ID, BYTES_ID.length))
             history.id = Bytes.toLong(buf);
-        else if (qualifier.equals("sec"))
+        else if (Utils.memEquals(qualBuf, BYTES_SEC, BYTES_SEC.length))
             history.sec = Bytes.toInt(buf);
-        else if (qualifier.equals("ns"))
+        else if (Utils.memEquals(qualBuf, BYTES_NS, BYTES_NS.length))
             history.ns = Bytes.toInt(buf);
-        else if (qualifier.equals("type"))
+        else if (Utils.memEquals(qualBuf, BYTES_TYPE, BYTES_TYPE.length))
             history.type = Bytes.toShort(buf);
-        else if (qualifier.equals("data"))
+        else if (Utils.memEquals(qualBuf, BYTES_DATA, BYTES_DATA.length))
             history.data = buf;
 
         return true;
