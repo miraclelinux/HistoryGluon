@@ -1257,6 +1257,11 @@ history_gluon_query_all(history_gluon_context_t _ctx,
 		BREAK_IF_ERROR(ret);
 		if (gluon_data->type == HISTORY_GLUON_TYPE_CTRL_STREAM_END) {
 			/* read result code */
+			uint32_t result;
+			ret = read_data(ctx, (uint8_t *)&result,
+			                REPLY_RESULT_LENGTH);
+			BREAK_IF_ERROR(ret);
+			ret = result;
 			break;
 		}
 		ret = read_gluon_data_body(ctx, gluon_data);

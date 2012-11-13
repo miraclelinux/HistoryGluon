@@ -702,7 +702,7 @@ public class BridgeWorker extends Thread {
         m_byteBuffer.putLong(dummyId);
         m_byteBuffer.putInt(dummySec);
         m_byteBuffer.putInt(dummyNSec);
-        m_byteBuffer.putInt(STREAM_EVENT_TYPE_END);
+        m_byteBuffer.putShort((short)STREAM_EVENT_TYPE_END);
         m_byteBuffer.putInt(errorCode);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         m_ostream.flush();
