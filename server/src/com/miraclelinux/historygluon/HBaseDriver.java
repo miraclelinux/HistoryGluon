@@ -53,6 +53,7 @@ public class HBaseDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     private static final String HISTORY_FAMILY_NAME = "history";
     private static final String QUALIFIER_DATA = "data";
+    private static final int NUM_QUALIFIERS = 5; // id, sec, ns, type, and data
 
     /* -----------------------------------------------------------------------
      * Private members
@@ -135,7 +136,7 @@ public class HBaseDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     @Override
     protected HistoryDataSet
-      getDataSet(long id, String startKey, String stopKey, long maxCount) {
+      getDataSet(String startKey, String stopKey, long maxCount) {
         HistoryDataSet dataSet = new HistoryDataSet();
         ResultScanner resultScanner = null;
         try {
@@ -143,10 +144,18 @@ public class HBaseDriver extends BasicStorageDriver {
             byte[] startRow = Bytes.toBytes(startKey);
             byte[] stopRow = Bytes.toBytes(stopKey);
             Scan scan = new Scan(startRow, stopRow);
+            if (maxCount != BridgeWorker.MAX_ENTRIES_UNLIMITED) {
+                if (maxCount > Integer.MAX_VALUE) {
+                    String msg;
+                    msg = "maxCount > Integer.MAX_VALUE: " + maxCount;
+                    throw new InternalCheckException(msg);
+                }
+                scan.setBatch((int)maxCount * NUM_QUALIFIERS);
+            }
             resultScanner = table.getScanner(scan);
             long count = 0;
             for (Result result : resultScanner) {
-                buildHistoryData(table, result, dataSet, id);
+                buildHistoryData(table, result, dataSet);
                 count++;
                 // FIXME: improve performance
                 if (count == maxCount)
@@ -223,12 +232,11 @@ public class HBaseDriver extends BasicStorageDriver {
     }
 
     private void buildHistoryData(HTable table, Result result,
-                                  HistoryDataSet dataSet, long id)
+                                  HistoryDataSet dataSet)
       throws IOException {
 
-        // key and id
+        // key
         HistoryData history = new HistoryData();
-        history.id = id;
 
         // fill one value
         for (KeyValue keyVal : result.list()) {
@@ -237,7 +245,7 @@ public class HBaseDriver extends BasicStorageDriver {
         }
 
         if (!history.fixupData()) {
-            m_log.warn("Failed: fixupData(): type:" + history.type);
+            m_log.warn("Failed: fixupData(): " + history.toString());
             return;
         }
 

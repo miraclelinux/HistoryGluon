@@ -119,7 +119,7 @@ public class MemDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     @Override
     protected HistoryDataSet
-      getDataSet(long itemId, String startKey, String stopKey, long maxCount) {
+      getDataSet(String startKey, String stopKey, long maxCount) {
         HistoryData historyForComp0 = new HistoryData();
         HistoryData historyForComp1 = new HistoryData();
         fillItemIdClockNsWithKey(startKey, historyForComp0);

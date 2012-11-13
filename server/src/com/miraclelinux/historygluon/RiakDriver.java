@@ -131,7 +131,7 @@ public class RiakDriver extends BasicStorageDriver {
      * -------------------------------------------------------------------- */
     @Override
     protected HistoryDataSet
-      getDataSet(long id, String startKey, String stopKey, long maxCount) {
+      getDataSet(String startKey, String stopKey, long maxCount) {
         long count = 0;
         boolean countLimited = (maxCount != BridgeWorker.MAX_ENTRIES_UNLIMITED);
         HistoryDataSet dataSet = new HistoryDataSet();
