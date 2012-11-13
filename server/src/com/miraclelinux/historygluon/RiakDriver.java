@@ -18,6 +18,7 @@
 package com.miraclelinux.historygluon;
 
 import java.util.List;
+import java.util.Iterator;
 
 import com.basho.riak.client.IRiakClient;
 import com.basho.riak.client.RiakFactory;
@@ -131,6 +132,8 @@ public class RiakDriver extends BasicStorageDriver {
     @Override
     protected HistoryDataSet
       getDataSet(long id, String startKey, String stopKey, long maxCount) {
+        long count = 0;
+        boolean countLimited = (maxCount != BridgeWorker.MAX_ENTRIES_UNLIMITED);
         HistoryDataSet dataSet = new HistoryDataSet();
         try {
             HistoryData history;
@@ -145,8 +148,17 @@ public class RiakDriver extends BasicStorageDriver {
                 if (history == null)
                     continue;
                 dataSet.add(history);
+                count++;
             }
-            // TODO: implemnets to return just maxCount
+
+            // TODO: improve performance
+            if (countLimited && count >= maxCount) {
+                while (dataSet.size() > maxCount) {
+                    Iterator<HistoryData> it = dataSet.descendingIterator();
+                    dataSet.remove(it.next());
+                }
+            }
+
         } catch (RiakException e) {
             m_log.error(e);
             e.printStackTrace();
