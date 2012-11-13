@@ -52,10 +52,10 @@ do { \
 } while(0)
 
 #define BREAK_IF_ERROR(R) \
-do { \
+{ \
 	if (R != HGL_SUCCESS) \
 		break; \
-} while(0)
+}
 
 /* Connection */
 #define MAGIC_CODE_LENGTH         4
@@ -1252,7 +1252,7 @@ history_gluon_query_all(history_gluon_context_t _ctx,
 	/* loop to send obtained data */
 	history_gluon_stream_event_t evt;
 	while (1) {
-		history_gluon_data_t *gluon_data;
+		history_gluon_data_t *gluon_data = NULL;
 		ret = read_gluon_data_header(ctx, &gluon_data);
 		BREAK_IF_ERROR(ret);
 		if (gluon_data->type == HISTORY_GLUON_TYPE_CTRL_STREAM_END) {
@@ -1274,6 +1274,7 @@ history_gluon_query_all(history_gluon_context_t _ctx,
 		evt.result = ret;
 		evt.flags = 0;
 
+		BREAK_IF_ERROR(ret);
 		/* execute the callback function */
 		(*event_cb)(&evt);
 		int dont_free =
