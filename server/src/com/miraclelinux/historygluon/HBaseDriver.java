@@ -139,6 +139,7 @@ public class HBaseDriver extends BasicStorageDriver {
       getDataSet(String startKey, String stopKey, long maxCount) {
         HistoryDataSet dataSet = new HistoryDataSet();
         ResultScanner resultScanner = null;
+        boolean countLimited = (maxCount != BridgeWorker.MAX_ENTRIES_UNLIMITED);
         try {
             HTable table = new HTable(m_config, m_tableNameBytes);
             byte[] startRow = Bytes.toBytes(startKey);
@@ -153,12 +154,9 @@ public class HBaseDriver extends BasicStorageDriver {
                 scan.setBatch((int)maxCount * NUM_QUALIFIERS);
             }
             resultScanner = table.getScanner(scan);
-            long count = 0;
             for (Result result : resultScanner) {
                 buildHistoryData(table, result, dataSet);
-                count++;
-                // FIXME: improve performance
-                if (count == maxCount)
+                if (countLimited && (dataSet.size() >= maxCount))
                     break;
             }
         } catch (IOException e) {

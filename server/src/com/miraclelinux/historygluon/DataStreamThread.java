@@ -17,6 +17,7 @@
 
 package com.miraclelinux.historygluon;
 
+import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Semaphore;
 
@@ -74,6 +75,11 @@ public class DataStreamThread extends Thread {
                 // TODO: Implement
                 e.printStackTrace();
                 m_log.error(e);
+                putEndOfStream();
+            } catch (Exception e) {
+                e.printStackTrace();
+                m_log.error(e);
+                putEndOfStream();
             }
         }
     }
@@ -81,11 +87,18 @@ public class DataStreamThread extends Thread {
     /* -----------------------------------------------------------------------
      * Private Methods
      * -------------------------------------------------------------------- */
-    private void getDataStream() {
-        /*
+    private void getDataStream() throws InterruptedException {
         while (true) {
-            HistoryDataSet dataSet = getDataSet(id, m_key0, m_key1,
-                                                 NUM_MAX_DATA_AT_ONCE);
+            HistoryDataSet dataSet;
+            try {
+                dataSet = m_basicDriver.getDataSet(m_key0, m_key1,
+                                                   NUM_MAX_DATA_AT_ONCE);
+            } catch (HistoryDataSet.TooManyException e) {
+                // This won't be occured, because NUM_MAX_DATA_AT_ONCE is
+                // not large.
+                break;
+            }
+
             int dataSize = dataSet.size();
             if (dataSize == 0)
                 break;
@@ -103,12 +116,11 @@ public class DataStreamThread extends Thread {
                 break;
 
             if (history.sec == 0xffffffff && history.ns == 0xffffffff)
-                m_key0 =  m_basicStorage.makeKey(history.id+1, 0, 0);
+                m_key0 =  m_basicDriver.makeKey(history.id+1, 0, 0);
             else
-                m_key0 =  m_basicStorage.makeKey(history.id, history.sec,
-                                                 history.ns + 1);
+                m_key0 =  m_basicDriver.makeKey(history.id, history.sec,
+                                                history.ns + 1);
         }
-        */
         putEndOfStream();
     }
 

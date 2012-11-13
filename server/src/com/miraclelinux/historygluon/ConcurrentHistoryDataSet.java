@@ -123,6 +123,8 @@ public class ConcurrentHistoryDataSet {
 
         while (count < maxCount) {
             history = m_dataSet.higher(history);
+            if (history == null)
+                break;
             if (HistoryData.comparePreferId(history, history1) >= 0)
                 break;
             dataSet.add(new HistoryData(history));
