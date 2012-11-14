@@ -417,22 +417,27 @@ public class BridgeWorker extends Thread {
             replyQueryAllHeader();
 
             // data loop
-            BlockingQueue<HistoryData> queue = m_driver.getAllDataStream();
+            BlockingQueue<HistoryStreamElement> queue
+              = m_driver.openHistoryStream();
+            int errorCode = ErrorCode.SUCCESS;
             while (true) {
-                HistoryData history = queue.take();
-                if (history.isEndOfStreamMarker())
+                HistoryStreamElement streamElem = queue.take();
+                if (streamElem.isEndOfStream()) {
+                    errorCode = streamElem.getErrorCode();
                     break;
-                sendOneHistoryData(history);
+                }
+                sendOneHistoryData(streamElem.getData());
                 m_ostream.flush();
             }
+            replyQueryAllFooter(errorCode);
         } catch (Exception e) {
             e.printStackTrace();
             m_log.error(e);
             replyQueryAllFooter(ErrorCode.UNKNOWN_ERROR);
             return true;
+        } finally {
+            m_driver.closeHistoryStream();
         }
-
-        replyQueryAllFooter(ErrorCode.SUCCESS);
         return true;
     }
 

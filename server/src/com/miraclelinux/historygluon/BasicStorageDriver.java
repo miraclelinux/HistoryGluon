@@ -31,7 +31,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
      * -------------------------------------------------------------------- */
     private Log m_log = null;
     private boolean m_stopKeyMinus1 = false;
-    private DataStreamThread m_dataStreamer = null;
+    private HistoryStreamer m_historyStreamer = null;
 
     /* -----------------------------------------------------------------------
      * Public Methods
@@ -47,6 +47,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
 
     @Override
     public void close() {
+        closeHistoryStream();
     }
 
     @Override
@@ -109,18 +110,24 @@ public abstract class BasicStorageDriver implements StorageDriver {
     }
 
     @Override
-    public BlockingQueue<HistoryData> getAllDataStream() {
+    public BlockingQueue<HistoryStreamElement> openHistoryStream() {
+        if (m_historyStreamer != null) {
+            String msg = "BasicStorageDriver.m_historyStreamer is not null.";
+            throw new InternalCheckException(msg);
+        }
+        m_historyStreamer = HistoryStreamer.getInstance(this);
+
         String key0 = makeKey(0, 0, 0);
         String key1 = makeKey(0xffffffffffffffffL, 0xffffffff, 0xffffffff);
-        if (m_dataStreamer == null) {
-            m_dataStreamer = new DataStreamThread(this);
-            m_dataStreamer.start();
-        }
+        return m_historyStreamer.open(key0, key1);
+    }
 
-        BlockingQueue<HistoryData> queue =
-          new LinkedBlockingQueue<HistoryData>();
-        m_dataStreamer.openNewStream(queue, key0, key1);
-        return queue;
+    @Override
+    public void closeHistoryStream() {
+        if (m_historyStreamer == null)
+            return;
+        m_historyStreamer.close();
+        m_historyStreamer = null;
     }
 
     @Override
@@ -193,12 +200,16 @@ public abstract class BasicStorageDriver implements StorageDriver {
     /* -----------------------------------------------------------------------
      * Protected Methods
      * -------------------------------------------------------------------- */
-
     /**
+     * Get data set of HistoryData with the specified range.
      *
+     * @param startKey
+     * @param stopKey
+     * @param maxCount Maximum count of the data
+     * 
      * @return The HistoryData instances that match the specified condition.
-     *         Even when there is no matched items, empty HistoryDataSet is returned.
-     *         When an error occured, null is returned.
+     *         Even when there is no matched items, empty HistoryDataSet
+     *         is returned.When an error occured, null is returned.
      */
     protected abstract HistoryDataSet
       getDataSet(String startKey, String stopKey, long maxCount)

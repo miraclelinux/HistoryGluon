@@ -34,7 +34,8 @@ interface StorageDriver {
                                  int searchWhenNotFound)
       throws HistoryDataSet.TooManyException;
 
-    public BlockingQueue<HistoryData> getAllDataStream();
+    public BlockingQueue<HistoryStreamElement> openHistoryStream();
+    public void closeHistoryStream();
 
     public HistoryData getMinimumTime(long itemId)
       throws HistoryDataSet.TooManyException;

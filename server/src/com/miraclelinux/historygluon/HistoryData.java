@@ -28,11 +28,6 @@ public class HistoryData implements Comparable<HistoryData> {
     }
 
     // -----------------------------------------------------------------------
-    // Private constant
-    // -----------------------------------------------------------------------
-    public static final int TYPE_CTRL_END_OF_STREAM = 0x7fff;
-
-    // -----------------------------------------------------------------------
     // Public constant
     // -----------------------------------------------------------------------
     public static final int TYPE_UNKNOWN = -1;
@@ -78,16 +73,6 @@ public class HistoryData implements Comparable<HistoryData> {
     // Public method
     // -----------------------------------------------------------------------
     public HistoryData() {
-    }
-
-    public static HistoryData getEndOfStreamMarker() {
-        HistoryData marker = new HistoryData();
-        marker.type = TYPE_CTRL_END_OF_STREAM;
-        return marker;
-    }
-
-    public boolean isEndOfStreamMarker() {
-        return type == TYPE_CTRL_END_OF_STREAM;
     }
 
     public HistoryData(HistoryData history) {
