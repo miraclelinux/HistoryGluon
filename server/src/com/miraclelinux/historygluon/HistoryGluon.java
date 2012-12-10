@@ -45,18 +45,19 @@ public class HistoryGluon {
 
         StorageDriver driver = null;
         String storageName = args[0];
-        if (storageName.equals("HBase"))
-            driver = new HBaseDriver();
-        else if (storageName.equals("Cassandra"))
-            driver = new CassandraDriver();
-        else if (storageName.equals("Riak"))
-            driver = new RiakDriver();
-        else if (storageName.equals("Mem"))
-            driver = new MemDriver();
-        else {
+        String prefix = "com.miraclelinux.historygluon.";
+        String driverName = prefix + storageName + "Driver";
+        try {
+            Class<?> c = Class.forName(driverName);
+            driver = (StorageDriver)c.newInstance();
+        } catch (ClassNotFoundException e) {
             m_log.error("Unknown Storage Type: " + storageName);
             printUsage();
             return;
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
 
         if (!driver.init()) {
