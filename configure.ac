@@ -20,11 +20,15 @@ if test -z "$ANT"; then
 fi
 AC_SUBST(ANT)
 
-dnl glib
+dnl **************************************************************
+dnl Check for GLib
+dnl **************************************************************
 GLIB_REQUIRED=2.22
 PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_REQUIRED)
 
-dnl cutter
+dnl **************************************************************
+dnl Check for Cutter
+dnl **************************************************************
 CUTTER_REQUIRED=1.1.7
 have_cutter=no
 
@@ -39,7 +43,6 @@ if test "$ac_cv_use_cutter" != "no"; then
   ],
   [ac_cv_use_cutter="no"])
 fi
-
 
 AM_CONDITIONAL([WITH_CUTTER], [test "$ac_cv_use_cutter" != "no"])
 if test "$ac_cv_use_cutter" != "no"; then
