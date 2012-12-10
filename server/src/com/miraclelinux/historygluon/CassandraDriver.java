@@ -164,7 +164,7 @@ public class CassandraDriver extends BasicStorageDriver {
 
     @Override
     public boolean deleteDB() {
-        m_log.error("HBaseDriver#deleteDB() is not implemented.");
+        m_log.error("CassandraDriver#deleteDB() is not implemented.");
         return false;
     }
 
