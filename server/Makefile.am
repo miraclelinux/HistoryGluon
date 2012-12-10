@@ -2,11 +2,11 @@
 all: compile
 
 compile:
-	ant compile
+	$(ANT) compile
 
 clean:
 	rm -fr classes classes.test
 	rm -f TEST-com.miraclelinux.historygluon.*
 
 test:
-	ant test
+	$(ANT) test

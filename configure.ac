@@ -5,6 +5,12 @@ AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CXX
 
+AC_PATH_PROG(ANT, ant)
+if test -z "$ANT"; then
+  AC_MSG_ERROR(Test for Ant failed. Please install Ant to build Java sources.)
+fi
+AC_SUBST(ANT)
+
 dnl glib
 GLIB_REQUIRED=2.22
 PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_REQUIRED)
@@ -54,5 +60,6 @@ dnl **************************************************************
 echo
 echo "Configure Result:"
 echo
+echo "  Ant path             : ${ANT}"
 echo "  C Unit test (cutter) : ${have_cutter}"
 echo
