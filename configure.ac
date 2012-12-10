@@ -5,9 +5,18 @@ AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CXX
 
+dnl **************************************************************
+dnl Check for Java
+dnl **************************************************************
+AC_PATH_PROG(JAVAC, javac)
+if test -z "$JAVAC"; then
+  AC_MSG_ERROR(Unable to find "javac" in your path. Please install JDK 1.6 or later to build Java sources.)
+fi
+AC_SUBST(JAVAC)
+
 AC_PATH_PROG(ANT, ant)
 if test -z "$ANT"; then
-  AC_MSG_ERROR(Test for Ant failed. Please install Ant to build Java sources.)
+  AC_MSG_ERROR(Unable to find "ant" in your path. Please install Apache Ant to build Java sources.)
 fi
 AC_SUBST(ANT)
 
