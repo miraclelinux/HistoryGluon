@@ -31,9 +31,18 @@ AC_SUBST(RIAK_CLIENT_PATH)
 dnl **************************************************************
 dnl Check for Commons-Logging
 dnl **************************************************************
-COMMONS_LOGGING_PATH=""
+AC_ARG_WITH([commons-logging],
+            AS_HELP_STRING([--with-commons-logging@<:@=PATH@:>@],
+                           [Specify Commons-Logging path
+                            @<:@default=auto@:>@]),
+            [COMMONS_LOGGING_PATH="$withval"],
+            [COMMONS_LOGGING_PATH=""])
 
-if test -e "$HBASE_PATH"; then
+if test "$COMMONS_LOGGING_PATH" = "no"; then
+  COMMONS_LOGGING_PATH=""
+fi
+
+if test -z "$COMMONS_LOGGING_PATH" -a -e "$HBASE_PATH"; then
   files="`find -L $HBASE_PATH/lib -type f -name "commons-logging-?.?.?.jar"`"
   for file in $files; do
     COMMONS_LOGGING_PATH=$file
