@@ -6,7 +6,7 @@ AC_PROG_LIBTOOL
 AC_PROG_CXX
 
 dnl **************************************************************
-dnl Check for Java
+dnl Checks for Java
 dnl **************************************************************
 AC_PATH_PROG(JAVAC, javac)
 if test -z "$JAVAC"; then
@@ -19,7 +19,7 @@ if test -z "$ANT"; then
 fi
 
 dnl **************************************************************
-dnl Check for JUnit4
+dnl Checks for JUnit4
 dnl **************************************************************
 JUNIT4_PATH="/usr/share/java/junit4.jar"
 m4_define([_JUNIT4_PATH_], [/usr/share/java/junit4.jar])
@@ -43,7 +43,7 @@ fi
 AC_SUBST(JUNIT4_PATH)
 
 dnl **************************************************************
-dnl Check for HBase
+dnl Checks for HBase
 dnl **************************************************************
 HBASE_PATH="/usr/local/hbase-0.94.1"
 m4_define([_HBASE_PATH_], [/usr/local/hbase-0.94.1])
@@ -75,7 +75,7 @@ fi
 AC_SUBST(HBASE_PATH)
 
 dnl **************************************************************
-dnl Check for Cassandra
+dnl Checks for Cassandra
 dnl **************************************************************
 CASSANDRA_PATH="/usr/local/apache-cassandra-1.1.6"
 m4_define([_CASSANDRA_PATH_], [/usr/local/apache-cassandra-1.1.6])
@@ -107,7 +107,7 @@ fi
 AC_SUBST(CASSANDRA_PATH)
 
 dnl **************************************************************
-dnl Check for Riak
+dnl Checks for Riak
 dnl **************************************************************
 RIAK_CLIENT_PATH="/usr/local/riak-client"
 m4_define([_RIAK_CLIENT_PATH_], [/usr/local/riak-client])
@@ -139,7 +139,7 @@ fi
 AC_SUBST(RIAK_CLIENT_PATH)
 
 dnl **************************************************************
-dnl Check for Commons-Logging
+dnl Checks for Commons-Logging
 dnl **************************************************************
 AC_ARG_WITH([commons-logging],
             AS_HELP_STRING([--with-commons-logging@<:@=PATH@:>@],
@@ -170,7 +170,7 @@ fi
 AC_SUBST(COMMONS_LOGGING_PATH)
 
 dnl **************************************************************
-dnl Check for PHP
+dnl Checks for PHP
 dnl **************************************************************
 AC_PATH_PROG(PHPIZE, phpize)
 AM_CONDITIONAL(ENABLE_PHP_EXT, [test -n "$PHPIZE"])
@@ -182,13 +182,13 @@ else
 fi
 
 dnl **************************************************************
-dnl Check for GLib
+dnl Checks for GLib
 dnl **************************************************************
 GLIB_REQUIRED=2.22
 PKG_CHECK_MODULES(GLIB, glib-2.0 >= $GLIB_REQUIRED)
 
 dnl **************************************************************
-dnl Check for Cutter
+dnl Checks for Cutter
 dnl **************************************************************
 CUTTER_REQUIRED=1.1.7
 have_cutter=no
