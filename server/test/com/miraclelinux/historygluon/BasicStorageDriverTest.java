@@ -41,8 +41,12 @@ public class BasicStorageDriverTest extends BasicStorageDriver
 
     @Override
     protected HistoryDataSet
-      getDataSet(long id, String startKey, String stopKey, int maxCount) {
+      getDataSet(String startKey, String stopKey, long maxCount) {
         return null;
+    }
+
+    @Override
+    public void setDatabase(String dbName) {
     }
 
     @Override
