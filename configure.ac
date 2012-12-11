@@ -19,12 +19,8 @@ if test -z "$ANT"; then
 fi
 
 JUNIT4_PATH="/usr/share/java/junit4.jar"
-CASSANDRA_PATH="/usr/local/apache-cassandra-1.1.6"
-RIAK_CLIENT_PATH="/usr/local/riak-client"
 
 AC_SUBST(JUNIT4_PATH)
-AC_SUBST(CASSANDRA_PATH)
-AC_SUBST(RIAK_CLIENT_PATH)
 
 dnl **************************************************************
 dnl Check for HBase
@@ -34,7 +30,7 @@ m4_define([_HBASE_PATH_], [/usr/local/hbase-0.94.1])
 
 AC_ARG_WITH([hbase],
             AS_HELP_STRING([--with-hbase@<:@=PATH@:>@],
-                           [Specify HBase path
+                           [build HBase storage driver
                             @<:@default=_HBASE_PATH_@:>@]),
             [with_hbase="$withval"],
             [with_hbase="$HBASE_PATH"])
@@ -57,6 +53,70 @@ if test -z "$HBASE_PATH"; then
 fi
 
 AC_SUBST(HBASE_PATH)
+
+dnl **************************************************************
+dnl Check for Cassandra
+dnl **************************************************************
+CASSANDRA_PATH="/usr/local/apache-cassandra-1.1.6"
+m4_define([_CASSANDRA_PATH_], [/usr/local/apache-cassandra-1.1.6])
+
+AC_ARG_WITH([cassandra],
+            AS_HELP_STRING([--with-cassandra@<:@=PATH@:>@],
+                           [build Apache Cassandra storage driver
+                            @<:@default=_CASSANDRA_PATH_@:>@]),
+            [with_cassandra="$withval"],
+            [with_cassandra="$CASSANDRA_PATH"])
+
+if test -n $CASSANDRA_PATH -a "$with_cassandra" != "no"; then
+  CASSANDRA_PATH=$with_cassandra
+fi
+
+if test -e "$CASSANDRA_PATH"; then
+  jar_files="`find -L $CASSANDRA_PATH/lib -type f -name "apache-cassandra-*.jar"`"
+  if test -z "$jar_files"; then
+    CASSANDRA_PATH=""
+  fi
+else
+  CASSANDRA_PATH=""
+fi
+
+if test -z "$CASSANDRA_PATH"; then
+  with_cassandra=no
+fi
+
+AC_SUBST(CASSANDRA_PATH)
+
+dnl **************************************************************
+dnl Check for Riak
+dnl **************************************************************
+RIAK_CLIENT_PATH="/usr/local/riak-client"
+m4_define([_RIAK_CLIENT_PATH_], [/usr/local/riak-client])
+
+AC_ARG_WITH([riak_client],
+            AS_HELP_STRING([--with-riak-client@<:@=PATH@:>@],
+                           [build Riak storage driver
+                            @<:@default=_RIAK_CLIENT_PATH_@:>@]),
+            [with_riak_client="$withval"],
+            [with_riak_client="$RIAK_CLIENT_PATH"])
+
+if test -n $RIAK_CLIENT_PATH -a "$with_riak_client" != "no"; then
+  RIAK_CLIENT_PATH=$with_riak_client
+fi
+
+if test -e "$RIAK_CLIENT_PATH"; then
+  jar_files="`find -L $RIAK_CLIENT_PATH -type f -name "riak-*.jar"`"
+  if test -z "$jar_files"; then
+    RIAK_CLIENT_PATH=""
+  fi
+else
+  RIAK_CLIENT_PATH=""
+fi
+
+if test -z "$RIAK_CLIENT_PATH"; then
+  with_riak_client=no
+fi
+
+AC_SUBST(RIAK_CLIENT_PATH)
 
 dnl **************************************************************
 dnl Check for Commons-Logging
@@ -145,8 +205,8 @@ echo
 echo "  JUnit4:              : ${JUNIT4_PATH}"
 echo "  Commons-Logging      : ${COMMONS_LOGGING_PATH}"
 echo "  HBase                : ${with_hbase}"
-echo "  Cassandra            : ${CASSANDRA_PATH}"
-echo "  Riak Client          : ${RIAK_CLIENT_PATH}"
+echo "  Cassandra            : ${with_cassandra}"
+echo "  Riak Client          : ${with_riak_client}"
 echo "  Ant path             : ${ANT}"
 echo "  C Unit test (cutter) : ${have_cutter}"
 echo
