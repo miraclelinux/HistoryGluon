@@ -19,14 +19,43 @@ if test -z "$ANT"; then
 fi
 
 JUNIT4_PATH="/usr/share/java/junit4.jar"
-HBASE_PATH="/usr/local/hbase-0.94.1"
 CASSANDRA_PATH="/usr/local/apache-cassandra-1.1.6"
 RIAK_CLIENT_PATH="/usr/local/riak-client"
 
 AC_SUBST(JUNIT4_PATH)
-AC_SUBST(HBASE_PATH)
 AC_SUBST(CASSANDRA_PATH)
 AC_SUBST(RIAK_CLIENT_PATH)
+
+dnl **************************************************************
+dnl Check for HBase
+dnl **************************************************************
+HBASE_PATH="/usr/local/hbase-0.94.1"
+
+AC_ARG_WITH([hbase],
+            AS_HELP_STRING([--with-hbase@<:@=PATH@:>@],
+                           [Specify HBase path
+                            @<:@default=$HBASE_PATH@:>@]),
+            [with_hbase="$withval"],
+            [with_hbase="$HBASE_PATH"])
+
+if test -n $HBASE_PATH -a "$with_hbase" != "no"; then
+  HBASE_PATH=$with_hbase
+fi
+
+if test -e "$HBASE_PATH"; then
+  jar_files="`find -L $HBASE_PATH -type f -name "hbase-*.jar"`"
+  if test -z "$jar_files"; then
+    HBASE_PATH=""
+  fi
+else
+  HBASE_PATH=""
+fi
+
+if test -z "$HBASE_PATH"; then
+  with_hbase=no
+fi
+
+AC_SUBST(HBASE_PATH)
 
 dnl **************************************************************
 dnl Check for Commons-Logging
@@ -114,7 +143,7 @@ echo "Configure Result:"
 echo
 echo "  JUnit4:              : ${JUNIT4_PATH}"
 echo "  Commons-Logging      : ${COMMONS_LOGGING_PATH}"
-echo "  HBase                : ${HBASE_PATH}"
+echo "  HBase                : ${with_hbase}"
 echo "  Cassandra            : ${CASSANDRA_PATH}"
 echo "  Riak Client          : ${RIAK_CLIENT_PATH}"
 echo "  Ant path             : ${ANT}"
