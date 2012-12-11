@@ -26,6 +26,13 @@ THRIFT_PATH="/usr/local/apache-cassandra-1.1.6/lib/libthrift-0.7.0.jar"
 CASSANDRA_PATH="/usr/local/apache-cassandra-1.1.6/lib/apache-cassandra-1.1.6.jar"
 RIAK_CLIENT_PATH="/usr/local/riak-client/riak-client-1.0.6.jar"
 
+if test "!" -e "$COMMONS_LOGGING_PATH"; then
+  COMMONS_LOGGING_PATH="/usr/share/java/commons-logging.jar"
+  if test "!" -e "$COMMONS_LOGGING_PATH"; then
+    AC_MSG_ERROR(Unable to find Commons-Logging library.)
+  fi
+fi
+
 AC_SUBST(JUNIT4_PATH)
 AC_SUBST(COMMONS_LOGGING_PATH)
 AC_SUBST(HADOOP_CORE_PATH)
@@ -87,6 +94,7 @@ dnl **************************************************************
 echo
 echo "Configure Result:"
 echo
+echo "  Commons-Logging      : ${COMMONS_LOGGING_PATH}"
 echo "  Ant path             : ${ANT}"
 echo "  C Unit test (cutter) : ${have_cutter}"
 echo
