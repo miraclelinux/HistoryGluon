@@ -19,12 +19,18 @@ if test -z "$ANT"; then
 fi
 
 JUNIT4_PATH="/usr/share/java/junit4.jar"
-COMMONS_LOGGING_PATH="/usr/local/hbase-0.94.1/lib/commons-logging-1.1.1.jar"
+COMMONS_LOGGING_PATH=""
 HBASE_PATH="/usr/local/hbase-0.94.1"
 CASSANDRA_PATH="/usr/local/apache-cassandra-1.1.6"
 RIAK_CLIENT_PATH="/usr/local/riak-client"
 
-if test "!" -e "$COMMONS_LOGGING_PATH"; then
+files="`find -L $HBASE_PATH/lib -type f -name "commons-logging-?.?.?.jar"`"
+for file in $files; do
+  COMMONS_LOGGING_PATH=$file
+  break
+done
+
+if test -z "$COMMONS_LOGGING_PATH"; then
   COMMONS_LOGGING_PATH="/usr/share/java/commons-logging.jar"
   if test "!" -e "$COMMONS_LOGGING_PATH"; then
     AC_MSG_ERROR(Unable to find Commons-Logging library.)
