@@ -1,3 +1,4 @@
+if ENABLE_PHP_EXT
 all: src/configure make_in_src
 
 .PHONY: make_in_src
@@ -18,3 +19,4 @@ install:
 clean:
 	-make -C src clean
 	rm -f src/configure
+endif

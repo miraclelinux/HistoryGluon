@@ -170,6 +170,18 @@ fi
 AC_SUBST(COMMONS_LOGGING_PATH)
 
 dnl **************************************************************
+dnl Check for PHP
+dnl **************************************************************
+AC_PATH_PROG(PHPIZE, phpize)
+AM_CONDITIONAL(ENABLE_PHP_EXT, [test -n "$PHPIZE"])
+
+if test -n "$PHPIZE"; then
+  enable_php_ext=yes
+else
+  enable_php_ext=no
+fi
+
+dnl **************************************************************
 dnl Check for GLib
 dnl **************************************************************
 GLIB_REQUIRED=2.22
@@ -222,11 +234,12 @@ dnl **************************************************************
 echo
 echo "Configure Result:"
 echo
+echo "  Ant path             : ${ANT}"
 echo "  JUnit4:              : ${with_junit4}"
 echo "  Commons-Logging      : ${COMMONS_LOGGING_PATH}"
 echo "  HBase                : ${with_hbase}"
 echo "  Cassandra            : ${with_cassandra}"
 echo "  Riak Client          : ${with_riak_client}"
-echo "  Ant path             : ${ANT}"
+echo "  PHP extension        : ${enable_php_ext}"
 echo "  C Unit test (cutter) : ${have_cutter}"
 echo
