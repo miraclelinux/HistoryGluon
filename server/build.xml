@@ -26,6 +26,16 @@
         <pathelement location="${test.classDir}"/>
     </path>
 
+    <available classname="org.apache.hadoop.hbase.HBaseConfiguration"
+               classpathref="external.class.path"
+               property="hbase.exists"/>
+    <available classname="com.basho.riak.client.IRiakClient"
+               classpathref="external.class.path"
+               property="riak.exists"/>
+    <available classname="org.apache.cassandra.thrift.Cassandra"
+               classpathref="external.class.path"
+               property="cassandra.exists"/>
+
     <target name="init">
         <tstamp/>
     </target>
@@ -36,7 +46,10 @@
             <classpath refid="external.class.path"/>
             <compilerarg value="-Xlint:deprecation"/>
             <compilerarg value="-Xlint:unchecked"/>
-        </javac>
+            <exclude name="com/miraclelinux/historygluon/HBaseDriver.java" unless="hbase.exists"/>
+            <exclude name="com/miraclelinux/historygluon/RiakDriver.java" unless="riak.exists"/> 
+            <exclude name="com/miraclelinux/historygluon/CassandraDriver.java" unless="cassandra.exists"/>
+       </javac>
     </target>
 
     <target name="compile-test" depends="compile">
