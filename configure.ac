@@ -18,6 +18,22 @@ if test -z "$ANT"; then
   AC_MSG_ERROR(Unable to find "ant" in your path. Please install Apache Ant to build Java sources.)
 fi
 
+JUNIT4_PATH="/usr/share/java/junit4.jar"
+COMMONS_LOGGING_PATH="/usr/local/hbase-0.94.1/lib/commons-logging-1.1.1.jar"
+HADOOP_CORE_PATH="/usr/local/hbase-0.94.1/lib/hadoop-core-1.0.3.jar"
+HBASE_PATH="/usr/local/hbase-0.94.1/hbase-0.94.1.jar"
+THRIFT_PATH="/usr/local/apache-cassandra-1.1.6/lib/libthrift-0.7.0.jar"
+CASSANDRA_PATH="/usr/local/apache-cassandra-1.1.6/lib/apache-cassandra-1.1.6.jar"
+RIAK_CLIENT_PATH="/usr/local/riak-client/riak-client-1.0.6.jar"
+
+AC_SUBST(JUNIT4_PATH)
+AC_SUBST(COMMONS_LOGGING_PATH)
+AC_SUBST(HADOOP_CORE_PATH)
+AC_SUBST(HBASE_PATH)
+AC_SUBST(THRIFT_PATH)
+AC_SUBST(CASSANDRA_PATH)
+AC_SUBST(RIAK_CLIENT_PATH)
+
 dnl **************************************************************
 dnl Check for GLib
 dnl **************************************************************
@@ -54,6 +70,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_OUTPUT([
 Makefile
 server/Makefile
+server/build.xml
 client-lib-c/Makefile
 client-lib-c/history-gluon-1.0.pc
 client-lib-c/src/Makefile

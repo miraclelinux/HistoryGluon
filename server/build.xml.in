@@ -8,16 +8,16 @@
 
     <property name="test.srcDir" value="test"/>
     <property name="test.classDir" value="classes.test"/>
-    <property name="junit4Path" value="/usr/share/java/junit4.jar"/>
+    <property name="junit4Path" value="@JUNIT4_PATH@"/>
     <property name="defaultTestClass" value="com.miraclelinux.historygluon.AllTests"/>
 
     <path id="external.class.path">
-        <pathelement path="/usr/local/hbase-0.94.1/hbase-0.94.1.jar"/>
-        <pathelement path="/usr/local/hbase-0.94.1/lib/hadoop-core-1.0.3.jar"/>
-        <pathelement path="/usr/local/hbase-0.94.1/lib/commons-logging-1.1.1.jar"/>
-        <pathelement path="/usr/local/apache-cassandra-1.1.6/lib/libthrift-0.7.0.jar"/>
-        <pathelement path="/usr/local/apache-cassandra-1.1.6/lib/apache-cassandra-1.1.6.jar"/>
-        <pathelement path="/usr/local/riak-client/riak-client-1.0.6.jar"/>
+        <pathelement path="@HBASE_PATH@"/>
+        <pathelement path="@HADOOP_CORE_PATH@"/>
+        <pathelement path="@COMMONS_LOGGING_PATH@"/>
+        <pathelement path="@THRIFT_PATH@"/>
+        <pathelement path="@CASSANDRA_PATH@"/>
+        <pathelement path="@RIAK_CLIENT_PATH@"/>
     </path>
 
     <path id="test.class.path">
