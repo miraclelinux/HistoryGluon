@@ -18,7 +18,27 @@ if test -z "$ANT"; then
   AC_MSG_ERROR(Unable to find "ant" in your path. Please install Apache Ant to build Java sources.)
 fi
 
+dnl **************************************************************
+dnl Check for JUnit4
+dnl **************************************************************
 JUNIT4_PATH="/usr/share/java/junit4.jar"
+m4_define([_JUNIT4_PATH_], [/usr/share/java/junit4.jar])
+
+AC_ARG_WITH([junit4],
+            AS_HELP_STRING([--with-junit4@<:@=PATH@:>@],
+                           [build JUnit4 storage driver
+                            @<:@default=_JUNIT4_PATH_@:>@]),
+            [with_junit4="$withval"],
+            [with_junit4="$JUNIT4_PATH"])
+
+if test -n $JUNIT4_PATH -a "$with_junit4" != "no"; then
+  JUNIT4_PATH=$with_junit4
+fi
+
+if test "!" -e "$JUNIT4_PATH"; then
+  JUNIT4_PATH=""
+  with_junit4=no
+fi
 
 AC_SUBST(JUNIT4_PATH)
 
@@ -202,7 +222,7 @@ dnl **************************************************************
 echo
 echo "Configure Result:"
 echo
-echo "  JUnit4:              : ${JUNIT4_PATH}"
+echo "  JUnit4:              : ${with_junit4}"
 echo "  Commons-Logging      : ${COMMONS_LOGGING_PATH}"
 echo "  HBase                : ${with_hbase}"
 echo "  Cassandra            : ${with_cassandra}"
