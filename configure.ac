@@ -5,6 +5,8 @@ AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_PROG_CXX
 
+AC_CONFIG_MACRO_DIR([m4])
+
 dnl **************************************************************
 dnl Checks for Java
 dnl **************************************************************
@@ -212,7 +214,9 @@ if test "$ac_cv_use_cutter" != "no"; then
 fi
 
 
-AC_CONFIG_MACRO_DIR([m4])
+dnl **************************************************************
+dnl Results
+dnl **************************************************************
 
 AC_OUTPUT([
 Makefile
@@ -226,10 +230,6 @@ client-php-ext/Makefile
 cli/Makefile
 cli/src/Makefile
 ])
-
-dnl **************************************************************
-dnl Show configure result
-dnl **************************************************************
 
 echo
 echo "Configure Result:"
