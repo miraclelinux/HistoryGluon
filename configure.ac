@@ -30,11 +30,12 @@ dnl **************************************************************
 dnl Check for HBase
 dnl **************************************************************
 HBASE_PATH="/usr/local/hbase-0.94.1"
+m4_define([_HBASE_PATH_], [/usr/local/hbase-0.94.1])
 
 AC_ARG_WITH([hbase],
             AS_HELP_STRING([--with-hbase@<:@=PATH@:>@],
                            [Specify HBase path
-                            @<:@default=$HBASE_PATH@:>@]),
+                            @<:@default=_HBASE_PATH_@:>@]),
             [with_hbase="$withval"],
             [with_hbase="$HBASE_PATH"])
 
