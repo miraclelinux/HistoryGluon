@@ -20,11 +20,9 @@ fi
 
 JUNIT4_PATH="/usr/share/java/junit4.jar"
 COMMONS_LOGGING_PATH="/usr/local/hbase-0.94.1/lib/commons-logging-1.1.1.jar"
-HADOOP_CORE_PATH="/usr/local/hbase-0.94.1/lib/hadoop-core-1.0.3.jar"
-HBASE_PATH="/usr/local/hbase-0.94.1/hbase-0.94.1.jar"
-THRIFT_PATH="/usr/local/apache-cassandra-1.1.6/lib/libthrift-0.7.0.jar"
-CASSANDRA_PATH="/usr/local/apache-cassandra-1.1.6/lib/apache-cassandra-1.1.6.jar"
-RIAK_CLIENT_PATH="/usr/local/riak-client/riak-client-1.0.6.jar"
+HBASE_PATH="/usr/local/hbase-0.94.1"
+CASSANDRA_PATH="/usr/local/apache-cassandra-1.1.6"
+RIAK_CLIENT_PATH="/usr/local/riak-client"
 
 if test "!" -e "$COMMONS_LOGGING_PATH"; then
   COMMONS_LOGGING_PATH="/usr/share/java/commons-logging.jar"
@@ -35,9 +33,7 @@ fi
 
 AC_SUBST(JUNIT4_PATH)
 AC_SUBST(COMMONS_LOGGING_PATH)
-AC_SUBST(HADOOP_CORE_PATH)
 AC_SUBST(HBASE_PATH)
-AC_SUBST(THRIFT_PATH)
 AC_SUBST(CASSANDRA_PATH)
 AC_SUBST(RIAK_CLIENT_PATH)
 
@@ -94,7 +90,11 @@ dnl **************************************************************
 echo
 echo "Configure Result:"
 echo
+echo "  JUnit4:              : ${JUNIT4_PATH}"
 echo "  Commons-Logging      : ${COMMONS_LOGGING_PATH}"
+echo "  HBase                : ${HBASE_PATH}"
+echo "  Cassandra            : ${CASSANDRA_PATH}"
+echo "  Riak Client          : ${RIAK_CLIENT_PATH}"
 echo "  Ant path             : ${ANT}"
 echo "  C Unit test (cutter) : ${have_cutter}"
 echo

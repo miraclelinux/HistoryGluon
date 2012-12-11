@@ -12,12 +12,13 @@
     <property name="defaultTestClass" value="com.miraclelinux.historygluon.AllTests"/>
 
     <path id="external.class.path">
-        <pathelement path="@HBASE_PATH@"/>
-        <pathelement path="@HADOOP_CORE_PATH@"/>
         <pathelement path="@COMMONS_LOGGING_PATH@"/>
-        <pathelement path="@THRIFT_PATH@"/>
-        <pathelement path="@CASSANDRA_PATH@"/>
-        <pathelement path="@RIAK_CLIENT_PATH@"/>
+        <fileset dir="@HBASE_PATH@" includes="**/*.jar"
+                 erroronmissingdir="false"/>
+        <fileset dir="@CASSANDRA_PATH@" includes="**/*.jar"
+                 erroronmissingdir="false"/>
+        <fileset dir="@RIAK_CLIENT_PATH@" includes="**/*.jar"
+                 erroronmissingdir="false"/>
     </path>
 
     <path id="test.class.path">
