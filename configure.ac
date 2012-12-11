@@ -19,10 +19,19 @@ if test -z "$ANT"; then
 fi
 
 JUNIT4_PATH="/usr/share/java/junit4.jar"
-COMMONS_LOGGING_PATH=""
 HBASE_PATH="/usr/local/hbase-0.94.1"
 CASSANDRA_PATH="/usr/local/apache-cassandra-1.1.6"
 RIAK_CLIENT_PATH="/usr/local/riak-client"
+
+AC_SUBST(JUNIT4_PATH)
+AC_SUBST(HBASE_PATH)
+AC_SUBST(CASSANDRA_PATH)
+AC_SUBST(RIAK_CLIENT_PATH)
+
+dnl **************************************************************
+dnl Check for Commons-Logging
+dnl **************************************************************
+COMMONS_LOGGING_PATH=""
 
 if test -e "$HBASE_PATH"; then
   files="`find -L $HBASE_PATH/lib -type f -name "commons-logging-?.?.?.jar"`"
@@ -39,11 +48,7 @@ if test -z "$COMMONS_LOGGING_PATH"; then
   fi
 fi
 
-AC_SUBST(JUNIT4_PATH)
 AC_SUBST(COMMONS_LOGGING_PATH)
-AC_SUBST(HBASE_PATH)
-AC_SUBST(CASSANDRA_PATH)
-AC_SUBST(RIAK_CLIENT_PATH)
 
 dnl **************************************************************
 dnl Check for GLib
