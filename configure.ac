@@ -24,11 +24,13 @@ HBASE_PATH="/usr/local/hbase-0.94.1"
 CASSANDRA_PATH="/usr/local/apache-cassandra-1.1.6"
 RIAK_CLIENT_PATH="/usr/local/riak-client"
 
-files="`find -L $HBASE_PATH/lib -type f -name "commons-logging-?.?.?.jar"`"
-for file in $files; do
-  COMMONS_LOGGING_PATH=$file
-  break
-done
+if test -e "$HBASE_PATH"; then
+  files="`find -L $HBASE_PATH/lib -type f -name "commons-logging-?.?.?.jar"`"
+  for file in $files; do
+    COMMONS_LOGGING_PATH=$file
+    break
+  done
+fi
 
 if test -z "$COMMONS_LOGGING_PATH"; then
   COMMONS_LOGGING_PATH="/usr/share/java/commons-logging.jar"
