@@ -6,12 +6,12 @@ history-gluon.jar:
 clean-local:
 	-rm -rf classes classes.test
 
-TESTS_ENVIRONMENT = $(SHELL)
-TESTS = run-test.sh
-
 CLEANFILES = \
 	TEST-com.miraclelinux.historygluon.* \
 	history-gluon.jar
+
+TESTS_ENVIRONMENT = $(SHELL)
+TESTS = run-test.sh
 
 jardir = $(datadir)/$(PACKAGE_NAME)
 jar_DATA = \
