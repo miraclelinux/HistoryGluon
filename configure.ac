@@ -23,8 +23,8 @@ fi
 dnl **************************************************************
 dnl Checks for JUnit4
 dnl **************************************************************
-JUNIT4_PATH="/usr/share/java/junit4.jar"
 m4_define([_JUNIT4_PATH_], [/usr/share/java/junit4.jar])
+JUNIT4_PATH=_JUNIT4_PATH_
 
 AC_ARG_WITH([junit4],
             AS_HELP_STRING([--with-junit4@<:@=PATH@:>@],
@@ -47,8 +47,8 @@ AC_SUBST(JUNIT4_PATH)
 dnl **************************************************************
 dnl Checks for HBase
 dnl **************************************************************
-HBASE_PATH="/usr/local/hbase-0.94.1"
 m4_define([_HBASE_PATH_], [/usr/local/hbase-0.94.1])
+HBASE_PATH=_HBASE_PATH_
 
 AC_ARG_WITH([hbase],
             AS_HELP_STRING([--with-hbase@<:@=PATH@:>@],
@@ -79,8 +79,8 @@ AC_SUBST(HBASE_PATH)
 dnl **************************************************************
 dnl Checks for Cassandra
 dnl **************************************************************
-CASSANDRA_PATH="/usr/local/apache-cassandra-1.1.6"
 m4_define([_CASSANDRA_PATH_], [/usr/local/apache-cassandra-1.1.6])
+CASSANDRA_PATH=_CASSANDRA_PATH_
 
 AC_ARG_WITH([cassandra],
             AS_HELP_STRING([--with-cassandra@<:@=PATH@:>@],
@@ -111,8 +111,8 @@ AC_SUBST(CASSANDRA_PATH)
 dnl **************************************************************
 dnl Checks for Riak
 dnl **************************************************************
-RIAK_CLIENT_PATH="/usr/local/riak-client"
 m4_define([_RIAK_CLIENT_PATH_], [/usr/local/riak-client])
+RIAK_CLIENT_PATH=_RIAK_CLIENT_PATH_
 
 AC_ARG_WITH([riak_client],
             AS_HELP_STRING([--with-riak-client@<:@=PATH@:>@],
