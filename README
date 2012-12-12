@@ -13,7 +13,7 @@ The currently supported databases are the following.
  - Mem (mainly for test)
 
 =========================================
-How to build souces from the repository
+How to build sources from the repository
 =========================================
 The sources in the repository doesn't contain 'configure' script.
 So you have to crete 'configure' with the following steps.
