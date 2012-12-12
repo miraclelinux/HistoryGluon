@@ -1,4 +1,4 @@
-.PHONY: all compile package test clean
+.PHONY: all compile package test clean-local
 all: package
 
 compile:
@@ -7,10 +7,12 @@ compile:
 package:
 	$(ANT) package
 
-clean:
-	rm -fr classes classes.test
-	rm -f TEST-com.miraclelinux.historygluon.*
-	rm -f history-gluon.jar
-
 test:
 	$(ANT) test
+
+clean-local:
+	-rm -rf classes classes.test
+
+CLEANFILES = \
+	TEST-com.miraclelinux.historygluon.* \
+	history-gluon.jar
