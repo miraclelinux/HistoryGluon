@@ -1,7 +1,4 @@
-.PHONY: compile history-gluon.jar test
-compile:
-	$(ANT) compile
-
+.PHONY: history-gluon.jar test
 history-gluon.jar:
 	$(ANT) package
 
