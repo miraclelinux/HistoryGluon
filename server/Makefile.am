@@ -1,10 +1,8 @@
-.PHONY: all compile package test clean-local
-all: package
-
+.PHONY: compile history-gluon.jar test
 compile:
 	$(ANT) compile
 
-package:
+history-gluon.jar:
 	$(ANT) package
 
 test:
@@ -15,4 +13,8 @@ clean-local:
 
 CLEANFILES = \
 	TEST-com.miraclelinux.historygluon.* \
+	history-gluon.jar
+
+jardir = $(datadir)/$(PACKAGE_NAME)
+jar_DATA = \
 	history-gluon.jar
