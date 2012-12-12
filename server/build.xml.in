@@ -73,4 +73,8 @@
             <test name="${testClass}"/>
         </junit>
     </target>
+
+    <target name="package" depends="compile">
+        <jar jarfile="history-gluon.jar" basedir="classes"/>
+    </target>
 </project>
