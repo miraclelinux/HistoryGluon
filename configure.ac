@@ -160,7 +160,7 @@ if test "$COMMONS_LOGGING_PATH" = "no"; then
 fi
 
 if test -z "$COMMONS_LOGGING_PATH" -a -e "$HBASE_PATH"; then
-  files="`find -L $HBASE_PATH/lib -type f -name "commons-logging-?.?.?.jar"`"
+  files="`find -L $HBASE_PATH/lib -type f -name "commons-logging-*.*.*.jar"`"
   for file in $files; do
     COMMONS_LOGGING_PATH=$file
     break
