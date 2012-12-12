@@ -20,3 +20,9 @@ clean:
 	-make -C src clean
 	rm -f src/configure
 endif
+
+EXTRA_DIST = \
+	history-gluon.ini \
+	src/config.m4 \
+	src/history-gluon-php-ext.c \
+	src/history-gluon-php-ext.h
