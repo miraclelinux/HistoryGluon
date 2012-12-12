@@ -29,9 +29,11 @@ So you have to crete 'configure' with the following steps.
  - HBase (*1)
  - Cassandra (*1)
  - Riak (*1)
- - PHP development package (*2)
+ - Commons-Logging (*2)
+ - PHP development package (*3)
 (*1) If you don't support the DB, no need to install
-(*2) If you don't build the PHP extension module, no need to install
+(*2) If you install HBase, no need to install.
+(*3) If you don't build the PHP extension module, no need to install
 
  Optionally, install the following tools if you do test.
  - JUnit4
