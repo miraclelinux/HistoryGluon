@@ -35,7 +35,7 @@ JUNIT4_PATH=DEFAULT_JUNIT4_PATH
 
 AC_ARG_WITH([junit4],
             AS_HELP_STRING([--with-junit4@<:@=PATH@:>@],
-                           [build JUnit4 storage driver
+                           [use JUnit4 for testing Java codes
                             @<:@default=DEFAULT_JUNIT4_PATH@:>@]),
             [with_junit4="$withval"],
             [with_junit4="$JUNIT4_PATH"])
