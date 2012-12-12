@@ -21,7 +21,7 @@ INCLUDES = $(CUTTER_CFLAGS) -I ../src
 LIBS = $(CUTTER_LIBS) ../src/libhistory-gluon.la
 
 # utility
-libutils_la_SOURCES = utils.c
+libutils_la_SOURCES = utils.c utils.h
 libutils_la_LDFLAGS = 
 
 # Test cases
