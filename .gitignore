@@ -32,6 +32,7 @@ client-lib-c/test/*.lo
 touch
 missing
 history-gluon-1.0.pc
+history-gluon-*.*.*.tar.bz2
 client-lib-c/message.lo
 client-php-ext/src/.deps
 ient-php-ext/src/.libs/
