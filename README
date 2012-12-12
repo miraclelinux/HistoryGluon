@@ -40,6 +40,8 @@ So you have to crete 'configure' with the following steps.
  - Cutter
  - PHPUnit
 
+ Please see also server/README to know how to install each Java libraries.
+
 1) execute the autogen.sh
 $ autogen.sh
 
