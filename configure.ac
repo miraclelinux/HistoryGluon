@@ -169,7 +169,7 @@ if test -z "$COMMONS_LOGGING_PATH" -a -e "$HBASE_PATH"; then
   done
 fi
 
-if test -z "$COMMONS_LOGGING_PATH"; then
+if test -z "$COMMONS_LOGGING_PATH" -o "!" -e "$COMMONS_LOGGING_PATH"; then
   COMMONS_LOGGING_PATH="/usr/share/java/commons-logging.jar"
   if test "!" -e "$COMMONS_LOGGING_PATH"; then
     AC_MSG_ERROR(Unable to find Commons-Logging library.)
