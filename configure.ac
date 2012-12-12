@@ -228,6 +228,7 @@ Makefile
 server/Makefile
 server/build.xml
 server/history-gluon-server
+server/run-test.sh
 client-lib-c/Makefile
 client-lib-c/history-gluon-1.0.pc
 client-lib-c/src/Makefile

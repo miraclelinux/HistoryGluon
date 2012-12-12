@@ -1,0 +1,14 @@
+#!/bin/sh
+
+prefix=@prefix@
+datadir=@datadir@
+package_name=@PACKAGE_NAME@
+package_datadir="${datadir}/${package_name}"
+
+HBASE_LIBS="@HBASE_PATH@/*.jar:@HBASE_PATH@/lib/*"
+CASSANDRA_LIBS="@CASSANDRA_PATH@/lib/*"
+RIAK_CLIENT_LIBS="@RIAK_CLIENT_PATH@/*"
+
+export CLASSPATH="classes:${HBASE_LIBS}:${CASSANDRA_LIBS}:${RIAK_CLIENT_LIBS}"
+
+@ANT@ test

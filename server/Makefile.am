@@ -1,13 +1,13 @@
-.PHONY: history-gluon.jar test
+.PHONY: history-gluon.jar
 
 history-gluon.jar:
 	$(ANT) package
 
-test:
-	$(ANT) test
-
 clean-local:
 	-rm -rf classes classes.test
+
+TESTS_ENVIRONMENT = $(SHELL)
+TESTS = run-test.sh
 
 CLEANFILES = \
 	TEST-com.miraclelinux.historygluon.* \
