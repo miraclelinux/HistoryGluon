@@ -1,3 +1,4 @@
+*~
 ChangeLog
 HistoryGluon/classes/
 INSTALL
@@ -50,6 +51,11 @@ client-php-ext/src/mkinstalldirs
 client-php-ext/src/modules/
 client-php-ext/src/run-tests.php
 client-php-ext/src/.libs/
+server/TEST-*.txt
+server/build.xml
+server/history-gluon-server
+server/history-gluon.jar
+server/run-test.sh
 server/classes.test/
 server/classes/
 cli/src/.deps/
