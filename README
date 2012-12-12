@@ -25,6 +25,7 @@ So you have to crete 'configure' with the following steps.
  - gcc
  - make
  - jdk
+ - ant
  - HBase (*1)
  - Cassandra (*1)
  - Riak (*1)
