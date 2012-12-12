@@ -1,9 +1,9 @@
 #!/bin/sh
 
 prefix=@prefix@
-datadir=@datadir@
+datarootdir=@datarootdir@
 package_name=@PACKAGE_NAME@
-package_datadir="${datadir}/${package_name}"
+package_datadir="${datarootdir}/${package_name}"
 
 COMMONS_LOGGING_LIBS="@COMMONS_LOGGING_PATH@"
 HBASE_LIBS="@HBASE_PATH@/*.jar:@HBASE_PATH@/lib/*"

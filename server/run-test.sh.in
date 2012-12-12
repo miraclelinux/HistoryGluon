@@ -1,9 +1,9 @@
 #!/bin/sh
 
 prefix=@prefix@
-datadir=@datadir@
+datarootdir=@datarootdir@
 package_name=@PACKAGE_NAME@
-package_datadir="${datadir}/${package_name}"
+package_datadir="${datarootdir}/${package_name}"
 
 JUNIT4_LIBS="@JUNIT4_PATH@"
 COMMONS_LOGGING_LIBS="@COMMONS_LOGGING_PATH@"
