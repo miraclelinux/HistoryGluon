@@ -23,13 +23,13 @@ fi
 dnl **************************************************************
 dnl Checks for JUnit4
 dnl **************************************************************
-m4_define([_JUNIT4_PATH_], [/usr/share/java/junit4.jar])
-JUNIT4_PATH=_JUNIT4_PATH_
+m4_define([DEFAULT_JUNIT4_PATH], [/usr/share/java/junit4.jar])
+JUNIT4_PATH=DEFAULT_JUNIT4_PATH
 
 AC_ARG_WITH([junit4],
             AS_HELP_STRING([--with-junit4@<:@=PATH@:>@],
                            [build JUnit4 storage driver
-                            @<:@default=_JUNIT4_PATH_@:>@]),
+                            @<:@default=DEFAULT_JUNIT4_PATH@:>@]),
             [with_junit4="$withval"],
             [with_junit4="$JUNIT4_PATH"])
 
@@ -47,13 +47,13 @@ AC_SUBST(JUNIT4_PATH)
 dnl **************************************************************
 dnl Checks for HBase
 dnl **************************************************************
-m4_define([_HBASE_PATH_], [/usr/local/hbase-0.94.1])
-HBASE_PATH=_HBASE_PATH_
+m4_define([DEFAULT_HBASE_PATH], [/usr/local/hbase-0.94.1])
+HBASE_PATH=DEFAULT_HBASE_PATH
 
 AC_ARG_WITH([hbase],
             AS_HELP_STRING([--with-hbase@<:@=PATH@:>@],
                            [build HBase storage driver
-                            @<:@default=_HBASE_PATH_@:>@]),
+                            @<:@default=DEFAULT_HBASE_PATH@:>@]),
             [with_hbase="$withval"],
             [with_hbase="$HBASE_PATH"])
 
@@ -79,13 +79,13 @@ AC_SUBST(HBASE_PATH)
 dnl **************************************************************
 dnl Checks for Cassandra
 dnl **************************************************************
-m4_define([_CASSANDRA_PATH_], [/usr/local/apache-cassandra-1.1.6])
-CASSANDRA_PATH=_CASSANDRA_PATH_
+m4_define([DEFAULT_CASSANDRA_PATH], [/usr/local/apache-cassandra-1.1.6])
+CASSANDRA_PATH=DEFAULT_CASSANDRA_PATH
 
 AC_ARG_WITH([cassandra],
             AS_HELP_STRING([--with-cassandra@<:@=PATH@:>@],
                            [build Apache Cassandra storage driver
-                            @<:@default=_CASSANDRA_PATH_@:>@]),
+                            @<:@default=DEFAULT_CASSANDRA_PATH@:>@]),
             [with_cassandra="$withval"],
             [with_cassandra="$CASSANDRA_PATH"])
 
@@ -111,13 +111,13 @@ AC_SUBST(CASSANDRA_PATH)
 dnl **************************************************************
 dnl Checks for Riak
 dnl **************************************************************
-m4_define([_RIAK_CLIENT_PATH_], [/usr/local/riak-client])
-RIAK_CLIENT_PATH=_RIAK_CLIENT_PATH_
+m4_define([DEFAULT_RIAK_CLIENT_PATH], [/usr/local/riak-client])
+RIAK_CLIENT_PATH=DEFAULT_RIAK_CLIENT_PATH
 
 AC_ARG_WITH([riak_client],
             AS_HELP_STRING([--with-riak-client@<:@=PATH@:>@],
                            [build Riak storage driver
-                            @<:@default=_RIAK_CLIENT_PATH_@:>@]),
+                            @<:@default=DEFAULT_RIAK_CLIENT_PATH@:>@]),
             [with_riak_client="$withval"],
             [with_riak_client="$RIAK_CLIENT_PATH"])
 
