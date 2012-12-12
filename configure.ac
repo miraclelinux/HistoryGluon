@@ -1,5 +1,7 @@
+AC_PREREQ(2.68)
+
 AC_INIT(history-gluon, 0.2.0)
-AM_INIT_AUTOMAKE()
+AM_INIT_AUTOMAKE([1.9 no-dist-gzip dist-bzip2 tar-pax])
 
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
