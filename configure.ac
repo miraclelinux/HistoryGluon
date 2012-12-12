@@ -10,14 +10,19 @@ AC_CONFIG_MACRO_DIR([m4])
 dnl **************************************************************
 dnl Checks for Java
 dnl **************************************************************
+AC_PATH_PROG(JAVA, java)
+if test -z "$JAVA"; then
+  AC_MSG_ERROR(Unable to find "java" in your path. Please install JDK 1.6 or later.)
+fi
+
 AC_PATH_PROG(JAVAC, javac)
 if test -z "$JAVAC"; then
-  AC_MSG_ERROR(Unable to find "javac" in your path. Please install JDK 1.6 or later to build Java sources.)
+  AC_MSG_ERROR(Unable to find "javac" in your path. Please install JDK 1.6 or later.)
 fi
 
 AC_PATH_PROG(ANT, ant)
 if test -z "$ANT"; then
-  AC_MSG_ERROR(Unable to find "ant" in your path. Please install Apache Ant to build Java sources.)
+  AC_MSG_ERROR(Unable to find "ant" in your path. Please install Apache Ant.)
 fi
 
 dnl **************************************************************
@@ -222,6 +227,7 @@ AC_OUTPUT([
 Makefile
 server/Makefile
 server/build.xml
+server/history-gluon-server
 client-lib-c/Makefile
 client-lib-c/history-gluon-1.0.pc
 client-lib-c/src/Makefile

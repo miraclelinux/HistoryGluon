@@ -1,4 +1,5 @@
 .PHONY: history-gluon.jar test
+
 history-gluon.jar:
 	$(ANT) package
 
@@ -15,3 +16,6 @@ CLEANFILES = \
 jardir = $(datadir)/$(PACKAGE_NAME)
 jar_DATA = \
 	history-gluon.jar
+
+sbin_SCRIPTS = \
+	history-gluon-server

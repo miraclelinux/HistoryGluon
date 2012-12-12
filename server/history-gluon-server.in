@@ -1,0 +1,18 @@
+#!/bin/bash
+
+prefix=@prefix@
+datadir=@datadir@
+package_name=@PACKAGE_NAME@
+package_datadir="${datadir}/${package_name}"
+
+HBASE_LIBS="@HBASE_PATH@/*.jar:@HBASE_PATH@/lib/*"
+CASSANDRA_LIBS="@CASSANDRA_PATH@/lib/*"
+RIAK_CLIENT_LIBS="@RIAK_CLIENT_PATH@/*"
+
+EXT_CLASSPATH="${HBASE_LIBS}:${CASSANDRA_LIBS}:${RIAK_CLIENT_LIBS}"
+HISTORY_GLUON_JAR="${package_datadir}/history-gluon.jar"
+HISTORY_GLUON_MAIN_CLASS="com.miraclelinux.historygluon.HistoryGluon"
+
+@JAVA@ \
+  -cp "${EXT_CLASSPATH}:${HISTORY_GLUON_JAR}" \
+  ${HISTORY_GLUON_MAIN_CLASS} $@
