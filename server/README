@@ -7,6 +7,7 @@ Cassandra       : 1.1.6
 Riak            : 1.2.1
 riak-java-client: 1.0.6
 riak-pb         : 1.2
+Commons-Logging : 1.1.1 (When you don't install HBase)
 JUnit           : 4.10 (When you run tests)
 
 <<< HBase >>>
@@ -23,6 +24,12 @@ JUnit           : 4.10 (When you run tests)
 (3a) donwload package riak-client-1.0.6.jar from http://search.maven.org/?#search%7Cgav%7C1%7Cg%3A%22com.basho.riak%22%20AND%20a%3A%22riak-client%22
 (3b) download package riak-pb-1.2.jar from  http://mvnrepository.com/artifact/com.basho.riak.protobuf/riak-pb
 (4) put the jar files at /usr/local/riak-client
+
+<<< Commons-Logging >>>
+# yum install jakarta-commons-logging
+
+<<< JUnit >>>
+# yum install junit4
 
 ======================================
 * How to build *
