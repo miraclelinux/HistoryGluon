@@ -35,7 +35,7 @@ history_gluon_start() {
 
     @JAVA@ \
         -cp "${EXT_CLASSPATH}:${HISTORY_GLUON_JAR}" \
-        ${HISTORY_GLUON_MAIN_CLASS} ${STORAGE_DRIVER} &
+        ${HISTORY_GLUON_MAIN_CLASS} ${STORAGE_DRIVER} >> ${LOG_FILE} 2>&1 &
 
     echo -n $! > ${PID_FILE}
 }
