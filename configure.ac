@@ -1,4 +1,4 @@
-AC_PREREQ(2.68)
+AC_PREREQ(2.63)
 
 AC_INIT(history-gluon, 0.2.0)
 AM_INIT_AUTOMAKE([1.9 no-dist-gzip dist-bzip2 tar-pax])
