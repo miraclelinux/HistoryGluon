@@ -2,8 +2,15 @@
 
 prefix=@prefix@
 datarootdir=@datarootdir@
+sysconfdir=@sysconfdir@
 package_name=@PACKAGE_NAME@
 package_datadir="${datarootdir}/${package_name}"
+package_confdir="${sysconfdir}/${package_name}"
+conf_file="${package_confdir}/${package_name}.conf"
+
+if test -f ${conf_file}; then
+    . ${conf_file}
+fi
 
 COMMONS_LOGGING_LIBS="@COMMONS_LOGGING_PATH@"
 HBASE_LIBS="@HBASE_PATH@/*.jar:@HBASE_PATH@/lib/*"
@@ -16,4 +23,4 @@ HISTORY_GLUON_MAIN_CLASS="com.miraclelinux.historygluon.HistoryGluon"
 
 @JAVA@ \
   -cp "${EXT_CLASSPATH}:${HISTORY_GLUON_JAR}" \
-  ${HISTORY_GLUON_MAIN_CLASS} $@
+  ${HISTORY_GLUON_MAIN_CLASS} ${STORAGE_DRIVER} $@

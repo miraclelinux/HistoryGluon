@@ -1,3 +1,5 @@
+SUBDIRS = conf
+
 .PHONY: history-gluon.jar
 
 history-gluon.jar:
