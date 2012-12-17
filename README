@@ -70,4 +70,23 @@ Ex. Ubuntu 12.10)
 Ex. CentOS 6.3)
 /etc/php.d/
 
+=========================================
+How to run HistoryGluon server
+=========================================
+1) Before you run HistoryGluon server, you have to run databae server.
+Please see server/README for detail.
 
+2) Edit the following line in /usr/local/etc/history-gluon/history-gluon.conf
+to choose a storage driver to use:
+
+STORAGE_DRIVER=Mem
+
+Available values are: "HBase", "Cassandra", "Riak", "Mem"
+
+3) Run HistoryGluon server:
+
+# /usr/local/sbin/history-gluon-server start
+
+4) You can stop HisotryGluon server by following command:
+
+# /usr/local/sbin/history-gluon-server stop
