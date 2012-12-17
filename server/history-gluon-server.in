@@ -7,12 +7,14 @@ package_name=@PACKAGE_NAME@
 package_datadir="${datarootdir}/${package_name}"
 package_confdir="${sysconfdir}/${package_name}"
 
+STORAGE_DRIVER="Mem"
+PID_FILE="/var/run/history-gluon.pid"
+LOG_FILE="/var/run/history-gluon.log"
+
 CONF_FILE="${package_confdir}/${package_name}.conf"
 
 if test -f ${CONF_FILE}; then
     . ${CONF_FILE}
-else
-    STORAGE_DRIVER=Mem
 fi
 
 COMMONS_LOGGING_LIBS="@COMMONS_LOGGING_PATH@"
