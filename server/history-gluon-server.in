@@ -24,6 +24,46 @@ EXT_CLASSPATH="${COMMONS_LOGGING_LIBS}:${HBASE_LIBS}:${CASSANDRA_LIBS}:${RIAK_CL
 HISTORY_GLUON_JAR="${package_datadir}/history-gluon.jar"
 HISTORY_GLUON_MAIN_CLASS="com.miraclelinux.historygluon.HistoryGluon"
 
-@JAVA@ \
-  -cp "${EXT_CLASSPATH}:${HISTORY_GLUON_JAR}" \
-  ${HISTORY_GLUON_MAIN_CLASS} ${STORAGE_DRIVER}
+history_gluon_start() {
+    if test -f ${PID_FILE}; then
+        echo "${PID_FILE} exists!"
+        echo " Please stop history-gluon-server or remove the pid file."
+        exit 1
+    fi
+
+    touch ${PID_FILE} || exit 1
+
+    @JAVA@ \
+        -cp "${EXT_CLASSPATH}:${HISTORY_GLUON_JAR}" \
+        ${HISTORY_GLUON_MAIN_CLASS} ${STORAGE_DRIVER} &
+
+    echo -n $! > ${PID_FILE}
+}
+
+history_gluon_stop() {
+    if test -f ${PID_FILE}; then
+        HISTORY_GLUON_PID=`cat ${PID_FILE}`
+        if test -n ${HISTORY_GLUON_PID}; then
+            kill ${HISTORY_GLUON_PID} && echo "history-gluon-server stopped"
+            rm -f ${PID_FILE}
+        fi
+    else
+        echo "${PID_FILE} doesn't exist!"
+    fi
+}
+
+case $1 in
+    start)
+        history_gluon_start
+        ;;
+    stop)
+        history_gluon_stop
+        ;;
+    restart)
+        history_gluon_stop
+        history_gluon_start
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|resart}"
+        exit 1
+esac
