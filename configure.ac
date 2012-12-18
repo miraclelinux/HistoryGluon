@@ -54,7 +54,7 @@ AC_SUBST(JUNIT4_PATH)
 dnl **************************************************************
 dnl Checks for HBase
 dnl **************************************************************
-m4_define([DEFAULT_HBASE_PATH], [/usr/local/hbase-0.94.1])
+m4_define([DEFAULT_HBASE_PATH], [/usr/local/hbase])
 HBASE_PATH=DEFAULT_HBASE_PATH
 
 AC_ARG_WITH([hbase],
@@ -86,7 +86,7 @@ AC_SUBST(HBASE_PATH)
 dnl **************************************************************
 dnl Checks for Cassandra
 dnl **************************************************************
-m4_define([DEFAULT_CASSANDRA_PATH], [/usr/local/apache-cassandra-1.1.6])
+m4_define([DEFAULT_CASSANDRA_PATH], [/usr/local/apache-cassandra])
 CASSANDRA_PATH=DEFAULT_CASSANDRA_PATH
 
 AC_ARG_WITH([cassandra],
