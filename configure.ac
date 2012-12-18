@@ -31,19 +31,22 @@ dnl **************************************************************
 dnl Checks for JUnit4
 dnl **************************************************************
 m4_define([DEFAULT_JUNIT4_PATH], [/usr/share/java/junit4.jar])
-JUNIT4_PATH=DEFAULT_JUNIT4_PATH
 
 AC_ARG_WITH([junit4],
             AS_HELP_STRING([--with-junit4@<:@=PATH@:>@],
                            [use JUnit4 for testing Java codes
                             @<:@default=DEFAULT_JUNIT4_PATH@:>@]),
-            [with_junit4="$withval"],
-            [with_junit4="$JUNIT4_PATH"])
+            [JUNIT4_PATH="$withval"],
+            [JUNIT4_PATH=DEFAULT_JUNIT4_PATH])
 
-if test -n "$with_junit4" -a "$with_junit4" != "no"; then
-  JUNIT4_PATH=$with_junit4
-elif test "$with_junit4" = "no"; then
+if test "$JUNIT4_PATH" = "yes"; then
+  JUNIT4_PATH=DEFAULT_JUNIT4_PATH
+  with_junit4="$JUNIT4_PATH"
+elif test "$JUNIT4_PATH" = "no"; then
   JUNIT4_PATH=""
+  with_junit4=no
+else
+  with_junit4="$JUNIT4_PATH"
 fi
 
 if test "!" -e "$JUNIT4_PATH"; then
@@ -57,18 +60,18 @@ dnl **************************************************************
 dnl Checks for HBase
 dnl **************************************************************
 m4_define([DEFAULT_HBASE_PATH], [/usr/local/hbase])
-HBASE_PATH=DEFAULT_HBASE_PATH
 
 AC_ARG_WITH([hbase],
             AS_HELP_STRING([--with-hbase@<:@=PATH@:>@],
                            [build HBase storage driver
                             @<:@default=DEFAULT_HBASE_PATH@:>@]),
-            [with_hbase="$withval"],
-            [with_hbase="$HBASE_PATH"])
+            [HBASE_PATH="$withval"],
+            [HBASE_PATH=DEFAULT_HBASE_PATH])
 
-if test -n "$with_hbase" -a "$with_hbase" != "no"; then
-  HBASE_PATH=$with_hbase
-elif test "$with_hbase" = "no"; then
+if test "$HBASE_PATH" = "yes"; then
+  HBASE_PATH=DEFAULT_HBASE_PATH
+  with_hbase="$HBASE_PATH"
+elif test "$HBASE_PATH" = "no"; then
   HBASE_PATH=""
 fi
 
@@ -83,6 +86,8 @@ fi
 
 if test -z "$HBASE_PATH"; then
   with_hbase=no
+else
+  with_hbase="$HBASE_PATH"
 fi
 
 AC_SUBST(HBASE_PATH)
@@ -91,18 +96,18 @@ dnl **************************************************************
 dnl Checks for Cassandra
 dnl **************************************************************
 m4_define([DEFAULT_CASSANDRA_PATH], [/usr/local/apache-cassandra])
-CASSANDRA_PATH=DEFAULT_CASSANDRA_PATH
 
 AC_ARG_WITH([cassandra],
             AS_HELP_STRING([--with-cassandra@<:@=PATH@:>@],
                            [build Apache Cassandra storage driver
                             @<:@default=DEFAULT_CASSANDRA_PATH@:>@]),
-            [with_cassandra="$withval"],
-            [with_cassandra="$CASSANDRA_PATH"])
+            [CASSANDRA_PATH="$withval"],
+            [CASSANDRA_PATH=DEFAULT_CASSANDRA_PATH])
 
-if test -n "$with_cassandra" -a "$with_cassandra" != "no"; then
-  CASSANDRA_PATH=$with_cassandra
-elif test "$with_cassandra" = "no"; then
+if test "$CASSANDRA_PATH" = "yes"; then
+  CASSANDRA_PATH=DEFAULT_CASSANDRA_PATH
+  with_cassandra="$CASSANDRA_PATH"
+elif test "$CASSANDRA_PATH" = "no"; then
   CASSANDRA_PATH=""
 fi
 
@@ -117,6 +122,8 @@ fi
 
 if test -z "$CASSANDRA_PATH"; then
   with_cassandra=no
+else
+  with_cassandra="$CASSANDRA_PATH"
 fi
 
 AC_SUBST(CASSANDRA_PATH)
@@ -125,18 +132,18 @@ dnl **************************************************************
 dnl Checks for Riak
 dnl **************************************************************
 m4_define([DEFAULT_RIAK_CLIENT_PATH], [/usr/local/riak-client])
-RIAK_CLIENT_PATH=DEFAULT_RIAK_CLIENT_PATH
 
 AC_ARG_WITH([riak_client],
             AS_HELP_STRING([--with-riak-client@<:@=PATH@:>@],
                            [build Riak storage driver
                             @<:@default=DEFAULT_RIAK_CLIENT_PATH@:>@]),
-            [with_riak_client="$withval"],
-            [with_riak_client="$RIAK_CLIENT_PATH"])
+            [RIAK_CLIENT_PATH="$withval"],
+            [RIAK_CLIENT_PATH=DEFAULT_RIAK_CLIENT_PATH])
 
-if test -n "$with_riak_client" -a "$with_riak_client" != "no"; then
-  RIAK_CLIENT_PATH=$with_riak_client
-elif test "$with_riak_client" = "no"; then
+if test "$RIAK_CLIENT_PATH" = "yes"; then
+  RIAK_CLIENT_PATH=DEFAULT_RIAK_CLIENT_PATH
+  with_riak_client="$RIAK_CLIENT_PATH"
+elif test "$RIAK_CLIENT_PATH" = "no"; then
   RIAK_CLIENT_PATH=""
 fi
 
@@ -151,6 +158,8 @@ fi
 
 if test -z "$RIAK_CLIENT_PATH"; then
   with_riak_client=no
+else
+  with_riak_client="$RIAK_CLIENT_PATH"
 fi
 
 AC_SUBST(RIAK_CLIENT_PATH)
