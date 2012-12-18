@@ -40,8 +40,10 @@ AC_ARG_WITH([junit4],
             [with_junit4="$withval"],
             [with_junit4="$JUNIT4_PATH"])
 
-if test -n $JUNIT4_PATH -a "$with_junit4" != "no"; then
+if test -n "$with_junit4" -a "$with_junit4" != "no"; then
   JUNIT4_PATH=$with_junit4
+elif test "$with_junit4" = "no"; then
+  JUNIT4_PATH=""
 fi
 
 if test "!" -e "$JUNIT4_PATH"; then
@@ -64,8 +66,10 @@ AC_ARG_WITH([hbase],
             [with_hbase="$withval"],
             [with_hbase="$HBASE_PATH"])
 
-if test -n $HBASE_PATH -a "$with_hbase" != "no"; then
+if test -n "$with_hbase" -a "$with_hbase" != "no"; then
   HBASE_PATH=$with_hbase
+elif test "$with_hbase" = "no"; then
+  HBASE_PATH=""
 fi
 
 if test -e "$HBASE_PATH"; then
@@ -96,8 +100,10 @@ AC_ARG_WITH([cassandra],
             [with_cassandra="$withval"],
             [with_cassandra="$CASSANDRA_PATH"])
 
-if test -n $CASSANDRA_PATH -a "$with_cassandra" != "no"; then
+if test -n "$with_cassandra" -a "$with_cassandra" != "no"; then
   CASSANDRA_PATH=$with_cassandra
+elif test "$with_cassandra" = "no"; then
+  CASSANDRA_PATH=""
 fi
 
 if test -e "$CASSANDRA_PATH"; then
@@ -128,8 +134,10 @@ AC_ARG_WITH([riak_client],
             [with_riak_client="$withval"],
             [with_riak_client="$RIAK_CLIENT_PATH"])
 
-if test -n $RIAK_CLIENT_PATH -a "$with_riak_client" != "no"; then
+if test -n "$with_riak_client" -a "$with_riak_client" != "no"; then
   RIAK_CLIENT_PATH=$with_riak_client
+elif test "$with_riak_client" = "no"; then
+  RIAK_CLIENT_PATH=""
 fi
 
 if test -e "$RIAK_CLIENT_PATH"; then
