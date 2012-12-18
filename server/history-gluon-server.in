@@ -39,7 +39,9 @@ history_gluon_start() {
         -cp "${EXT_CLASSPATH}:${HISTORY_GLUON_JAR}" \
         ${HISTORY_GLUON_MAIN_CLASS} ${STORAGE_DRIVER} >> ${LOG_FILE} 2>&1 &
 
-    echo -n $! > ${PID_FILE}
+    HISTORY_GLUON_PID=$!
+    echo -n ${HISTORY_GLUON_PID} > ${PID_FILE}
+    echo "history-gluon-server has been started with PID ${HISTORY_GLUON_PID}"
 }
 
 history_gluon_stop() {
