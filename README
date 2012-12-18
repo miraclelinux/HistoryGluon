@@ -74,7 +74,7 @@ Ex. CentOS 6.3)
 How to run HistoryGluon server
 =========================================
 1) Before you run HistoryGluon server, you have to run databae server.
-Please see server/README for detail.
+Please see server/README for more details.
 
 2) Edit the following line in /usr/local/etc/history-gluon/history-gluon.conf
 to choose a storage driver to use:
