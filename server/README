@@ -14,15 +14,15 @@ JUnit           : 4.10 (When you run tests)
 (1) download package hbase-0.94.1.tar.gz from http://www.apache.org/dyn/closer.cgi/hbase/
 (2) unzip under /usr/local
 (3) Link (or move) the extracted directory to "hbase":
-    # cd /usr/local
-    # ln -s hbase-0.94.1 hbase
+# cd /usr/local
+# ln -s hbase-0.94.1 hbase
 
 <<< Cassandra >>>
 (1) download package apache-cassandra-1.1.6-bin.tar.gz from http://cassandra.apache.org/download/
 (2) unzip under /usr/local
 (3) Link (or move) the extracted directory to "apache-cassandra":
-    # cd /usr/local
-    # ln -s apache-cassandra-1.1.6 apache-cassandra
+# cd /usr/local
+# ln -s apache-cassandra-1.1.6 apache-cassandra
 
 <<< Riak >>>
 (1) download http://downloads.basho.com.s3-website-us-east-1.amazonaws.com/riak/CURRENT/rhel/6/riak-1.2.1-1.el6.x86_64.rpm
