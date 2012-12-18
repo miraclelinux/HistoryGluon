@@ -70,7 +70,6 @@ AC_ARG_WITH([hbase],
 
 if test "$HBASE_PATH" = "yes"; then
   HBASE_PATH=DEFAULT_HBASE_PATH
-  with_hbase="$HBASE_PATH"
 elif test "$HBASE_PATH" = "no"; then
   HBASE_PATH=""
 fi
@@ -106,7 +105,6 @@ AC_ARG_WITH([cassandra],
 
 if test "$CASSANDRA_PATH" = "yes"; then
   CASSANDRA_PATH=DEFAULT_CASSANDRA_PATH
-  with_cassandra="$CASSANDRA_PATH"
 elif test "$CASSANDRA_PATH" = "no"; then
   CASSANDRA_PATH=""
 fi
@@ -142,7 +140,6 @@ AC_ARG_WITH([riak_client],
 
 if test "$RIAK_CLIENT_PATH" = "yes"; then
   RIAK_CLIENT_PATH=DEFAULT_RIAK_CLIENT_PATH
-  with_riak_client="$RIAK_CLIENT_PATH"
 elif test "$RIAK_CLIENT_PATH" = "no"; then
   RIAK_CLIENT_PATH=""
 fi
