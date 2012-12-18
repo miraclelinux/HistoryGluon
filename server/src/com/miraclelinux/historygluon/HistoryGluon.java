@@ -83,18 +83,30 @@ public class HistoryGluon {
         driver.close();
     }
 
+    public static boolean hasDriver(String storageName) {
+        String prefix = "com.miraclelinux.historygluon.";
+        String driverName = prefix + storageName + "Driver";
+        try {
+            Class<?> c = Class.forName(driverName);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     /* -----------------------------------------------------------------------
      * Private Methods
      * -------------------------------------------------------------------- */
     private static void printUsage() {
+        String drivers[] = {"HBase", "Cassandra", "Riak", "Mem"};
         System.out.println("Usage:");
         System.out.println(" HistoryServer StorageName [--delete-db]");
         System.out.println("");
         System.out.println(" StorageName: One of the following.");
-        System.out.println("   HBase");
-        System.out.println("   Cassandra");
-        System.out.println("   Riak");
-        System.out.println("   Mem");
+        for (String driver : drivers) {
+            if (hasDriver(driver))
+                System.out.println("   " + driver);
+        }
         System.out.println("");
         System.out.println(" --delete-db: Delete DataBase and quit");
         System.out.println("");
