@@ -41,15 +41,13 @@ AC_ARG_WITH([junit4],
 
 if test "$JUNIT4_PATH" = "yes"; then
   JUNIT4_PATH=DEFAULT_JUNIT4_PATH
-  with_junit4="$JUNIT4_PATH"
 elif test "$JUNIT4_PATH" = "no"; then
   JUNIT4_PATH=""
-  with_junit4=no
-else
-  with_junit4="$JUNIT4_PATH"
 fi
 
-if test "!" -e "$JUNIT4_PATH"; then
+if test -e "$JUNIT4_PATH"; then
+  with_junit4="$JUNIT4_PATH"
+else
   JUNIT4_PATH=""
   with_junit4=no
 fi
