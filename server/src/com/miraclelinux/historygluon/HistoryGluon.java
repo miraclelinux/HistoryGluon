@@ -98,7 +98,7 @@ public class HistoryGluon {
      * Private Methods
      * -------------------------------------------------------------------- */
     private static void printUsage() {
-        String drivers[] = {"HBase", "Cassandra", "Riak", "Mem"};
+        String[] drivers = {"HBase", "Cassandra", "Riak", "Mem"};
         System.out.println("Usage:");
         System.out.println(" HistoryServer StorageName [--delete-db]");
         System.out.println("");
