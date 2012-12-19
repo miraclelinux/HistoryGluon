@@ -83,7 +83,7 @@ public class HistoryGluon {
         driver.close();
     }
 
-    public static boolean hasDriver(String storageName) {
+    public static boolean hasStorageDriver(String storageName) {
         String prefix = "com.miraclelinux.historygluon.";
         String driverName = prefix + storageName + "Driver";
         try {
@@ -104,7 +104,7 @@ public class HistoryGluon {
         System.out.println("");
         System.out.println(" StorageName: One of the following.");
         for (String driver : drivers) {
-            if (hasDriver(driver))
+            if (hasStorageDriver(driver))
                 System.out.println("   " + driver);
         }
         System.out.println("");
