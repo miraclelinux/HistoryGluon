@@ -90,14 +90,15 @@ public class CassandraDriver extends BasicStorageDriver {
     /* -----------------------------------------------------------------------
      * Public Methods
      * -------------------------------------------------------------------- */
-    public CassandraDriver() {
+    public CassandraDriver(String[] args) {
+        super(args);
         m_log = LogFactory.getLog(CassandraDriver.class); 
         setStopKeyMinus1(true);
     }
 
     @Override
     public StorageDriver createInstance() {
-        StorageDriver driver = new CassandraDriver();
+        StorageDriver driver = new CassandraDriver(getArgs());
         driver.init();
         return driver;
     }

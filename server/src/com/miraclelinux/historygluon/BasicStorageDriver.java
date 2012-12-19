@@ -29,6 +29,7 @@ public abstract class BasicStorageDriver implements StorageDriver {
     /* -----------------------------------------------------------------------
      * Private members
      * -------------------------------------------------------------------- */
+    private String[] m_args = null;
     private Log m_log = null;
     private boolean m_stopKeyMinus1 = false;
     private HistoryStreamer m_historyStreamer = null;
@@ -36,8 +37,14 @@ public abstract class BasicStorageDriver implements StorageDriver {
     /* -----------------------------------------------------------------------
      * Public Methods
      * -------------------------------------------------------------------- */
-    public BasicStorageDriver() {
+    public BasicStorageDriver(String[] args) {
+        m_args = new String[args.length];
+        System.arraycopy(args, 0, m_args, 0, args.length);
         m_log = LogFactory.getLog(BasicStorageDriver.class); 
+    }
+
+    public String[] getArgs() {
+        return m_args;
     }
 
     @Override

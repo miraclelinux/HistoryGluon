@@ -41,7 +41,8 @@ public class MemDriver extends BasicStorageDriver {
     /* -----------------------------------------------------------------------
      * Public Methods
      * -------------------------------------------------------------------- */
-    public MemDriver() {
+    public MemDriver(String[] args) {
+        super(args);
         m_log = LogFactory.getLog(MemDriver.class); 
     }
 
@@ -52,7 +53,7 @@ public class MemDriver extends BasicStorageDriver {
 
     @Override
     public StorageDriver createInstance() {
-        StorageDriver driver = new MemDriver();
+        StorageDriver driver = new MemDriver(getArgs());
         driver.init();
         return driver;
     }

@@ -17,6 +17,7 @@
 
 package com.miraclelinux.historygluon;
 
+import java.lang.reflect.Constructor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -30,34 +31,35 @@ public class HistoryGluon {
      * Private Members
      * -------------------------------------------------------------------- */
     static private Log m_log = null;
+    static private String m_storageName = null;
+    static private String[] m_storageDriverArgs = null;
+    static private boolean m_isDeleteDBMode = false;
 
     /* -----------------------------------------------------------------------
      * Public Methods
      * -------------------------------------------------------------------- */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         m_log = LogFactory.getLog(HistoryGluon.class); 
         m_log.info("HistoryGluon, MIRACLE LINUX Corp. 2012");
-        // check Storage Type
-        if (args.length < 1) {
-            printUsage();
+
+        if (!parseArgs(args))
             return;
-        }
 
         StorageDriver driver = null;
-        String storageName = args[0];
         String prefix = "com.miraclelinux.historygluon.";
-        String driverName = prefix + storageName + "Driver";
+        String driverName = prefix + m_storageName + "Driver";
         try {
             Class<?> c = Class.forName(driverName);
-            driver = (StorageDriver)c.newInstance();
+            Class[] argTypes = { String[].class };
+            Constructor constructor = c.getConstructor(argTypes);
+            Object[] driverArgs = { m_storageDriverArgs };
+            driver = (StorageDriver)constructor.newInstance(driverArgs);
         } catch (ClassNotFoundException e) {
-            m_log.error("Unknown Storage Type: " + storageName);
+            m_log.error("Unknown Storage Type: " + m_storageName);
             printUsage();
             return;
-        } catch (InstantiationException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw e;
         }
 
         if (!driver.init()) {
@@ -66,8 +68,7 @@ public class HistoryGluon {
         }
         m_log.info("StorageDriver: " + driver.getName());
 
-        // check if --delete-db is specfied
-        if (args.length >= 2 && args[1].equals("--delete-db")) {
+        if (m_isDeleteDBMode) {
             m_log.info("try to deleted DB...");
             if (driver.deleteDB())
                 m_log.info("Success: Deleted DB");
@@ -97,6 +98,29 @@ public class HistoryGluon {
     /* -----------------------------------------------------------------------
      * Private Methods
      * -------------------------------------------------------------------- */
+    private static boolean parseArgs(String[] args) {
+        if (args.length < 1) {
+            printUsage();
+            return false;
+        }
+
+        m_storageName = args[0];
+
+        int nGlobalArgs = 1;
+
+        if (args.length >= 2 && args[1].equals("--delete-db")) {
+            m_isDeleteDBMode = true;
+            nGlobalArgs++;
+        }
+
+        m_storageDriverArgs = new String[args.length - nGlobalArgs];
+        for (int i = nGlobalArgs; i < args.length; i++) {
+            m_storageDriverArgs[i - nGlobalArgs] = args[i];
+        }
+
+        return true;
+    }
+
     private static void printUsage() {
         String[] drivers = {"HBase", "Cassandra", "Riak", "Mem"};
         System.out.println("Usage:");

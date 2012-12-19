@@ -48,14 +48,15 @@ public class RiakDriver extends BasicStorageDriver {
     /* -----------------------------------------------------------------------
      * Public Methods
      * -------------------------------------------------------------------- */
-    public RiakDriver() {
+    public RiakDriver(String[] args) {
+        super(args);
         m_log = LogFactory.getLog(RiakDriver.class); 
         setStopKeyMinus1(true);
     }
 
     @Override
     public StorageDriver createInstance() {
-        StorageDriver driver = new RiakDriver();
+        StorageDriver driver = new RiakDriver(getArgs());
         driver.init();
         return driver;
     }

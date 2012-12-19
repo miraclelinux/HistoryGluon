@@ -71,14 +71,15 @@ public class HBaseDriver extends BasicStorageDriver {
     /* -----------------------------------------------------------------------
      * Public Methods
      * -------------------------------------------------------------------- */
-    public HBaseDriver() {
+    public HBaseDriver(String[] args) {
+        super(args);
         m_log = LogFactory.getLog(HBaseDriver.class);
         m_config = HBaseConfiguration.create();
     }
 
     @Override
     public StorageDriver createInstance() {
-        StorageDriver driver = new HBaseDriver();
+        StorageDriver driver = new HBaseDriver(getArgs());
         driver.init();
         return driver;
     }
