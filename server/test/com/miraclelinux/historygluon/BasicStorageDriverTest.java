@@ -5,6 +5,12 @@ import static org.junit.Assert.*;
 
 public class BasicStorageDriverTest extends BasicStorageDriver
 {
+    static private String[] m_args = {};
+
+    public BasicStorageDriverTest() {
+        super(m_args);
+    }
+
     @Test
     public void testMakeKeyNormal() {
         long id = 0x123456789abcdef0L;
