@@ -11,12 +11,7 @@ STORAGE_DRIVER="Mem"
 STORAGE_OPTIONS=
 PID_FILE="/var/run/history-gluon.pid"
 LOG_FILE="/var/run/history-gluon.log"
-
 CONF_FILE="${package_confdir}/${package_name}.conf"
-
-if test -f ${CONF_FILE}; then
-    . ${CONF_FILE}
-fi
 
 COMMONS_LOGGING_LIBS="@COMMONS_LOGGING_PATH@"
 HBASE_LIBS="@HBASE_PATH@/*.jar:@HBASE_PATH@/lib/*"
@@ -27,6 +22,10 @@ EXT_CLASSPATH="${COMMONS_LOGGING_LIBS}:${HBASE_LIBS}:${CASSANDRA_LIBS}:${RIAK_CL
 HISTORY_GLUON_JAR="${package_datadir}/history-gluon.jar"
 HISTORY_GLUON_MAIN_CLASS="com.miraclelinux.historygluon.HistoryGluon"
 
+if test -f ${CONF_FILE}; then
+    . ${CONF_FILE}
+fi
+
 history_gluon_start() {
     if test -f ${PID_FILE}; then
         echo "${PID_FILE} exists!"
@@ -35,6 +34,7 @@ history_gluon_start() {
     fi
 
     touch ${PID_FILE} || exit 1
+    rm -f ${PID_FILE}
 
     @JAVA@ \
         -cp "${EXT_CLASSPATH}:${HISTORY_GLUON_JAR}" \
