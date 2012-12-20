@@ -54,7 +54,8 @@ history_gluon_start() {
             ;;
         *)
             echo "Failed to start history-gluon-server!"
-            echo "Please see the log file for more details."
+            tail ${LOG_FILE}
+            echo "Please see the log file for more detail: ${LOG_FILE}"
             exit 1
     esac
 }
