@@ -59,6 +59,13 @@ history_gluon_stop() {
     fi
 }
 
+history_gluon_deletedb() {
+    @JAVA@ \
+        -cp "${EXT_CLASSPATH}:${HISTORY_GLUON_JAR}" \
+        ${HISTORY_GLUON_MAIN_CLASS} \
+            ${STORAGE_DRIVER} --delete-db ${STORAGE_OPTIONS}
+}
+
 case $1 in
     start)
         history_gluon_start
@@ -70,7 +77,10 @@ case $1 in
         history_gluon_stop
         history_gluon_start
         ;;
+    deletedb)
+        history_gluon_deletedb
+        ;;
     *)
-        echo "Usage: $0 {start|stop|resart}"
+        echo "Usage: $0 {start|stop|resart|deletedb}"
         exit 1
 esac
