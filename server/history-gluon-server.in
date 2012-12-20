@@ -43,8 +43,20 @@ history_gluon_start() {
         >> ${LOG_FILE} 2>&1 &
 
     HISTORY_GLUON_PID=$!
-    echo -n ${HISTORY_GLUON_PID} > ${PID_FILE}
-    echo "history-gluon-server has been started with PID ${HISTORY_GLUON_PID}"
+
+    sleep 3
+
+    ps ${HISTORY_GLUON_PID} > /dev/null 2>&1
+    case $? in
+        0)
+            echo -n ${HISTORY_GLUON_PID} > ${PID_FILE}
+            echo "history-gluon-server started with PID ${HISTORY_GLUON_PID}"
+            ;;
+        *)
+            echo "Failed to start history-gluon-server!"
+            echo "Please see the log file for more details."
+            exit 1
+    esac
 }
 
 history_gluon_stop() {
