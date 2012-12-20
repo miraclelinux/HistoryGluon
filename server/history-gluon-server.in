@@ -7,17 +7,18 @@ package_name=@PACKAGE_NAME@
 package_datadir="${datarootdir}/${package_name}"
 package_confdir="${sysconfdir}/${package_name}"
 
+# default config
 STORAGE_DRIVER="Mem"
 STORAGE_OPTIONS=
 PID_FILE="/var/run/history-gluon.pid"
 LOG_FILE="/var/run/history-gluon.log"
 CONF_FILE="${package_confdir}/${package_name}.conf"
 
+# class path
 COMMONS_LOGGING_LIBS="@COMMONS_LOGGING_PATH@"
 HBASE_LIBS="@HBASE_PATH@/*.jar:@HBASE_PATH@/lib/*"
 CASSANDRA_LIBS="@CASSANDRA_PATH@/lib/*"
 RIAK_CLIENT_LIBS="@RIAK_CLIENT_PATH@/*"
-
 EXT_CLASSPATH="${COMMONS_LOGGING_LIBS}:${HBASE_LIBS}:${CASSANDRA_LIBS}:${RIAK_CLIENT_LIBS}"
 HISTORY_GLUON_JAR="${package_datadir}/history-gluon.jar"
 HISTORY_GLUON_MAIN_CLASS="com.miraclelinux.historygluon.HistoryGluon"
