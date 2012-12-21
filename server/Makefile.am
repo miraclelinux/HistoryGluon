@@ -40,6 +40,7 @@ java_FILES = \
 	src/com/miraclelinux/historygluon/HistoryStreamer.java \
 	src/com/miraclelinux/historygluon/InternalCheckException.java \
 	src/com/miraclelinux/historygluon/MemDriver.java \
+	src/com/miraclelinux/historygluon/NullDriver.java \
 	src/com/miraclelinux/historygluon/QueryType.java \
 	src/com/miraclelinux/historygluon/RiakDriver.java \
 	src/com/miraclelinux/historygluon/Statistics.java \
