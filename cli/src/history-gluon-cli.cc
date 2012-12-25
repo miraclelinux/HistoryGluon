@@ -250,7 +250,7 @@ static bool command_handler_query_all(history_gluon_context_t ctx)
 	return true;
 }
 
-static bool parse_item_id(const string &id_str, uint64_t &id)
+static bool parse_data_id(const string &id_str, uint64_t &id)
 {
 	const char *scan_fmt;
 	if (id_str.size() > 2 && (id_str.compare(0, 2, "0x", 2) == 0))
@@ -278,9 +278,9 @@ static bool command_handler_query(const vector<string> &args)
 
 	if (args.size() > 1) {
 		uint64_t id;
-		bool succeeded = parse_item_id(args[1], id);
+		bool succeeded = parse_data_id(args[1], id);
 		if (!succeeded) {
-			printf("Error: failed to parse an item id: %s\n",
+			printf("Error: failed to parse an data ID: %s\n",
 			       args[1].c_str());
 			return false;
 		}
