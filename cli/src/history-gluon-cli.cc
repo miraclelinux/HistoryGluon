@@ -250,6 +250,20 @@ static bool command_handler_query_all(history_gluon_context_t ctx)
 	return true;
 }
 
+static bool parse_item_id(const string &id_str, uint64_t &id)
+{
+	const char *scan_fmt;
+	if (id_str.size() > 2 && (id_str.compare(0, 2, "0x", 2) == 0))
+		scan_fmt = "%"PRIx64;
+	else
+		scan_fmt = "%"PRIu64;
+
+	if (sscanf(id_str.c_str(), scan_fmt, &id) < 1)
+		return false;
+
+	return true;
+}
+
 static bool command_handler_query(const vector<string> &args)
 {
 	if (args.size() < 1) {
@@ -262,22 +276,17 @@ static bool command_handler_query(const vector<string> &args)
 	g_hgl_ctx_factory.set_database_name(db_name);
 	history_gluon_context_t ctx = g_hgl_ctx_factory.get();
 
-	if (args.size() == 1)
+	if (args.size() > 0) {
+		uint64_t id;
+		bool succeeded = parse_item_id(args[1], id);
+		if (!succeeded) {
+			printf("Error: sscanf(): %s\n", args[1].c_str());
+			return false;
+		}
+		return command_handler_range_query(ctx, id);
+	} else {
 		return command_handler_query_all(ctx);
-
-	// parse ID
-	uint64_t id;
-	const char *scan_fmt;
-	const string &id_str = args[1];
-	if (id_str.size() > 2 && (id_str.compare(0, 2, "0x", 2) == 0))
-		scan_fmt = "%"PRIx64;
-	else
-		scan_fmt = "%"PRIu64;
-	if (sscanf(id_str.c_str(), scan_fmt, &id) < 1) {
-		printf("Error: sscanf(): %s\n", id_str.c_str());
-		return false;
 	}
-	return command_handler_range_query(ctx, id);
 }
 
 static void print_usage(void)
