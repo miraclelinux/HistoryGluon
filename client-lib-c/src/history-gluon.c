@@ -177,6 +177,10 @@ do { \
  REPLY_RESULT_LENGTH + \
  REPLY_COUNT_DELETED_LENGTH)
 
+/* Query All */
+#define PKT_DELETE_ALL_LENGTH   (PKT_SIZE_LENGTH + PKT_CMD_TYPE_LENGTH)
+#define REPLY_DELETE_ALL_LENGTH (PKT_SIZE_LENGTH + PKT_CMD_TYPE_LENGTH)
+
 /* Packet type */
 enum {
 	PKT_CMD_ADD_DATA           = 100,
@@ -186,6 +190,7 @@ enum {
 	PKT_CMD_GET_MINIMUM_TIME   = 400,
 	PKT_CMD_GET_STATISTICS     = 500,
 	PKT_CMD_DELETE             = 600,
+	PKT_CMD_DELETE_ALL         = 610,
 };
 
 /* Result code */
@@ -676,6 +681,21 @@ static int fill_delete_packet(private_context_t *ctx, uint8_t *buf, uint64_t id,
 	return idx;
 }
 
+static int fill_delete_all_packet(private_context_t *ctx, uint8_t *buf)
+{
+	int idx = 0;
+
+	/* pkt size */
+	*((uint32_t *)&buf[idx]) = conv_le32(ctx, PKT_DELETE_ALL_LENGTH - PKT_SIZE_LENGTH);
+	idx += PKT_SIZE_LENGTH;
+
+	/* command */
+	*((uint16_t *)&buf[idx]) = conv_le16(ctx, PKT_CMD_DELETE_ALL);
+	idx += PKT_CMD_TYPE_LENGTH;
+
+	return idx;
+}
+
 static int fill_get_statistics(private_context_t *ctx, uint8_t *buf, uint64_t id,
                                struct timespec *ts0, struct timespec *ts1)
 {
@@ -797,6 +817,18 @@ parse_reply_delete(private_context_t *ctx, uint8_t *buf, uint64_t *num_deleted)
 	*num_deleted = restore_le64(ctx, &buf[idx]);
 	idx += REPLY_COUNT_DELETED_LENGTH;
 
+	return HGL_SUCCESS;
+}
+
+static history_gluon_result_t
+parse_reply_delete_all(private_context_t *ctx, uint8_t *buf)
+{
+	history_gluon_result_t ret;
+	uint32_t expected_length = REPLY_DELETE_ALL_LENGTH - PKT_SIZE_LENGTH;
+	int idx;
+	ret = parse_common_reply_header(ctx, buf, NULL, expected_length,
+	                                PKT_CMD_DELETE_ALL, &idx);
+	RETURN_IF_ERROR(ret);
 	return HGL_SUCCESS;
 }
 
@@ -1480,3 +1512,25 @@ history_gluon_delete(history_gluon_context_t _ctx, uint64_t id, struct timespec 
 	return HGL_SUCCESS;
 }
 
+history_gluon_result_t
+history_gluon_delete_all(history_gluon_context_t _ctx)
+{
+	private_context_t *ctx;
+	history_gluon_result_t ret = get_connected_private_context(_ctx, &ctx);
+	RETURN_IF_ERROR(ret);
+
+	// request
+	uint8_t request[PKT_DELETE_ALL_LENGTH];
+	int cmd_length = fill_delete_all_packet(ctx, request);
+	ret = write_data(ctx, request, cmd_length);
+	RETURN_IF_ERROR(ret);
+
+	// reply
+	uint8_t reply[REPLY_DELETE_ALL_LENGTH];
+	ret = read_data(ctx, reply, REPLY_DELETE_ALL_LENGTH);
+	RETURN_IF_ERROR(ret);
+
+	ret = parse_reply_delete_all(ctx, reply);
+	RETURN_IF_ERROR(ret);
+	return HGL_SUCCESS;
+}

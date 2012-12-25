@@ -1359,3 +1359,21 @@ void test_delete_not_found_blob(void)
 	assert_delete_not_found(NUM_BLOB_SAMPLES, g_blob_samples,
 	                        TEST_STD_ID_BLOB, assert_add_blob_samples);
 }
+
+void test_delete_all(void)
+{
+	init_query_all_evt_vars();
+	create_global_context();
+	assert_add_uint_samples();
+	assert_add_float_samples();
+	assert_add_string_samples();
+	assert_add_blob_samples();
+
+	history_gluon_result_t ret;
+	ret = history_gluon_delete_all(g_ctx);
+	cut_assert_equal_int_least32(HGL_SUCCESS, ret);
+
+	ret = history_gluon_query_all(g_ctx, test_query_all_evt_cb, NULL);
+	cut_assert_equal_int_least32(HGL_SUCCESS, ret);
+	cut_assert_equal_int(0, g_tree_nnodes(g_gtree));
+}

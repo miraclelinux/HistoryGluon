@@ -386,6 +386,15 @@ history_gluon_result_t
 history_gluon_delete(history_gluon_context_t context, uint64_t id, struct timespec *ts,
                      history_gluon_delete_way_t delete_way, uint64_t *num_deleted_entries);
 
+/**
+ * Delete all data
+ *
+ * @param context A History Gluon's context.
+ * @return \HGL_SUCCESS on success. If an error occured, the code is returned.
+ */
+history_gluon_result_t
+history_gluon_delete_all(history_gluon_context_t context);
+
 #ifdef __cplusplus
 }
 #endif
