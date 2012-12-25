@@ -280,7 +280,8 @@ static bool command_handler_query(const vector<string> &args)
 		uint64_t id;
 		bool succeeded = parse_item_id(args[1], id);
 		if (!succeeded) {
-			printf("Error: sscanf(): %s\n", args[1].c_str());
+			printf("Error: failed to parse an item id: %s\n",
+			       args[1].c_str());
 			return false;
 		}
 		return command_handler_range_query(ctx, id);
