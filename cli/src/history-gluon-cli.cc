@@ -276,7 +276,7 @@ static bool command_handler_query(const vector<string> &args)
 	g_hgl_ctx_factory.set_database_name(db_name);
 	history_gluon_context_t ctx = g_hgl_ctx_factory.get();
 
-	if (args.size() > 0) {
+	if (args.size() > 1) {
 		uint64_t id;
 		bool succeeded = parse_item_id(args[1], id);
 		if (!succeeded) {
