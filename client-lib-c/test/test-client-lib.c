@@ -1105,7 +1105,7 @@ void test_get_statistics_blob(void)
 /* ---------------------------------------------------------------------------
  * Delete Data
  * ------------------------------------------------------------------------ */
-void test_delete_all(void)
+void test_delete_all_for_id(void)
 {
 	create_global_context();
 
