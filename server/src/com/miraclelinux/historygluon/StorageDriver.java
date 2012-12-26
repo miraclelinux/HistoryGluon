@@ -67,5 +67,12 @@ interface StorageDriver {
     */
     public long delete(long id, int sec, int ns, short way);
 
+   /**
+    * Delete all data.
+    *
+    * @return The error code.
+    */
+    public int deleteAll();
+
     public boolean deleteDB();
 }

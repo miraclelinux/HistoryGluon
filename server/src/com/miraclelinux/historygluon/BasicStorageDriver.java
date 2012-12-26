@@ -204,6 +204,10 @@ public abstract class BasicStorageDriver implements StorageDriver {
         return numDeleted;
     }
 
+    public int deleteAll() {
+	return ErrorCode.NOT_IMPLEMENTED;
+    }
+
     /* -----------------------------------------------------------------------
      * Protected Methods
      * -------------------------------------------------------------------- */
