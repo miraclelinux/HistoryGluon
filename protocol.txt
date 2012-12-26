@@ -228,6 +228,21 @@ REPLY PKT: Delete Data
 [ 4] Result
 [ 8] The count of the deleted data: Integer (64bit)
 
+=========================================
+COMMAND PKT: Delete All Data
+=========================================
+[ 4] Packet length (not including this)
+[ 2] Command type
+  610: Delete All Data
+
+-----------------------------------------
+REPLY PKT: Delete All Data
+-----------------------------------------
+[ 4] Packet length (not including this)
+[ 2] Reply type
+  610: reply: Delete All Data
+[ 4] Result
+
 ==================================================
 Result Code
 ==================================================
