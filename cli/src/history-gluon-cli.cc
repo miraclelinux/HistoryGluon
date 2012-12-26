@@ -356,6 +356,8 @@ static void print_usage(void)
 	printf("*** command list ***\n");
 	printf("  query db_name\n");
 	printf("  query db_name id\n");
+	printf("  delete db_name\n");
+	printf("  delete db_name id\n");
 	printf("\n");
 }
 
