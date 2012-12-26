@@ -280,13 +280,70 @@ static bool command_handler_query(const vector<string> &args)
 		uint64_t id;
 		bool succeeded = parse_data_id(args[1], id);
 		if (!succeeded) {
-			printf("Error: failed to parse an data ID: %s\n",
+			printf("Error: failed to parse data ID: %s\n",
 			       args[1].c_str());
 			return false;
 		}
 		return command_handler_range_query(ctx, id);
 	} else {
 		return command_handler_query_all(ctx);
+	}
+}
+
+static bool command_handler_delete(history_gluon_context_t ctx, uint64_t id)
+{
+	history_gluon_result_t ret;
+	uint64_t num_deleted_items = 0;
+	ret = history_gluon_delete(ctx, id,
+				   &HISTORY_GLUON_TIMESPEC_START,
+				   HISTORY_GLUON_DELETE_TYPE_GREATER,
+				   &num_deleted_items);
+	if (ret != HGL_SUCCESS) {
+		printf("Error: history_gluon_delete: %d\n", ret);
+		return false;
+	}
+
+	printf("[DELETE] num_deleted_items: %"PRIu64"\n", num_deleted_items);
+
+	return true;
+}
+
+static bool command_handler_delete_all(history_gluon_context_t ctx)
+{
+	history_gluon_result_t ret;
+
+	ret = history_gluon_delete_all(ctx);
+	if (ret != HGL_SUCCESS) {
+		printf("Error: history_gluon_delete: %d\n", ret);
+		return false;
+	}
+
+	return true;
+}
+
+static bool command_handler_delete(const vector<string> &args)
+{
+	if (args.size() < 1) {
+		printf("Error: delete command needs args.\n");
+		return false;
+	}
+
+	// set database name
+	string db_name = args[0];
+	g_hgl_ctx_factory.set_database_name(db_name);
+	history_gluon_context_t ctx = g_hgl_ctx_factory.get();
+
+	if (args.size() > 1) {
+		uint64_t id;
+		bool succeeded = parse_data_id(args[1], id);
+		if (!succeeded) {
+			printf("Error: failed to parse data ID: %s\n",
+			       args[1].c_str());
+			return false;
+		}
+		return command_handler_delete(ctx, id);
+	} else {
+		return command_handler_delete_all(ctx);
 	}
 }
 
@@ -304,7 +361,8 @@ static void print_usage(void)
 
 static void init(void)
 {
-	g_command_map["query"] = command_handler_query;
+	g_command_map["query"]  = command_handler_query;
+	g_command_map["delete"] = command_handler_delete;
 }
 
 int main(int argc, char **argv)
