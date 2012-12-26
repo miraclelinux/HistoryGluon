@@ -110,6 +110,12 @@ public class MemDriver extends BasicStorageDriver {
     }
 
     @Override
+    public int deleteAll() {
+        m_dataSetPreferId.clear();
+        return ErrorCode.SUCCESS;
+    }
+
+    @Override
     public boolean deleteDB() {
         // Nothing to do, because data is lost when the server terminates.
         return true;

@@ -94,6 +94,15 @@ public class ConcurrentHistoryDataSet {
         return dataSet;
     }
 
+    public void clear() {
+        try {
+            m_rwlock.writeLock().lock();
+            m_dataSet.clear();
+        } finally {
+            m_rwlock.writeLock().unlock();
+        }
+    }
+
     /* -----------------------------------------------------------------------
      * Private Methods
      * -------------------------------------------------------------------- */
