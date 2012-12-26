@@ -61,6 +61,7 @@ public class BridgeWorker extends Thread {
     private static final short PKT_CMD_GET_MIN_TIME   = 400;
     private static final short PKT_CMD_GET_STATISTICS = 500;
     private static final short PKT_CMD_DELETE         = 600;
+    private static final short PKT_CMD_DELETE_ALL     = 610;
 
     private static final short PKT_SORT_ORDER_ASCENDING  = 0;
     private static final short PKT_SORT_ORDER_DESCENDING = 1;
@@ -230,6 +231,8 @@ public class BridgeWorker extends Thread {
             ret = getStatistics(pktBuf, idx);
         else if (cmd == PKT_CMD_DELETE)
             ret = deleteData(pktBuf, idx);
+        else if (cmd == PKT_CMD_DELETE_ALL)
+            ret = deleteAllData(pktBuf, idx);
         else
             m_log.error("Got unknown command: " + cmd);
 
@@ -549,6 +552,12 @@ public class BridgeWorker extends Thread {
         return true;
     }
 
+    private boolean deleteAllData(byte[] pktBuf, int idx) throws IOException {
+        int ret = m_driver.deleteAll();
+        replyDeleteAll(ret);
+        return true;
+    }
+
     private int procFloatData(byte[] pktBuf, int idx, HistoryData history) {
         m_byteBuffer.clear();
         m_byteBuffer.put(pktBuf, idx, PKT_DATA_FLOAT_LENGTH);
@@ -755,6 +764,16 @@ public class BridgeWorker extends Thread {
         m_byteBuffer.putShort(PKT_CMD_DELETE);
         m_byteBuffer.putInt(ErrorCode.SUCCESS);
         m_byteBuffer.putLong(numDeleted);
+        m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
+        m_ostream.flush();
+    }
+
+    private void replyDeleteAll(int errorCode) throws IOException {
+        int length = PKT_CMD_LENGTH + REPLY_RESULT_LENGTH;
+        m_byteBuffer.clear();
+        m_byteBuffer.putInt(length);
+        m_byteBuffer.putShort(PKT_CMD_DELETE_ALL);
+        m_byteBuffer.putInt(errorCode);
         m_ostream.write(m_byteBuffer.array(), 0, m_byteBuffer.position());
         m_ostream.flush();
     }
