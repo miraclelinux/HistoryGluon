@@ -1,16 +1,23 @@
-History Gluon
+HistoryGluon
 =====
 
-History Gluon is a database (mainly NoSQL) interface server. It was
-originally develop to be used to store history data of ZABBIX (http://www.zabbix.com/).
-However, it can be used in other applications, because the APIs are general
-for the history data.
+HistoryGluon provides functions for storing/getting history data
+into/from various DBs (mainly NoSQL) with a simple way from some programming
+languages.
 
-The currently supported databases are the following.
+Currently supported databases:
  - HBase
  - Cassandra
  - Riak
  - Mem (mainly for test)
+
+Currently supported client libraries:
+ - C/C++
+ - PHP
+
+HistoryGluon was originally developed for storing history data of
+ZABBIX (http://www.zabbix.com/) into NoSQL DBs. However, now it can be used
+in other applications, because the APIs are general for the history data.
 
 =========================================
 How to build sources from the repository
