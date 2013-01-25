@@ -51,7 +51,7 @@ history_gluon_start() {
     case $? in
         0)
             echo -n ${HISTORY_GLUON_PID} > ${PID_FILE}
-            echo "history-gluon-server started with PID ${HISTORY_GLUON_PID}"
+            echo "history-gluon-server started (PID ${HISTORY_GLUON_PID})"
             ;;
         *)
             echo "Failed to start history-gluon-server!"
