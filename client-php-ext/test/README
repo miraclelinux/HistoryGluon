@@ -30,6 +30,12 @@ $ ln -s ~/build/history-gluon/client-php-ext/src/modules/history_gluon.so
 ======================
 How to test
 ======================
+You have to launch HistoryGluon server before running tests:
+
+# history-gluon-server start
+
+After that, you can run unit tests by following command:
+
 $ phpunit --colors ApiTest
 
 [Hint 1] add runtime library path if you do test before the C client library is installed.
