@@ -1,3 +1,7 @@
+20130222-001: Add features to dump/restore Mem data
+Current implementaion of 'Mem' driver doesn't have dump & restore festures.
+It is wasteful to setup benchmark data every time.
+
 20121101-001: Fix client-php-ext/Makefile.am
 Current implementation uses 'export' in Makefile.am
 This may not work with shell other than bash.
