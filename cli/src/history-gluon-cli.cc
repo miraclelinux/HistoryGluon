@@ -290,6 +290,93 @@ static bool command_handler_query(const vector<string> &args)
 	}
 }
 
+static bool command_handler_add_uint(const vector<string> &args)
+{
+	if (args.size() < 5) {
+		printf("Error: add_uint command needs 5 args.\n");
+		return false;
+	}
+
+	string db_name = args[0];
+	g_hgl_ctx_factory.set_database_name(db_name);
+	history_gluon_context_t ctx = g_hgl_ctx_factory.get();
+
+	struct timespec ts;
+	uint64_t id, data;
+	id         = atoll(args[1].c_str());
+	ts.tv_sec  = atoll(args[2].c_str());;
+	ts.tv_nsec = atoll(args[3].c_str());
+	data       = atoll(args[4].c_str());
+
+	history_gluon_result_t result;
+	result = history_gluon_add_uint(ctx, id, &ts, data);
+	if (result != HGL_SUCCESS) {
+		printf("Error: history_gluon_add_uint: %d\n", result);
+		return false;
+	}
+
+	return true;
+}
+
+static bool command_handler_add_float(const vector<string> &args)
+{
+	if (args.size() < 5) {
+		printf("Error: add_float command needs 5 args.\n");
+		return false;
+	}
+
+	string db_name = args[0];
+	g_hgl_ctx_factory.set_database_name(db_name);
+	history_gluon_context_t ctx = g_hgl_ctx_factory.get();
+
+	struct timespec ts;
+	uint64_t id;
+	double data;
+	id         = atoll(args[1].c_str());
+	ts.tv_sec  = atoll(args[2].c_str());;
+	ts.tv_nsec = atoll(args[3].c_str());
+	data       = atof(args[4].c_str());
+
+	history_gluon_result_t result;
+	result = history_gluon_add_float(ctx, id, &ts, data);
+	if (result != HGL_SUCCESS) {
+		printf("Error: history_gluon_add_float: %d\n", result);
+		return false;
+	}
+
+	return true;
+}
+
+static bool command_handler_add_string(const vector<string> &args)
+{
+	if (args.size() < 5) {
+		printf("Error: add_string command needs 5 args.\n");
+		return false;
+	}
+
+	string db_name = args[0];
+	g_hgl_ctx_factory.set_database_name(db_name);
+	history_gluon_context_t ctx = g_hgl_ctx_factory.get();
+
+	struct timespec ts;
+	uint64_t id;
+	const char *data;
+	id         = atoll(args[1].c_str());
+	ts.tv_sec  = atoll(args[2].c_str());
+	ts.tv_nsec = atoll(args[3].c_str());
+	data       = args[4].c_str();
+
+	history_gluon_result_t result;
+	result = history_gluon_add_string(ctx, id, &ts,
+					  const_cast<char*>(data));
+	if (result != HGL_SUCCESS) {
+		printf("Error: history_gluon_add_string: %d\n", result);
+		return false;
+	}
+
+	return true;
+}
+
 static bool command_handler_delete(history_gluon_context_t ctx, uint64_t id)
 {
 	history_gluon_result_t ret;
@@ -354,17 +441,23 @@ static void print_usage(void)
 	printf(" $ history-gluon-cli command args\n");
 	printf("\n");
 	printf("*** command list ***\n");
-	printf("  query db_name\n");
-	printf("  query db_name id\n");
-	printf("  delete db_name\n");
-	printf("  delete db_name id\n");
+	printf("  query      db_name\n");
+	printf("  query      db_name id\n");
+	printf("  add_uint   db_name id clock ns value\n");
+	printf("  add_float  db_name id clock ns value\n");
+	printf("  add_string db_name id clock ns value\n");
+	printf("  delete     db_name\n");
+	printf("  delete     db_name id\n");
 	printf("\n");
 }
 
 static void init(void)
 {
-	g_command_map["query"]  = command_handler_query;
-	g_command_map["delete"] = command_handler_delete;
+	g_command_map["query"]      = command_handler_query;
+	g_command_map["add_uint"]   = command_handler_add_uint;
+	g_command_map["add_float"]  = command_handler_add_float;
+	g_command_map["add_string"] = command_handler_add_string;
+	g_command_map["delete"]     = command_handler_delete;
 }
 
 int main(int argc, char **argv)
