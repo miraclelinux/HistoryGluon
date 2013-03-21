@@ -304,7 +304,7 @@ static bool command_handler_add_uint(const vector<string> &args)
 	struct timespec ts;
 	uint64_t id, data;
 	id         = atoll(args[1].c_str());
-	ts.tv_sec  = atoll(args[2].c_str());;
+	ts.tv_sec  = atoll(args[2].c_str());
 	ts.tv_nsec = atoll(args[3].c_str());
 	data       = atoll(args[4].c_str());
 
@@ -333,7 +333,7 @@ static bool command_handler_add_float(const vector<string> &args)
 	uint64_t id;
 	double data;
 	id         = atoll(args[1].c_str());
-	ts.tv_sec  = atoll(args[2].c_str());;
+	ts.tv_sec  = atoll(args[2].c_str());
 	ts.tv_nsec = atoll(args[3].c_str());
 	data       = atof(args[4].c_str());
 
