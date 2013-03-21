@@ -303,10 +303,20 @@ static bool command_handler_add_uint(const vector<string> &args)
 
 	struct timespec ts;
 	uint64_t id, data;
-	id         = atoll(args[1].c_str());
+	bool succeeded = parse_uint64(args[1], id);
+	if (!succeeded) {
+		printf("Error: failed to parse data ID: %s\n",
+		       args[1].c_str());
+		return false;
+	}
+	succeeded = parse_uint64(args[4], data);
+	if (!succeeded) {
+		printf("Error: failed to parse data value: %s\n",
+		       args[4].c_str());
+		return false;
+	}
 	ts.tv_sec  = atoll(args[2].c_str());
 	ts.tv_nsec = atoll(args[3].c_str());
-	data       = atoll(args[4].c_str());
 
 	history_gluon_result_t result;
 	result = history_gluon_add_uint(ctx, id, &ts, data);
@@ -332,7 +342,12 @@ static bool command_handler_add_float(const vector<string> &args)
 	struct timespec ts;
 	uint64_t id;
 	double data;
-	id         = atoll(args[1].c_str());
+	bool succeeded = parse_uint64(args[1], id);
+	if (!succeeded) {
+		printf("Error: failed to parse data ID: %s\n",
+		       args[1].c_str());
+		return false;
+	}
 	ts.tv_sec  = atoll(args[2].c_str());
 	ts.tv_nsec = atoll(args[3].c_str());
 	data       = atof(args[4].c_str());
@@ -361,7 +376,12 @@ static bool command_handler_add_string(const vector<string> &args)
 	struct timespec ts;
 	uint64_t id;
 	const char *data;
-	id         = atoll(args[1].c_str());
+	bool succeeded = parse_uint64(args[1], id);
+	if (!succeeded) {
+		printf("Error: failed to parse data ID: %s\n",
+		       args[1].c_str());
+		return false;
+	}
 	ts.tv_sec  = atoll(args[2].c_str());
 	ts.tv_nsec = atoll(args[3].c_str());
 	data       = args[4].c_str();
