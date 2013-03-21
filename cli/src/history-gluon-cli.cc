@@ -250,15 +250,15 @@ static bool command_handler_query_all(history_gluon_context_t ctx)
 	return true;
 }
 
-static bool parse_data_id(const string &id_str, uint64_t &id)
+static bool parse_uint64(const string &value_str, uint64_t &value)
 {
 	const char *scan_fmt;
-	if (id_str.size() > 2 && (id_str.compare(0, 2, "0x", 2) == 0))
+	if (value_str.size() > 2 && (value_str.compare(0, 2, "0x", 2) == 0))
 		scan_fmt = "%"PRIx64;
 	else
 		scan_fmt = "%"PRIu64;
 
-	if (sscanf(id_str.c_str(), scan_fmt, &id) < 1)
+	if (sscanf(value_str.c_str(), scan_fmt, &value) < 1)
 		return false;
 
 	return true;
@@ -278,7 +278,7 @@ static bool command_handler_query(const vector<string> &args)
 
 	if (args.size() > 1) {
 		uint64_t id;
-		bool succeeded = parse_data_id(args[1], id);
+		bool succeeded = parse_uint64(args[1], id);
 		if (!succeeded) {
 			printf("Error: failed to parse data ID: %s\n",
 			       args[1].c_str());
@@ -422,7 +422,7 @@ static bool command_handler_delete(const vector<string> &args)
 
 	if (args.size() > 1) {
 		uint64_t id;
-		bool succeeded = parse_data_id(args[1], id);
+		bool succeeded = parse_uint64(args[1], id);
 		if (!succeeded) {
 			printf("Error: failed to parse data ID: %s\n",
 			       args[1].c_str());
