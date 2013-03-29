@@ -95,6 +95,27 @@ hgldata2value(history_gluon_data_t *gluon_data)
 	return data;
 }
 
+static void
+raise_hgl_exception(history_gluon_result_t result)
+{
+	if (result == HGL_SUCCESS)
+		return;
+
+	switch (result) {
+	case HGLSVERR_INVALID_SORT_TYPE:
+		rb_raise(rb_path2class("HistoryGluon::SortTypeException"),
+			 "Failed to call history_gluon_range_query: %d",
+			 result);
+		break;
+	default:
+		/* FIXME: raise suitable exception */
+		rb_raise(rb_path2class("HistoryGluon::Exception"),
+			 "Failed to call history_gluon_range_query: %d",
+			 result);
+		break;
+	}
+}
+
 static VALUE
 range_query(VALUE self, VALUE id, VALUE sec0, VALUE ns0, VALUE sec1, VALUE ns1,
 	    VALUE sort_request, VALUE num_max_entries)
@@ -115,10 +136,7 @@ range_query(VALUE self, VALUE id, VALUE sec0, VALUE ns0, VALUE sec1, VALUE ns1,
 					   NUM2ULL(num_max_entries),
 					   &array);
 	if (result != HGL_SUCCESS) {
-		/* FIXME: raise suitable exception */
-		rb_raise(rb_eRuntimeError,
-			 "Failed to call history_gluon_range_query: %d",
-			 result);
+		raise_hgl_exception(result);
 		return Qnil;
 	}
 

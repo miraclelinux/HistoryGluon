@@ -25,6 +25,13 @@ class HistoryGluonTestCase < Test::Unit::TestCase
                ]
     assert_equal(expected, actual);
   end
+
+  def test_raise_sort_type_exception
+    hgl = HistoryGluon.new("zabbix", "localhost", 0)
+    assert_raise("HistoryGluon::SortTypeException") do
+      hgl.range_query(1, 1, 0, 21, 0, 5, 100)
+    end
+  end
 end
 
 class HistoryGluonSortTypeTestCase < Test::Unit::TestCase
