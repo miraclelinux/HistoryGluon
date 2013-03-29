@@ -151,7 +151,9 @@ Init_historygluon(void)
 	rb_define_method(rb_cHistoryGluon, "add_float", add_float, 4);
 	rb_define_method(rb_cHistoryGluon, "add_string", add_string, 4);
 	rb_define_method(rb_cHistoryGluon, "range_query", range_query, 7);
-
+	rb_define_const(rb_cHistoryGluon, "SORT_ASCENDING",  INT2NUM(0));
+	rb_define_const(rb_cHistoryGluon, "SORT_DESCENDING", INT2NUM(1));
+	rb_define_const(rb_cHistoryGluon, "SORT_NOT_SORTED", INT2NUM(2));
 	sym_data_id = ID2SYM(rb_intern("id"));
 	sym_sec     = ID2SYM(rb_intern("sec"));
 	sym_ns      = ID2SYM(rb_intern("ns"));
