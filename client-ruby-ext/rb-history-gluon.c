@@ -30,11 +30,11 @@ static VALUE
 add_uint(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE data)
 {
 	HglRubyPtr *hgl;
-	struct timespec ts = { NUM2LONG(sec), NUM2LONG(ns) };
+	struct timespec ts = { NUM2LL(sec), NUM2LL(ns) };
 	history_gluon_result_t result;
 
 	Data_Get_Struct(self, HglRubyPtr, hgl);
-	result = history_gluon_add_uint(hgl->ctx, NUM2ULONG(id), &ts,
+	result = history_gluon_add_uint(hgl->ctx, NUM2ULL(id), &ts,
 					NUM2ULONG(data));
 
 	return INT2NUM(result);
@@ -44,11 +44,11 @@ static VALUE
 add_float(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE data)
 {
 	HglRubyPtr *hgl;
-	struct timespec ts = { NUM2LONG(sec), NUM2LONG(ns) };
+	struct timespec ts = { NUM2LL(sec), NUM2LL(ns) };
 	history_gluon_result_t result;
 
 	Data_Get_Struct(self, HglRubyPtr, hgl);
-	result = history_gluon_add_float(hgl->ctx, NUM2ULONG(id), &ts,
+	result = history_gluon_add_float(hgl->ctx, NUM2ULL(id), &ts,
 					 NUM2DBL(data));
 
 	return INT2NUM(result);
@@ -58,11 +58,11 @@ static VALUE
 add_string(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE data)
 {
 	HglRubyPtr *hgl;
-	struct timespec ts = { NUM2LONG(sec), NUM2LONG(ns) };
+	struct timespec ts = { NUM2LL(sec), NUM2LL(ns) };
 	history_gluon_result_t result;
 
 	Data_Get_Struct(self, HglRubyPtr, hgl);
-	result = history_gluon_add_string(hgl->ctx, NUM2ULONG(id), &ts,
+	result = history_gluon_add_string(hgl->ctx, NUM2ULL(id), &ts,
 					  STR2CSTR(data));
 
 	return INT2NUM(result);
