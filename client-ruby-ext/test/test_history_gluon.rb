@@ -1,4 +1,5 @@
 $:.unshift(File.expand_path(File.dirname(__FILE__)) + "/..")
+$:.unshift(File.expand_path(File.dirname(__FILE__)) + "/../lib")
 
 require 'rubygems'
 require 'test-unit'
@@ -25,13 +26,6 @@ class HistoryGluonTestCase < Test::Unit::TestCase
                ]
     assert_equal(expected, actual);
   end
-
-  def test_raise_sort_type_exception
-    hgl = HistoryGluon.new("zabbix", "localhost", 0)
-    assert_raise("HistoryGluon::SortTypeException") do
-      hgl.range_query(1, 1, 0, 21, 0, 5, 100)
-    end
-  end
 end
 
 class HistoryGluonSortTypeTestCase < Test::Unit::TestCase
@@ -42,5 +36,25 @@ class HistoryGluonSortTypeTestCase < Test::Unit::TestCase
   def test_sort_type(data)
     expected, value = data
     assert_equal(expected, value)
+  end
+end
+
+class HistoryGluonSortTypeExceptionTestCase < Test::Unit::TestCase
+  data("ASCENDING"  => [HistoryGluon::SORT_ASCENDING,  false],
+       "DESCENDING" => [HistoryGluon::SORT_DESCENDING, false],
+       "NOT_SORTED" => [HistoryGluon::SORT_NOT_SORTED, true])
+
+  def test_exception(data)
+    sort_type, should_raise = data
+    hgl = HistoryGluon.new("zabbix", "localhost", 0)
+    if should_raise
+      assert_raise("HistoryGluon::SortTypeException") do
+        hgl.range_query(1, 1, 0, 21, 0, sort_type, 100)
+      end
+    else
+      assert_nothing_raised do
+        hgl.range_query(1, 1, 0, 21, 0, sort_type, 100)
+      end
+    end
   end
 end
