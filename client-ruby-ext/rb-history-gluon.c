@@ -57,7 +57,7 @@ static VALUE
 add_string(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE data)
 {
     HglRubyPtr *hgl;
-    struct timespec ts = {NUM2LONG(sec), NUM2LONG(ns)};
+    struct timespec ts = { NUM2LONG(sec), NUM2LONG(ns) };
     history_gluon_result_t result;
 
     Data_Get_Struct(self, HglRubyPtr, hgl);
