@@ -69,7 +69,7 @@ add_string(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE data)
 }
 
 static VALUE
-create_gluon_data_value(history_gluon_data_t *gluon_data)
+hgldata2value(history_gluon_data_t *gluon_data)
 {
 	VALUE data = rb_hash_new();
 
@@ -124,7 +124,7 @@ range_query(VALUE self, VALUE id, VALUE sec0, VALUE ns0, VALUE sec1, VALUE ns1,
 
 	value_array = rb_ary_new();
 	for (i = 0; i < array->num_data; i++)
-		rb_ary_push(value_array, create_gluon_data_value(array->array[i]));
+		rb_ary_push(value_array, hgldata2value(array->array[i]));
 
 	return value_array;
 }
