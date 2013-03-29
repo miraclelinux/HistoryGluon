@@ -143,6 +143,7 @@ range_query(VALUE self, VALUE id, VALUE sec0, VALUE ns0, VALUE sec1, VALUE ns1,
 	value_array = rb_ary_new();
 	for (i = 0; i < array->num_data; i++)
 		rb_ary_push(value_array, hgldata2value(array->array[i]));
+	history_gluon_free_data_array(hgl->ctx, array);
 
 	return value_array;
 }
