@@ -78,18 +78,24 @@ hgldata2value(history_gluon_data_t *gluon_data)
 	rb_hash_aset(data, sym_ns,      LL2NUM(gluon_data->ts.tv_nsec));
 	rb_hash_aset(data, sym_type,    INT2NUM(gluon_data->type));
 
-	if (gluon_data->type == HISTORY_GLUON_TYPE_FLOAT) {
+	switch (gluon_data->type) {
+	case HISTORY_GLUON_TYPE_FLOAT:
 		rb_hash_aset(data, sym_value, rb_float_new(gluon_data->v.fp));
-	} else if (gluon_data->type == HISTORY_GLUON_TYPE_UINT) {
+		break;
+	case HISTORY_GLUON_TYPE_UINT:
 		rb_hash_aset(data, sym_value, ULL2NUM(gluon_data->v.uint));
-	} else if (gluon_data->type == HISTORY_GLUON_TYPE_STRING) {
+		break;
+	case HISTORY_GLUON_TYPE_STRING:
 		rb_hash_aset(data, sym_value, rb_str_new2(gluon_data->v.string));
-	} else if (gluon_data->type == HISTORY_GLUON_TYPE_BLOB) {
+		break;
+	case HISTORY_GLUON_TYPE_BLOB:
 		rb_hash_aset(data, sym_value, rb_str_new2((char*)gluon_data->v.blob));
-	} else {
+		break;
+	default:
 		rb_raise(rb_eRuntimeError,
 			 "%s: %d: Unknown data type: %d",
 			 __FILE__, __LINE__, gluon_data->type);
+		break;
 	}
 
 	return data;
