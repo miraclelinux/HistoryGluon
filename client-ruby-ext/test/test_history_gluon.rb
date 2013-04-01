@@ -40,21 +40,22 @@ class HistoryGluonSortTypeTestCase < Test::Unit::TestCase
 end
 
 class HistoryGluonSortTypeExceptionTestCase < Test::Unit::TestCase
-  data("ASCENDING"  => [HistoryGluon::SORT_ASCENDING,  false],
-       "DESCENDING" => [HistoryGluon::SORT_DESCENDING, false],
-       "NOT_SORTED" => [HistoryGluon::SORT_NOT_SORTED, true])
-
-  def test_exception(data)
-    sort_type, should_raise = data
+  data("ASCENDING"  => HistoryGluon::SORT_ASCENDING,
+       "DESCENDING" => HistoryGluon::SORT_DESCENDING)
+  def test_valid(sort_type)
     hgl = HistoryGluon.new("zabbix", "localhost", 0)
-    if should_raise
-      assert_raise("HistoryGluon::SortTypeException") do
-        hgl.range_query(1, 1, 0, 21, 0, sort_type, 100)
-      end
-    else
-      assert_nothing_raised do
-        hgl.range_query(1, 1, 0, 21, 0, sort_type, 100)
-      end
+    assert_nothing_raised do
+      hgl.range_query(1, 1, 0, 21, 0, sort_type, 100)
+    end
+  end
+
+  data("NOT_SORTED" => HistoryGluon::SORT_NOT_SORTED,
+       "TOO_LARGE_SORT_TYPE" => 3,
+       "TOO_SMALL_SORT_TYPE" => -1)
+  def test_invalid(sort_type)
+    hgl = HistoryGluon.new("zabbix", "localhost", 0)
+    assert_raise("HistoryGluon::SortTypeError") do
+      hgl.range_query(1, 1, 0, 21, 0, sort_type, 100)
     end
   end
 end
