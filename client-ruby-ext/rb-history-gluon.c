@@ -109,13 +109,13 @@ raise_hgl_exception(history_gluon_result_t result)
 
 	switch (result) {
 	case HGLSVERR_INVALID_SORT_TYPE:
-		rb_raise(rb_path2class("HistoryGluon::SortTypeException"),
+		rb_raise(rb_path2class("HistoryGluon::SortTypeError"),
 			 "Failed to call history_gluon_range_query: %d",
 			 result);
 		break;
 	default:
 		/* FIXME: raise suitable exception */
-		rb_raise(rb_path2class("HistoryGluon::Exception"),
+		rb_raise(rb_path2class("HistoryGluon::Error"),
 			 "Failed to call history_gluon_range_query: %d",
 			 result);
 		break;

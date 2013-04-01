@@ -5,7 +5,7 @@ class HistoryGluon
   SORT_DESCENDING = 1
   SORT_NOT_SORTED = 2
 
-  class Exception < ::StandardError
+  class Error < ::StandardError
     @code = 0
 
     def self.code
@@ -17,7 +17,7 @@ class HistoryGluon
     end
   end
 
-  class SortTypeException < Exception
+  class SortTypeError < Error
     @code = 202
   end
 end
