@@ -62,7 +62,7 @@ class HistoryGluonSortTypeExceptionTestCase < Test::Unit::TestCase
   data("ASCENDING"  => HistoryGluon::SORT_ASCENDING,
        "DESCENDING" => HistoryGluon::SORT_DESCENDING)
   def test_valid(sort_type)
-    hgl = HistoryGluon.new("zabbix", "localhost", 0)
+    hgl = HistoryGluon.new("test", "localhost", 0)
     assert_nothing_raised do
       hgl.range_query(1, 1, 0, 21, 0, sort_type, 100)
     end
@@ -72,7 +72,7 @@ class HistoryGluonSortTypeExceptionTestCase < Test::Unit::TestCase
        "TOO_LARGE_SORT_TYPE" => 3,
        "TOO_SMALL_SORT_TYPE" => -1)
   def test_invalid(sort_type)
-    hgl = HistoryGluon.new("zabbix", "localhost", 0)
+    hgl = HistoryGluon.new("test", "localhost", 0)
     assert_raise("HistoryGluon::SvInvalidSortTypeError") do
       hgl.range_query(1, 1, 0, 21, 0, sort_type, 100)
     end
