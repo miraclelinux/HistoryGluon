@@ -53,7 +53,7 @@ static HglErrors hgl_errors[] = {
 	{ "InvalidParameterError",      HGLERR_INVALID_PARAMETER,         0 },
 	{ "InvalidContextError",        HGLERR_INVALID_CONTEXT,           0 },
 	{ "TooLongDBNameError",         HGLERR_TOO_LONG_DB_NAME,          0 },
-	{ "InvazlidDBNameError",        HGLERR_INVALID_DB_NAME,           0 },
+	{ "InvalidDBNameError",         HGLERR_INVALID_DB_NAME,           0 },
 	{ "ReadStreamEndError",         HGLERR_READ_STREAM_END,           0 },
 	{ "ReadError",                  HGLERR_READ_ERROR,                0 },
 	{ "WriteError",                 HGLERR_WRITE_ERROR,               0 },
