@@ -153,7 +153,7 @@ add_uint(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE data)
 	raise_hgl_exception(result,
 			    "Failed to call history_gluon_add_uint");
 
-	return INT2NUM(result);
+	return Qnil;
 }
 
 static VALUE
@@ -169,7 +169,7 @@ add_float(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE data)
 	raise_hgl_exception(result,
 			    "Failed to call history_gluon_add_float");
 
-	return INT2NUM(result);
+	return Qnil;
 }
 
 static VALUE
@@ -185,7 +185,7 @@ add_string(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE data)
 	raise_hgl_exception(result,
 			    "Failed to call history_gluon_add_string");
 
-	return INT2NUM(result);
+	return Qnil;
 }
 
 static VALUE
