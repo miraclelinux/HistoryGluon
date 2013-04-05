@@ -55,6 +55,18 @@ allocate(VALUE klass)
 }
 
 static VALUE
+initialize(VALUE self, VALUE database_name, VALUE server_name, VALUE port)
+{
+	HglRubyPtr *ptr;
+	history_gluon_result_t result;
+	Data_Get_Struct(self, HglRubyPtr, ptr);
+	result = history_gluon_create_context(STR2CSTR(database_name),
+					      STR2CSTR(server_name),
+					      NUM2INT(port), &ptr->ctx);
+	return Qnil;
+}
+
+static VALUE
 add_uint(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE data)
 {
 	HglRubyPtr *hgl;
@@ -180,18 +192,6 @@ range_query(VALUE self, VALUE id, VALUE sec0, VALUE ns0, VALUE sec1, VALUE ns1,
 	history_gluon_free_data_array(hgl->ctx, array);
 
 	return value_array;
-}
-
-static VALUE
-initialize(VALUE self, VALUE database_name, VALUE server_name, VALUE port)
-{
-	HglRubyPtr *ptr;
-	history_gluon_result_t result;
-	Data_Get_Struct(self, HglRubyPtr, ptr);
-	result = history_gluon_create_context(STR2CSTR(database_name),
-					      STR2CSTR(server_name),
-					      NUM2INT(port), &ptr->ctx);
-	return Qnil;
 }
 
 void
