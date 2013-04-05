@@ -41,6 +41,7 @@ static void
 deallocate(void *ptr)
 {
 	HglRubyPtr *hgl = ptr;
+
 	if (hgl->ctx)
 		history_gluon_free_context(hgl->ctx);
 	free(ptr);
@@ -50,7 +51,9 @@ static VALUE
 allocate(VALUE klass)
 {
 	HglRubyPtr *hgl = malloc(sizeof(HglRubyPtr));
+
 	hgl->ctx = NULL;
+
 	return Data_Wrap_Struct(klass, NULL, deallocate, hgl);
 }
 
@@ -59,6 +62,7 @@ initialize(VALUE self, VALUE database_name, VALUE server_name, VALUE port)
 {
 	HglRubyPtr *ptr;
 	history_gluon_result_t result;
+
 	Data_Get_Struct(self, HglRubyPtr, ptr);
 	result = history_gluon_create_context(STR2CSTR(database_name),
 					      STR2CSTR(server_name),
@@ -198,6 +202,7 @@ void
 Init_historygluon(void)
 {
 	int i;
+
 	rb_cHistoryGluon = rb_define_class("HistoryGluon", rb_cObject);
 	rb_define_alloc_func(rb_cHistoryGluon, allocate);
 	rb_define_private_method(rb_cHistoryGluon, "initialize", initialize, 3);
