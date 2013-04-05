@@ -132,7 +132,7 @@ hgldata2value(history_gluon_data_t *gluon_data)
 		rb_hash_aset(data, sym_value, rb_str_new2((char*)gluon_data->v.blob));
 		break;
 	default:
-		rb_raise(rb_eRuntimeError,
+		rb_raise(rb_path2class("HistoryGluon::Error"),
 			 "%s: %d: Unknown data type: %d",
 			 __FILE__, __LINE__, gluon_data->type);
 		break;
