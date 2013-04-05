@@ -259,6 +259,7 @@ Init_historygluon(void)
 {
 	int i;
 
+	/* HistoryGluon class */
 	rb_cHistoryGluon = rb_define_class("HistoryGluon", rb_cObject);
 	rb_define_alloc_func(rb_cHistoryGluon, allocate);
 	rb_define_private_method(rb_cHistoryGluon, "initialize", initialize, 3);
@@ -272,6 +273,7 @@ Init_historygluon(void)
 				INT2NUM(hgl_constants[i].value));
 	}
 
+	/* HistoryGluon::Error class */
 	rb_eHistoryGluonError = rb_define_class_under(rb_cHistoryGluon, "Error",
 						      rb_eStandardError);
 	rb_define_class_variable(rb_eStandardError, "@@code",
@@ -285,6 +287,7 @@ Init_historygluon(void)
 			  INT2NUM(hgl_errors[i].code));
 	}
 
+	/* Frequently used symbols */
 	sym_data_id = ID2SYM(rb_intern("id"));
 	sym_sec     = ID2SYM(rb_intern("sec"));
 	sym_ns      = ID2SYM(rb_intern("ns"));
