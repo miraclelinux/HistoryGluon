@@ -2,6 +2,7 @@
 #include <history-gluon.h>
 
 VALUE rb_cHistoryGluon;
+VALUE rb_eHistoryGluonError;
 static VALUE sym_data_id, sym_sec, sym_ns, sym_type, sym_value, sym_length;
 
 typedef struct _HglRubyPtr
@@ -35,6 +36,54 @@ static HglConstants hgl_constants[] = {
 	{ "NUM_ENTRIES_UNLIMITED",		HISTORY_GLUON_NUM_ENTRIES_UNLIMITED },
 	{ "MAX_DATABASE_NAME_LENGTH",           HISTORY_GLUON_MAX_DATABASE_NAME_LENGTH },
 	{ NULL, 0 },
+};
+
+typedef struct _HglErrors
+{
+	char *name;
+	int   code;
+	VALUE klass;
+} HglErrors;
+
+static HglErrors hgl_errors[] = {
+	/* { "Success", HGL_SUCCESS }, */
+	{ "UnknownReasonError",         HGLERR_UNKNOWN_REASON,            0 },
+	{ "NotImplementedError",        HGLERR_NOT_IMPLEMENTED,           0 },
+	{ "MemAllocError",              HGLERR_MEM_ALLOC,                 0 },
+	{ "InvalidParameterError",      HGLERR_INVALID_PARAMETER,         0 },
+	{ "InvalidContextError",        HGLERR_INVALID_CONTEXT,           0 },
+	{ "TooLongDBNameError",         HGLERR_TOO_LONG_DB_NAME,          0 },
+	{ "InvazlidDBNameError",        HGLERR_INVALID_DB_NAME,           0 },
+	{ "ReadStreamEndError",         HGLERR_READ_STREAM_END,           0 },
+	{ "ReadError",                  HGLERR_READ_ERROR,                0 },
+	{ "WriteError",                 HGLERR_WRITE_ERROR,               0 },
+	{ "TooLongStringError",         HGLERR_TOO_LONG_STRING,           0 },
+	{ "TooLargeBlobError",          HGLERR_TOO_LARGE_BLOB,            0 },
+	{ "NullDataError",              HGLERR_NULL_DATA,                 0 },
+	{ "GetaddrinfoError",           HGLERR_GETADDRINFO,               0 },
+	{ "FailedConnectError",         HGLERR_FAILED_CONNECT,            0 },
+	{ "MagicCodeError",             HGLERR_UNEXPECTED_MAGIC_CODE,     0 },
+	{ "ReplySizeError",             HGLERR_UNEXPECTED_REPLY_SIZE,     0 },
+	{ "UnexpectedReplyTypeError",   HGLERR_UNEXPECTED_REPLY_TYPE,     0 },
+	{ "ReplyError",                 HGLERR_REPLY_ERROR,               0 },
+	{ "InvalidDataTypeError",       HGLERR_INVALID_DATA_TYPE,         0 },
+
+	/* { "SvSuccess", HGLSV_SUCCESS, }*/
+	{ "SvUnknownError",             HGLSVERR_UKNOWN_ERROR,            0 },
+	{ "SvServerError",              HGLSVERR_SERVER_ERROR,            0 },
+	{ "SvUnsupportedVersionError",  HGLSVERR_UNSUPPORTED_VERSION,     0 },
+	{ "SvNotImplementedError",      HGLSVERR_NOT_IMPLEMENTED,         0 },
+	{ "SvAuthentificationError",    HGLSVERR_AUTHENTIFICATION_FAILED, 0 },
+	{ "SvTooLongDBNameError",       HGLSVERR_TOO_LONG_DB_NAME,        0 },
+	{ "SvInvalidCharinDBNameError", HGLSVERR_INVLIAD_CHARIN_DB_NAME,  0 },
+	{ "SvPacketShortError",         HGLSVERR_PACKET_SHORT,            0 },
+	{ "SvInvalidDataTypeError",     HGLSVERR_INVALID_DATA_TYPE,       0 },
+	{ "SvInvalidSortTypeError",     HGLSVERR_INVALID_SORT_TYPE,       0 },
+	{ "SvEntryExistsError",         HGLSVERR_ENTRY_EXISTS,            0 },
+	{ "SvNotFoundError",            HGLSVERR_NOT_FOUND,               0 },
+	{ "SvTooManyEntriesError",      HGLSVERR_TOO_MANY_ENTRIES,        0 },
+
+	{NULL, 0, 0},
 };
 
 static void
@@ -153,7 +202,7 @@ raise_hgl_exception(history_gluon_result_t result)
 
 	switch (result) {
 	case HGLSVERR_INVALID_SORT_TYPE:
-		rb_raise(rb_path2class("HistoryGluon::SortTypeError"),
+		rb_raise(rb_path2class("HistoryGluon::SvInvalidSortTypeError"),
 			 "Failed to call history_gluon_range_query: %d",
 			 result);
 		break;
@@ -215,6 +264,20 @@ Init_historygluon(void)
 				hgl_constants[i].name,
 				INT2NUM(hgl_constants[i].value));
 	}
+
+	rb_eHistoryGluonError = rb_define_class_under(rb_cHistoryGluon, "Error",
+						      rb_eStandardError);
+	rb_define_class_variable(rb_eStandardError, "@@code",
+				 INT2NUM(HGLERR_UNKNOWN_REASON));
+	for (i = 0; hgl_errors[i].name; i++) {
+		hgl_errors[i].klass = 
+			rb_define_class_under(rb_cHistoryGluon,
+					      hgl_errors[i].name,
+					      rb_eHistoryGluonError);
+		rb_cv_set(rb_eStandardError, "@@code",
+			  INT2NUM(hgl_errors[i].code));
+	}
+
 	sym_data_id = ID2SYM(rb_intern("id"));
 	sym_sec     = ID2SYM(rb_intern("sec"));
 	sym_ns      = ID2SYM(rb_intern("ns"));

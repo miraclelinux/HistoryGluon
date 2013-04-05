@@ -54,7 +54,7 @@ class HistoryGluonSortTypeExceptionTestCase < Test::Unit::TestCase
        "TOO_SMALL_SORT_TYPE" => -1)
   def test_invalid(sort_type)
     hgl = HistoryGluon.new("zabbix", "localhost", 0)
-    assert_raise("HistoryGluon::SortTypeError") do
+    assert_raise("HistoryGluon::SvInvalidSortTypeError") do
       hgl.range_query(1, 1, 0, 21, 0, sort_type, 100)
     end
   end
