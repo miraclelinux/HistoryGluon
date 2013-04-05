@@ -7,12 +7,12 @@ require 'historygluon'
 
 class HistoryGluonTestCase < Test::Unit::TestCase
   def test_new
-    hgl = HistoryGluon.new("zabbix", "localhost", 0)
+    hgl = HistoryGluon.new("test", "localhost", 0)
     assert_equal(hgl.class, HistoryGluon)
   end
 
   def test_range_query
-    hgl = HistoryGluon.new("zabbix", "localhost", 0)
+    hgl = HistoryGluon.new("test", "localhost", 0)
     hgl.add_uint(1, 0, 0, 5)
     hgl.add_uint(1, 21, 1, 5)
     hgl.add_uint(1, 1, 0, 5)
