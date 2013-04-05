@@ -78,3 +78,26 @@ class HistoryGluonSortTypeExceptionTestCase < Test::Unit::TestCase
     end
   end
 end
+
+class HistoryGluonDeleteTypeExceptionTestCase < Test::Unit::TestCase
+  data("EQUAL"            => HistoryGluon::DELETE_TYPE_EQUAL,
+       "EQUAL_OR_LESS"    => HistoryGluon::DELETE_TYPE_EQUAL_OR_LESS,
+       "LESS"             => HistoryGluon::DELETE_TYPE_LESS,
+       "EQUAL_OR_GREATER" => HistoryGluon::DELETE_TYPE_EQUAL_OR_GREATER,
+       "GREATER"          => HistoryGluon::DELETE_TYPE_GREATER)
+  def test_valid(delete_type)
+    hgl = HistoryGluon.new("test", "localhost", 0)
+    assert_nothing_raised do
+      hgl.delete(1, 1, 0, delete_type)
+    end
+  end
+
+  data("too small" => -1,
+       "too large" => 5)
+  def test_invalid(delete_type)
+    hgl = HistoryGluon.new("test", "localhost", 0)
+    assert_raise("HistoryGluon::SvInvalidSortTypeError") do
+      hgl.delete(1, 1, 0, delete_type)
+    end
+  end
+end
