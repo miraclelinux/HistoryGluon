@@ -195,7 +195,7 @@ hgldata2value(history_gluon_data_t *gluon_data)
 }
 
 static void
-raise_hgl_exception(history_gluon_result_t result)
+raise_hgl_exception(history_gluon_result_t result, const char *message)
 {
 	if (result == HGL_SUCCESS)
 		return;
@@ -203,14 +203,12 @@ raise_hgl_exception(history_gluon_result_t result)
 	switch (result) {
 	case HGLSVERR_INVALID_SORT_TYPE:
 		rb_raise(rb_path2class("HistoryGluon::SvInvalidSortTypeError"),
-			 "Failed to call history_gluon_range_query: %d",
-			 result);
+			 message);
 		break;
 	default:
 		/* FIXME: raise suitable exception */
 		rb_raise(rb_path2class("HistoryGluon::Error"),
-			 "Failed to call history_gluon_range_query: %d",
-			 result);
+			 message);
 		break;
 	}
 }
@@ -235,7 +233,8 @@ range_query(VALUE self, VALUE id, VALUE sec0, VALUE ns0, VALUE sec1, VALUE ns1,
 					   NUM2ULL(num_max_entries),
 					   &array);
 	if (result != HGL_SUCCESS) {
-		raise_hgl_exception(result);
+		raise_hgl_exception(result,
+				    "Faile to call history_gluon_range_query");
 		return Qnil;
 	}
 
