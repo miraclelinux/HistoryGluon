@@ -197,20 +197,19 @@ hgldata2value(history_gluon_data_t *gluon_data)
 static void
 raise_hgl_exception(history_gluon_result_t result, const char *message)
 {
+	int i;
+
 	if (result == HGL_SUCCESS)
 		return;
 
-	switch (result) {
-	case HGLSVERR_INVALID_SORT_TYPE:
-		rb_raise(rb_path2class("HistoryGluon::SvInvalidSortTypeError"),
-			 message);
-		break;
-	default:
-		/* FIXME: raise suitable exception */
-		rb_raise(rb_path2class("HistoryGluon::Error"),
-			 message);
-		break;
+	for (i = 0; hgl_errors[i].name; i++) {
+		if (result != hgl_errors[i].code)
+			continue;
+		rb_raise(hgl_errors[i].klass, message);
+		return;
 	}
+
+	rb_raise(rb_path2class("HistoryGluon::Error"), message);
 }
 
 static VALUE
