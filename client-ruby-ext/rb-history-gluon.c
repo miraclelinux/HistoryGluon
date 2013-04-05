@@ -106,6 +106,24 @@ allocate(VALUE klass)
 	return Data_Wrap_Struct(klass, NULL, deallocate, hgl);
 }
 
+static void
+raise_hgl_exception(history_gluon_result_t result, const char *message)
+{
+	int i;
+
+	if (result == HGL_SUCCESS)
+		return;
+
+	for (i = 0; hgl_errors[i].name; i++) {
+		if (result != hgl_errors[i].code)
+			continue;
+		rb_raise(hgl_errors[i].klass, message);
+		return;
+	}
+
+	rb_raise(rb_path2class("HistoryGluon::Error"), message);
+}
+
 static VALUE
 initialize(VALUE self, VALUE database_name, VALUE server_name, VALUE port)
 {
@@ -116,6 +134,9 @@ initialize(VALUE self, VALUE database_name, VALUE server_name, VALUE port)
 	result = history_gluon_create_context(STR2CSTR(database_name),
 					      STR2CSTR(server_name),
 					      NUM2INT(port), &ptr->ctx);
+	raise_hgl_exception(result,
+			    "Failed to call history_gluon_create_context");
+
 	return Qnil;
 }
 
@@ -129,6 +150,8 @@ add_uint(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE data)
 	Data_Get_Struct(self, HglRubyPtr, hgl);
 	result = history_gluon_add_uint(hgl->ctx, NUM2ULL(id), &ts,
 					NUM2ULONG(data));
+	raise_hgl_exception(result,
+			    "Failed to call history_gluon_add_uint");
 
 	return INT2NUM(result);
 }
@@ -143,6 +166,8 @@ add_float(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE data)
 	Data_Get_Struct(self, HglRubyPtr, hgl);
 	result = history_gluon_add_float(hgl->ctx, NUM2ULL(id), &ts,
 					 NUM2DBL(data));
+	raise_hgl_exception(result,
+			    "Failed to call history_gluon_add_float");
 
 	return INT2NUM(result);
 }
@@ -157,6 +182,8 @@ add_string(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE data)
 	Data_Get_Struct(self, HglRubyPtr, hgl);
 	result = history_gluon_add_string(hgl->ctx, NUM2ULL(id), &ts,
 					  STR2CSTR(data));
+	raise_hgl_exception(result,
+			    "Failed to call history_gluon_add_string");
 
 	return INT2NUM(result);
 }
@@ -194,24 +221,6 @@ hgldata2value(history_gluon_data_t *gluon_data)
 	return data;
 }
 
-static void
-raise_hgl_exception(history_gluon_result_t result, const char *message)
-{
-	int i;
-
-	if (result == HGL_SUCCESS)
-		return;
-
-	for (i = 0; hgl_errors[i].name; i++) {
-		if (result != hgl_errors[i].code)
-			continue;
-		rb_raise(hgl_errors[i].klass, message);
-		return;
-	}
-
-	rb_raise(rb_path2class("HistoryGluon::Error"), message);
-}
-
 static VALUE
 range_query(VALUE self, VALUE id, VALUE sec0, VALUE ns0, VALUE sec1, VALUE ns1,
 	    VALUE sort_request, VALUE num_max_entries)
@@ -233,7 +242,7 @@ range_query(VALUE self, VALUE id, VALUE sec0, VALUE ns0, VALUE sec1, VALUE ns1,
 					   &array);
 	if (result != HGL_SUCCESS) {
 		raise_hgl_exception(result,
-				    "Faile to call history_gluon_range_query");
+				    "Failed to call history_gluon_range_query");
 		return Qnil;
 	}
 
