@@ -96,7 +96,7 @@ class HistoryGluonDeleteTypeExceptionTestCase < Test::Unit::TestCase
        "too large" => 5)
   def test_invalid(delete_type)
     hgl = HistoryGluon.new("test", "localhost", 0)
-    assert_raise("HistoryGluon::SvInvalidSortTypeError") do
+    assert_raise do
       hgl.delete(1, 1, 0, delete_type)
     end
   end
