@@ -264,7 +264,7 @@ delete(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE delete_way)
 
 	Data_Get_Struct(self, HglRubyPtr, hgl);
 	result = history_gluon_delete(hgl->ctx, NUM2ULL(id), &ts,
-				      INT2NUM(delete_way),
+				      NUM2INT(delete_way),
 				      &num_deleted_entries);
 	raise_hgl_exception(result,
 			    "Failed to call history_gluon_delete");
