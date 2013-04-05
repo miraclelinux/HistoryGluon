@@ -140,8 +140,6 @@ public class HBaseDriver extends BasicStorageDriver {
             Scan scan = new Scan(startRow, stopRow);
             if (maxCount != BridgeWorker.MAX_ENTRIES_UNLIMITED) {
                 if (maxCount > Integer.MAX_VALUE) {
-
-
                     String msg;
                     msg = "maxCount > Integer.MAX_VALUE: " + maxCount;
                     throw new InternalCheckException(msg);
@@ -149,8 +147,6 @@ public class HBaseDriver extends BasicStorageDriver {
                 scan.setBatch((int)maxCount * NUM_QUALIFIERS);
             }
             resultScanner = table.getScanner(scan);
-
-
             for (Result result : resultScanner) {
                 buildHistoryData(table, result, dataSet);
                 if (countLimited && (dataSet.size() >= maxCount))
