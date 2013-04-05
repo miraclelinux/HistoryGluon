@@ -300,7 +300,7 @@ Init_historygluon(void)
 	rb_define_method(rb_cHistoryGluon, "add_string", add_string, 4);
 	rb_define_method(rb_cHistoryGluon, "range_query", range_query, 7);
 	rb_define_method(rb_cHistoryGluon, "delete", delete, 4);
-	rb_define_method(rb_cHistoryGluon, "delete", delete_all, 0);
+	rb_define_method(rb_cHistoryGluon, "delete_all", delete_all, 0);
 	for (i = 0; hgl_constants[i].name; i++) {
 		rb_define_const(rb_cHistoryGluon,
 				hgl_constants[i].name,
