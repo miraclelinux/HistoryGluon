@@ -254,6 +254,38 @@ range_query(VALUE self, VALUE id, VALUE sec0, VALUE ns0, VALUE sec1, VALUE ns1,
 	return value_array;
 }
 
+static VALUE
+delete(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE delete_way)
+{
+	HglRubyPtr *hgl;
+	struct timespec ts = { NUM2LL(sec), NUM2LL(ns) };
+	history_gluon_result_t result;
+	uint64_t num_deleted_entries = 0;
+
+	Data_Get_Struct(self, HglRubyPtr, hgl);
+	result = history_gluon_delete(hgl->ctx, NUM2ULL(id), &ts,
+				      INT2NUM(delete_way),
+				      &num_deleted_entries);
+	raise_hgl_exception(result,
+			    "Failed to call history_gluon_delete");
+
+	return ULL2NUM(num_deleted_entries);
+}
+
+static VALUE
+delete_all(VALUE self)
+{
+	HglRubyPtr *hgl;
+	history_gluon_result_t result;
+
+	Data_Get_Struct(self, HglRubyPtr, hgl);
+	result = history_gluon_delete_all(hgl->ctx);
+	raise_hgl_exception(result,
+			    "Failed to call history_gluon_delete_all");
+
+	return Qnil;
+}
+
 void
 Init_historygluon(void)
 {
@@ -267,6 +299,8 @@ Init_historygluon(void)
 	rb_define_method(rb_cHistoryGluon, "add_float", add_float, 4);
 	rb_define_method(rb_cHistoryGluon, "add_string", add_string, 4);
 	rb_define_method(rb_cHistoryGluon, "range_query", range_query, 7);
+	rb_define_method(rb_cHistoryGluon, "delete", delete, 4);
+	rb_define_method(rb_cHistoryGluon, "delete", delete_all, 0);
 	for (i = 0; hgl_constants[i].name; i++) {
 		rb_define_const(rb_cHistoryGluon,
 				hgl_constants[i].name,
