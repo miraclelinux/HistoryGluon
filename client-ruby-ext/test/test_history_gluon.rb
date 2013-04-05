@@ -6,25 +6,44 @@ require 'test-unit'
 require 'historygluon'
 
 class HistoryGluonTestCase < Test::Unit::TestCase
+  def setup
+    @hgl = HistoryGluon.new("test", "localhost", 0)
+    @hgl.add_uint(1, 0, 0, 5)
+    @hgl.add_uint(1, 21, 1, 5)
+    @hgl.add_uint(1, 1, 0, 5)
+    @hgl.add_float(1, 10, 10, 5.0)
+    @hgl.add_string(1, 20, 20, "5.0")
+  end
+
+  def teardown
+    @hgl.delete_all
+  end
+
   def test_new
     hgl = HistoryGluon.new("test", "localhost", 0)
     assert_equal(hgl.class, HistoryGluon)
   end
 
   def test_range_query
-    hgl = HistoryGluon.new("test", "localhost", 0)
-    hgl.add_uint(1, 0, 0, 5)
-    hgl.add_uint(1, 21, 1, 5)
-    hgl.add_uint(1, 1, 0, 5)
-    hgl.add_float(1, 10, 10, 5.0)
-    hgl.add_string(1, 20, 20, "5.0")
-    actual = hgl.range_query(1, 1, 0, 21, 0, HistoryGluon::SORT_ASCENDING, 100)
+    @hgl = HistoryGluon.new("test", "localhost", 0)
+    actual = @hgl.range_query(1, 1, 0, 21, 0, HistoryGluon::SORT_ASCENDING, 100)
     expected = [
                 { :id => 1, :type => 2, :sec => 1,  :ns => 0,  :value => 5},
                 { :id => 1, :type => 0, :sec => 10, :ns => 10, :value => 5.0},
                 { :id => 1, :type => 1, :sec => 20, :ns => 20, :value => "5.0"},
                ]
     assert_equal(expected, actual);
+  end
+
+  data("EQUAL"            => [1, 1, 21, 1,  HistoryGluon::DELETE_TYPE_EQUAL],
+       "EQUAL_OR_LESS"    => [3, 1, 10, 10, HistoryGluon::DELETE_TYPE_EQUAL_OR_LESS],
+       "LESS"             => [2, 1, 10, 10, HistoryGluon::DELETE_TYPE_LESS],
+       "EQUAL_OR_GREATER" => [2, 1, 20, 20, HistoryGluon::DELETE_TYPE_EQUAL_OR_GREATER],
+       "GREATER"          => [1, 1, 20, 20, HistoryGluon::DELETE_TYPE_GREATER])
+  def test_delete(data)
+    expected, id, sec, ns, delete_way = data
+    num = @hgl.delete(id, sec, ns, delete_way)
+    assert_equal(expected, num)
   end
 end
 
