@@ -9,6 +9,19 @@ typedef struct _HglRubyPtr
 	history_gluon_context_t ctx;
 } HglRubyPtr;
 
+typedef struct _HglConstants
+{
+	char *name;
+	int   value;
+} HglConstants;
+
+static HglConstants hgl_constants[] = {
+	{ "SORT_ASCENDING",  HISTORY_GLUON_SORT_ASCENDING,  },
+	{ "SORT_DESCENDING", HISTORY_GLUON_SORT_DESCENDING, },
+	{ "SORT_NOT_SORTED", HISTORY_GLUON_SORT_NOT_SORTED, },
+	{ NULL, 0, },
+};
+
 static void
 deallocate(void *ptr)
 {
@@ -169,6 +182,7 @@ initialize(VALUE self, VALUE database_name, VALUE server_name, VALUE port)
 void
 Init_historygluon(void)
 {
+	int i;
 	rb_cHistoryGluon = rb_define_class("HistoryGluon", rb_cObject);
 	rb_define_alloc_func(rb_cHistoryGluon, allocate);
 	rb_define_private_method(rb_cHistoryGluon, "initialize", initialize, 3);
@@ -176,6 +190,11 @@ Init_historygluon(void)
 	rb_define_method(rb_cHistoryGluon, "add_float", add_float, 4);
 	rb_define_method(rb_cHistoryGluon, "add_string", add_string, 4);
 	rb_define_method(rb_cHistoryGluon, "range_query", range_query, 7);
+	for (i = 0; hgl_constants[i].name; i++) {
+		rb_define_const(rb_cHistoryGluon,
+				hgl_constants[i].name,
+				INT2NUM(hgl_constants[i].value));
+	}
 	sym_data_id = ID2SYM(rb_intern("id"));
 	sym_sec     = ID2SYM(rb_intern("sec"));
 	sym_ns      = ID2SYM(rb_intern("ns"));
