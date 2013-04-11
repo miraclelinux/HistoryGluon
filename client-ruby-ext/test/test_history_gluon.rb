@@ -35,11 +35,11 @@ class HistoryGluonTestCase < Test::Unit::TestCase
     assert_equal(expected, actual);
   end
 
-  data("EQUAL"            => [1, 1, 21, 1,  HistoryGluon::DELETE_TYPE_EQUAL],
-       "EQUAL_OR_LESS"    => [3, 1, 10, 10, HistoryGluon::DELETE_TYPE_EQUAL_OR_LESS],
-       "LESS"             => [2, 1, 10, 10, HistoryGluon::DELETE_TYPE_LESS],
-       "EQUAL_OR_GREATER" => [2, 1, 20, 20, HistoryGluon::DELETE_TYPE_EQUAL_OR_GREATER],
-       "GREATER"          => [1, 1, 20, 20, HistoryGluon::DELETE_TYPE_GREATER])
+  data("equal"            => [1, 1, 21, 1,  HistoryGluon::DELETE_TYPE_EQUAL],
+       "equal or less"    => [3, 1, 10, 10, HistoryGluon::DELETE_TYPE_EQUAL_OR_LESS],
+       "less"             => [2, 1, 10, 10, HistoryGluon::DELETE_TYPE_LESS],
+       "equal or greater" => [2, 1, 20, 20, HistoryGluon::DELETE_TYPE_EQUAL_OR_GREATER],
+       "greater"          => [1, 1, 20, 20, HistoryGluon::DELETE_TYPE_GREATER])
   def test_delete(data)
     expected, id, sec, ns, delete_way = data
     num = @hgl.delete(id, sec, ns, delete_way)
@@ -48,9 +48,9 @@ class HistoryGluonTestCase < Test::Unit::TestCase
 end
 
 class HistoryGluonSortTypeTestCase < Test::Unit::TestCase
-  data("ASCENDING"  => [0, HistoryGluon::SORT_ASCENDING],
-       "DESCENDING" => [1, HistoryGluon::SORT_DESCENDING],
-       "NOT_SORTED" => [2, HistoryGluon::SORT_NOT_SORTED])
+  data("ascending"  => [0, HistoryGluon::SORT_ASCENDING],
+       "descending" => [1, HistoryGluon::SORT_DESCENDING],
+       "not sorted" => [2, HistoryGluon::SORT_NOT_SORTED])
 
   def test_sort_type(data)
     expected, value = data
@@ -59,8 +59,8 @@ class HistoryGluonSortTypeTestCase < Test::Unit::TestCase
 end
 
 class HistoryGluonSortTypeExceptionTestCase < Test::Unit::TestCase
-  data("ASCENDING"  => HistoryGluon::SORT_ASCENDING,
-       "DESCENDING" => HistoryGluon::SORT_DESCENDING)
+  data("ascending"  => HistoryGluon::SORT_ASCENDING,
+       "descending" => HistoryGluon::SORT_DESCENDING)
   def test_valid(sort_type)
     hgl = HistoryGluon.new("test", "localhost", 0)
     assert_nothing_raised do
@@ -68,9 +68,9 @@ class HistoryGluonSortTypeExceptionTestCase < Test::Unit::TestCase
     end
   end
 
-  data("NOT_SORTED" => HistoryGluon::SORT_NOT_SORTED,
-       "TOO_LARGE_SORT_TYPE" => 3,
-       "TOO_SMALL_SORT_TYPE" => -1)
+  data("not sorted" => HistoryGluon::SORT_NOT_SORTED,
+       "too large sort type" => 3,
+       "too small sort type" => -1)
   def test_invalid(sort_type)
     hgl = HistoryGluon.new("test", "localhost", 0)
     assert_raise("HistoryGluon::SvInvalidSortTypeError") do
@@ -80,11 +80,11 @@ class HistoryGluonSortTypeExceptionTestCase < Test::Unit::TestCase
 end
 
 class HistoryGluonDeleteTypeExceptionTestCase < Test::Unit::TestCase
-  data("EQUAL"            => HistoryGluon::DELETE_TYPE_EQUAL,
-       "EQUAL_OR_LESS"    => HistoryGluon::DELETE_TYPE_EQUAL_OR_LESS,
-       "LESS"             => HistoryGluon::DELETE_TYPE_LESS,
-       "EQUAL_OR_GREATER" => HistoryGluon::DELETE_TYPE_EQUAL_OR_GREATER,
-       "GREATER"          => HistoryGluon::DELETE_TYPE_GREATER)
+  data("equal"            => HistoryGluon::DELETE_TYPE_EQUAL,
+       "equal or less"    => HistoryGluon::DELETE_TYPE_EQUAL_OR_LESS,
+       "less"             => HistoryGluon::DELETE_TYPE_LESS,
+       "equal or greater" => HistoryGluon::DELETE_TYPE_EQUAL_OR_GREATER,
+       "greater"          => HistoryGluon::DELETE_TYPE_GREATER)
   def test_valid(delete_type)
     hgl = HistoryGluon.new("test", "localhost", 0)
     assert_nothing_raised do
