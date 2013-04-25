@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/uio.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -370,6 +371,41 @@ write_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
 }
 
 static history_gluon_result_t
+writev_data(private_context_t *ctx, struct iovec *iov, int iovcnt)
+{
+	uint64_t total_bytes = 0;
+	int i;
+
+	for (i = 0; i < iovcnt; i++)
+		total_bytes += iov[i].iov_len;
+
+	while (iovcnt > 0) {
+		ssize_t written_bytes, remaining_bytes;
+
+		written_bytes = writev(ctx->socket, iov, iovcnt);
+		if (written_bytes == -1) {
+			ERR_MSG("Failed to write data: %d\n", errno);
+			reset_context(ctx);
+			return HGLERR_WRITE_ERROR;
+		}
+
+		remaining_bytes = written_bytes;
+		while (iovcnt > 0 && remaining_bytes > 0) {
+			if ((*iov).iov_len > remaining_bytes) {
+				(*iov).iov_len -= remaining_bytes;
+				(*iov).iov_base += remaining_bytes;
+				break;
+			} else {
+				remaining_bytes -= (*iov).iov_len;
+				iov++;
+				iovcnt--;
+			}
+		}
+	}
+	return HGL_SUCCESS;
+}
+
+static history_gluon_result_t
 read_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
 {
 	uint8_t *ptr = buf;
@@ -400,19 +436,24 @@ static history_gluon_result_t
 proc_connect(private_context_t *ctx)
 {
 	history_gluon_result_t ret;
-
-	/* magic code */
-	ret = write_data(ctx, (uint8_t *)connect_magic_code, MAGIC_CODE_LENGTH);
-	RETURN_IF_ERROR(ret);
-
-	/* length of DB name */
 	uint16_t len_db_name = strlen(ctx->db_name);
 	uint16_t le_buf_length = conv_le16(ctx, len_db_name);
-	ret = write_data(ctx, (uint8_t *)&le_buf_length, DB_NAME_SIZE_LENGTH);
-	RETURN_IF_ERROR(ret);
+	struct iovec iov[3];
+
+	/* magic code */
+	iov[0].iov_base = (void*)connect_magic_code;
+	iov[0].iov_len = MAGIC_CODE_LENGTH;
+
+	/* length of DB name */
+	iov[1].iov_base = &le_buf_length;
+	iov[1].iov_len = DB_NAME_SIZE_LENGTH;
 
 	/* DB name */
-	ret = write_data(ctx, (uint8_t *)ctx->db_name, len_db_name);
+	iov[2].iov_base = ctx->db_name;
+	iov[2].iov_len = len_db_name;
+
+	/* write */
+	ret = writev_data(ctx, iov, 3);
 	RETURN_IF_ERROR(ret);
 
 	/* wait for reply */
@@ -1164,15 +1205,14 @@ history_gluon_add_string(history_gluon_context_t _ctx,
 	*((uint32_t *)ptr) = conv_le32(ctx, len_string);
 	ptr += PKT_DATA_STRING_SIZE_LENGTH;
 
-	/* write header */
-	ret = write_data(ctx, buf, pkt_size);
-	if (ret < 0)
-		return ret;
-
-	/* write string body */
-	ret = write_data(ctx, (uint8_t*)data, len_string);
-	if (ret < 0)
-		return ret;
+	/* write header & string body */
+	struct iovec iov[2];
+	iov[0].iov_base = buf;
+	iov[0].iov_len = pkt_size;
+	iov[1].iov_base = data;
+	iov[1].iov_len = len_string;
+	ret = writev_data(ctx, iov, 2);
+	RETURN_IF_ERROR(ret);
 
 	/* check result */
 	return wait_and_check_add_result(ctx);
@@ -1201,12 +1241,13 @@ history_gluon_add_blob(history_gluon_context_t _ctx, uint64_t id, struct timespe
 	*((uint64_t *)ptr) = conv_le64(ctx, length);
 	ptr += PKT_DATA_BLOB_SIZE_LENGTH;
 
-	/* write header */
-	ret = write_data(ctx, buf, pkt_size);
-	RETURN_IF_ERROR(ret);
-
-	/* write string body */
-	ret = write_data(ctx, data, length);
+	/* write header & string body */
+	struct iovec iov[2];
+	iov[0].iov_base = buf;
+	iov[0].iov_len = pkt_size;
+	iov[1].iov_base = data;
+	iov[1].iov_len = length;
+	ret = writev_data(ctx, iov, 2);
 	RETURN_IF_ERROR(ret);
 
 	/* check result */
