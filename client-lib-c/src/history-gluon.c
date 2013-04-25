@@ -931,7 +931,7 @@ static void init_gluon_data(history_gluon_data_t *gluon_data)
 
 static history_gluon_result_t
 read_gluon_data_body_float(private_context_t *ctx,
-                                      history_gluon_data_t *gluon_data)
+			   history_gluon_data_t *gluon_data)
 {
 	history_gluon_result_t ret;
 	uint8_t buf[PKT_DATA_FLOAT_LENGTH];
