@@ -67,6 +67,7 @@ public class HBaseDriver extends BasicStorageDriver {
     private Configuration m_config = null;
     private String m_tableName = null;
     private byte[] m_tableNameBytes = null;
+    private HTable m_table = null;
 
     /* -----------------------------------------------------------------------
      * Public Methods
@@ -99,7 +100,7 @@ public class HBaseDriver extends BasicStorageDriver {
     @Override
     public int addData(HistoryData history) {
         try {
-            HTable table = new HTable(m_config, m_tableNameBytes);
+            HTable table = getHTable();
             String key = String.format("%016x%08x%08x",
                                        history.id, history.sec,
                                        history.ns);
@@ -134,7 +135,7 @@ public class HBaseDriver extends BasicStorageDriver {
         ResultScanner resultScanner = null;
         boolean countLimited = (maxCount != BridgeWorker.MAX_ENTRIES_UNLIMITED);
         try {
-            HTable table = new HTable(m_config, m_tableNameBytes);
+            HTable table = getHTable();
             byte[] startRow = Bytes.toBytes(startKey);
             byte[] stopRow = Bytes.toBytes(stopKey);
             Scan scan = new Scan(startRow, stopRow);
@@ -220,6 +221,21 @@ public class HBaseDriver extends BasicStorageDriver {
         HTableDescriptor desc = new HTableDescriptor(m_tableNameBytes);
         desc.addFamily(new HColumnDescriptor(HISTORY_FAMILY_NAME));
         admin.createTable(desc);
+    }
+
+    private HTable getHTable() {
+        if (m_table != null)
+            return m_table;
+
+        try {
+            m_table = new HTable(m_config, m_tableNameBytes);
+            m_table.setAutoFlush(false);
+        } catch (IOException e) {
+            e.printStackTrace();
+            m_log.error(e);
+        }
+
+        return m_table;
     }
 
     private void buildHistoryData(HTable table, Result result,
