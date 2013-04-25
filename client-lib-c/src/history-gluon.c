@@ -358,7 +358,7 @@ write_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
 	while (1) {
 		ssize_t written_byte = write(ctx->socket, ptr, count);
 		if (written_byte == -1) {
-			ERR_MSG("Failed to write data: %d\n", errno);
+			ERR_MSG("Failed to write data: %s\n", strerror(errno));
 			reset_context(ctx);
 			return HGLERR_WRITE_ERROR;
 		}
@@ -384,7 +384,7 @@ writev_data(private_context_t *ctx, struct iovec *iov, int iovcnt)
 
 		written_bytes = writev(ctx->socket, iov, iovcnt);
 		if (written_bytes == -1) {
-			ERR_MSG("Failed to write data: %d\n", errno);
+			ERR_MSG("Failed to write data: %s\n", strerror(errno));
 			reset_context(ctx);
 			return HGLERR_WRITE_ERROR;
 		}
