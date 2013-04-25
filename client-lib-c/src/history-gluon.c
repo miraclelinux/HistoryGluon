@@ -373,12 +373,6 @@ write_data(private_context_t *ctx, uint8_t *buf, uint64_t count)
 static history_gluon_result_t
 writev_data(private_context_t *ctx, struct iovec *iov, int iovcnt)
 {
-	uint64_t total_bytes = 0;
-	int i;
-
-	for (i = 0; i < iovcnt; i++)
-		total_bytes += iov[i].iov_len;
-
 	while (iovcnt > 0) {
 		ssize_t written_bytes, remaining_bytes;
 
