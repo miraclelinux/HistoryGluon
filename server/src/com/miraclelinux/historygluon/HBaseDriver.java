@@ -86,6 +86,18 @@ public class HBaseDriver extends BasicStorageDriver {
     }
 
     @Override
+    public void close() {
+	try {
+	    m_table.close();
+	    m_table = null;
+	} catch (IOException e) {
+            e.printStackTrace();
+            m_log.error(e);
+	}
+	super.close();
+    }
+
+    @Override
     public String getName() {
         return "HBase";
     }
