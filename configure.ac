@@ -108,7 +108,7 @@ elif test "$CASSANDRA_PATH" = "no"; then
 fi
 
 if test -e "$CASSANDRA_PATH"; then
-  jar_files="`find -L $CASSANDRA_PATH/lib -type f -name "apache-cassandra-*.jar"`"
+  jar_files="`find -L $CASSANDRA_PATH -type f -name "apache-cassandra-*.jar"`"
   if test -z "$jar_files"; then
     CASSANDRA_PATH=""
   fi
