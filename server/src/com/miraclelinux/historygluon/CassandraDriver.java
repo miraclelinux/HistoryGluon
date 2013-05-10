@@ -78,6 +78,7 @@ public class CassandraDriver extends BasicStorageDriver {
 
     private static final int DEFALUT_PORT = 9160;
     private static final int COUNT_INTERNAL_LIMIT = 0x7fffffff;
+    private static final int MAX_TRANSPORT_BYTES = 64 * 1024 * 1024;
 
     /* -----------------------------------------------------------------------
      * Private members
@@ -106,7 +107,7 @@ public class CassandraDriver extends BasicStorageDriver {
     @Override
     public boolean init() {
         TSocket socket = new TSocket("localhost", DEFALUT_PORT);
-        m_transport = new TFramedTransport(socket);
+        m_transport = new TFramedTransport(socket, MAX_TRANSPORT_BYTES);
         TProtocol protocol = new TBinaryProtocol(m_transport);
         try {
             m_transport.open();
