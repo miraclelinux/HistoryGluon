@@ -183,14 +183,7 @@ public class HBaseDriver extends BasicStorageDriver {
     }
 
     protected Object deleteRowsPreAction() {
-        HTable table = null;
-        try {
-            table = new HTable(m_config, m_tableNameBytes);
-        } catch (IOException e) {
-            e.printStackTrace();
-            m_log.error(e);
-        }
-        return table;
+        return getHTable();
     }
 
     @Override
