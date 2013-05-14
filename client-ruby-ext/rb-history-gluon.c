@@ -131,8 +131,8 @@ initialize(VALUE self, VALUE database_name, VALUE server_name, VALUE port)
 	history_gluon_result_t result;
 
 	Data_Get_Struct(self, HglRubyPtr, ptr);
-	result = history_gluon_create_context(StringValuePtr(database_name),
-					      StringValuePtr(server_name),
+	result = history_gluon_create_context(StringValueCStr(database_name),
+					      StringValueCStr(server_name),
 					      NUM2INT(port), &ptr->ctx);
 	raise_hgl_exception(result,
 			    "Failed to call history_gluon_create_context");
@@ -181,7 +181,7 @@ add_string(VALUE self, VALUE id, VALUE sec, VALUE ns, VALUE data)
 
 	Data_Get_Struct(self, HglRubyPtr, hgl);
 	result = history_gluon_add_string(hgl->ctx, NUM2ULL(id), &ts,
-					  StringValuePtr(data));
+					  StringValueCStr(data));
 	raise_hgl_exception(result,
 			    "Failed to call history_gluon_add_string");
 
