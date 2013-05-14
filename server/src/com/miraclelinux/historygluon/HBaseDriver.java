@@ -68,12 +68,17 @@ public class HBaseDriver extends BasicStorageDriver {
     private String m_tableName = null;
     private byte[] m_tableNameBytes = null;
     private HTable m_table = null;
+    private boolean m_enable_auto_flush = true;
 
     /* -----------------------------------------------------------------------
      * Public Methods
      * -------------------------------------------------------------------- */
     public HBaseDriver(String[] args) {
         super(args);
+        for (String arg: args) {
+            if (arg.equalsIgnoreCase("DisableAutoFlush"))
+                m_enable_auto_flush = false;
+        }
         m_log = LogFactory.getLog(HBaseDriver.class);
         m_config = HBaseConfiguration.create();
     }
@@ -243,7 +248,7 @@ public class HBaseDriver extends BasicStorageDriver {
 
         try {
             m_table = new HTable(m_config, m_tableNameBytes);
-            m_table.setAutoFlush(false);
+            m_table.setAutoFlush(m_enable_auto_flush);
         } catch (IOException e) {
             e.printStackTrace();
             m_log.error(e);
