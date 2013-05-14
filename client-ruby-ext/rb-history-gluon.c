@@ -117,11 +117,11 @@ raise_hgl_exception(history_gluon_result_t result, const char *message)
 	for (i = 0; hgl_errors[i].name; i++) {
 		if (result != hgl_errors[i].code)
 			continue;
-		rb_raise(hgl_errors[i].klass, message);
+		rb_raise(hgl_errors[i].klass, "%s", message);
 		return;
 	}
 
-	rb_raise(rb_path2class("HistoryGluon::Error"), message);
+	rb_raise(rb_path2class("HistoryGluon::Error"), "%s", message);
 }
 
 static VALUE
