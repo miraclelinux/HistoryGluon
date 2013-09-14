@@ -17,13 +17,14 @@
 
 package com.miraclelinux.historygluon;
 
-import java.util.List;
 import java.util.Iterator;
 
 import com.basho.riak.client.IRiakClient;
+import com.basho.riak.client.IndexEntry;
 import com.basho.riak.client.RiakFactory;
 import com.basho.riak.client.RiakException;
 import com.basho.riak.client.bucket.Bucket;
+import com.basho.riak.client.query.StreamingOperation;
 import com.basho.riak.client.query.indexes.BinIndex;
 import com.basho.riak.client.query.indexes.KeyIndex;
 import com.basho.riak.client.RiakRetryFailedException;
@@ -42,7 +43,7 @@ public class RiakDriver extends BasicStorageDriver {
      * Private members
      * -------------------------------------------------------------------- */
     private Log m_log = null;
-    private String m_bucketName;
+    private Bucket m_bucket;
     private IRiakClient m_pbClient = null;
 
     /* -----------------------------------------------------------------------
@@ -88,18 +89,21 @@ public class RiakDriver extends BasicStorageDriver {
 
     @Override
     public void setDatabase(String dbName) {
-        m_bucketName = dbName;
+        try {
+            m_bucket = m_pbClient.fetchBucket(dbName).execute();
+        } catch (RiakRetryFailedException e) {
+            throw new RuntimeException(e); // FIXME quickhack
+        }
     }
 
     @Override
     public int addData(HistoryData history) {
         try {
-            Bucket bucket = m_pbClient.fetchBucket(m_bucketName).execute();
             String key = makeKey(history.id, history.sec, history.ns);
             ValueType value = new ValueType();
             value.type = history.type;
             value.data = history.getDataAsByteArray();
-            bucket.store(key, value).execute();
+            m_bucket.store(key, value).execute();
         } catch (RiakRetryFailedException e) {
             m_log.error(e);
             e.printStackTrace();
@@ -111,11 +115,10 @@ public class RiakDriver extends BasicStorageDriver {
     @Override
     public boolean deleteDB() {
         try {
-            Bucket bucket = m_pbClient.fetchBucket(m_bucketName).execute();
-            Iterable<String> keys = bucket.keys();
+            Iterable<String> keys = m_bucket.keys();
             long count = 0;
             for (String keyName : keys) {
-                bucket.delete(keyName).execute();
+                m_bucket.delete(keyName).execute();
                 count++;
             }
             m_log.info("Deleted " + count + " entries.");
@@ -138,14 +141,13 @@ public class RiakDriver extends BasicStorageDriver {
         HistoryDataSet dataSet = new HistoryDataSet();
         try {
             HistoryData history;
-            Bucket bucket = m_pbClient.fetchBucket(m_bucketName).execute();
-            List<String> keyList =
-              bucket.fetchIndex(KeyIndex.index).from(startKey).to(stopKey).execute();
-            for (String key : keyList) {
-                ValueType value = bucket.fetch(key, ValueType.class).execute();
+            StreamingOperation<IndexEntry> keyList =
+              m_bucket.fetchIndex(KeyIndex.index).from(startKey).to(stopKey).executeStreaming();
+            for (IndexEntry key : keyList) {
+                ValueType value = m_bucket.fetch(key.getObjectKey(), ValueType.class).execute();
                 if (value == null)
                     continue;
-                history = getHistoryData(key, value);
+                history = getHistoryData(key.getObjectKey(), value);
                 if (history == null)
                     continue;
                 dataSet.add(history);
@@ -170,8 +172,7 @@ public class RiakDriver extends BasicStorageDriver {
     @Override
     protected boolean deleteRow(HistoryData history, Object arg) {
         try {
-            Bucket bucket = m_pbClient.fetchBucket(m_bucketName).execute();
-            bucket.delete(history.key).execute();
+            m_bucket.delete(history.key).execute();
         } catch (RiakException e) {
             m_log.error(e);
             e.printStackTrace();
